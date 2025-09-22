@@ -1,11 +1,28 @@
 <?php
 
+use App\Http\Controllers\HomePageController;
+use App\Http\Controllers\PermohonanBantuanController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('welcome');
-})->name('home');
+
+
+// Route::get('/', function () {
+//     return Inertia::render('welcome');
+/// })->name('home');
+
+
+/*
+// HALAMAN PUBLIK
+*/
+// Halaman Beranda
+Route::get('/', [HomePageController::class, "index"])->name('home');
+
+// Halaman Ajukan Bantuan
+Route::get('ajukan-bantuan', [PermohonanBantuanController::class, "create"])->name('permohonan.create');
+
+
+
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
