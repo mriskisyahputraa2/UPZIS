@@ -18,7 +18,6 @@ import {
     Users,
 } from 'lucide-react';
 
-// import heroLogo from '../../assets/images/hero.png';
 import heroLogo from '../../../../assets/images/hero.png';
 
 // Terima props dari controller
@@ -114,7 +113,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
             <Head title="Selamat Datang di Sistem Informasi Zakat" />
 
             {/* 1. Hero Section */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-green-600 to-green-800 pt-28 pb-40 text-white">
+            <section className="relative overflow-hidden bg-gradient-to-br from-green-600 to-green-800 pt-36 pb-32 text-white">
                 <div className="absolute inset-0 bg-[url('/images/islamic-pattern.svg')] opacity-10"></div>
                 <div className="relative z-10 container mx-auto max-w-7xl px-6">
                     <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
@@ -158,10 +157,9 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                             className="hidden items-center justify-center lg:flex"
                         >
                             <img
-                                // src="/images/mosque_illustration.svg"
                                 src={heroLogo}
                                 alt="Ilustrasi Masjid"
-                                className="h-auto w-full max-w-md"
+                                className="h-auto w-full max-w-lg"
                             />
                         </motion.div>
                     </div>
@@ -257,7 +255,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
             </section>
 
             {/* 3. Layanan Section */}
-            <section className="mb-24 bg-white py-16">
+            <section className="bg-white py-24">
                 <div className="container mx-auto max-w-5xl px-6 text-center">
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
@@ -273,7 +271,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, amount: 0.5 }}
                         transition={{ duration: 0.5, delay: 0.1 }}
-                        className="mx-auto mt-4 max-w-2xl text-gray-600"
+                        className="mx-auto mt-4 max-w-2xl text-slate-600"
                     >
                         Platform kami hadir untuk menjembatani niat baik Anda
                         dengan mereka yang membutuhkan, melalui proses yang
@@ -289,7 +287,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                         <motion.div variants={itemVariants}>
                             <Link
                                 href="/bayar-zakat"
-                                className="block h-full transform rounded-xl bg-white p-8 text-left shadow-lg transition-shadow duration-300 hover:-translate-y-2 hover:shadow-2xl"
+                                className="block h-full transform rounded-xl border-t-4 border-green-500 bg-white p-8 text-left shadow-lg transition-shadow duration-300 hover:-translate-y-2 hover:shadow-2xl"
                             >
                                 <div className="inline-block rounded-full bg-green-100 p-4">
                                     <HandHeart className="h-8 w-8 text-green-600" />
@@ -297,7 +295,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                                 <h3 className="mt-4 text-xl font-bold text-gray-800">
                                     Untuk Muzakki
                                 </h3>
-                                <p className="mt-2 text-gray-500">
+                                <p className="mt-2 text-slate-600">
                                     Hitung dan tunaikan zakat Anda dengan mudah
                                     melalui berbagai metode pembayaran yang aman
                                     dan terverifikasi otomatis.
@@ -307,7 +305,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                         <motion.div variants={itemVariants}>
                             <Link
                                 href="/ajukan-bantuan"
-                                className="block h-full transform rounded-xl bg-white p-8 text-left shadow-lg transition-shadow duration-300 hover:-translate-y-2 hover:shadow-2xl"
+                                className="block h-full transform rounded-xl border-t-4 border-green-500 bg-white p-8 text-left shadow-lg transition-shadow duration-300 hover:-translate-y-2 hover:shadow-2xl"
                             >
                                 <div className="inline-block rounded-full bg-green-100 p-4">
                                     <ListChecks className="h-8 w-8 text-green-600" />
@@ -315,7 +313,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                                 <h3 className="mt-4 text-xl font-bold text-gray-800">
                                     Untuk Mustahik
                                 </h3>
-                                <p className="mt-2 text-gray-500">
+                                <p className="mt-2 text-slate-600">
                                     Ajukan permohonan bantuan zakat secara
                                     online. Proses yang adil, transparan, dan
                                     mudah untuk diikuti.
@@ -327,7 +325,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
             </section>
 
             {/* 4. Seksi Testimoni */}
-            <section className="bg-gray-50 py-16">
+            <section className="bg-green-50 py-24">
                 <div className="container mx-auto max-w-7xl px-6 text-center">
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
@@ -455,7 +453,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
             </section>
 
             {/* 6. Seksi FAQ */}
-            <section className="bg-gray-50 py-24">
+            <section className="bg-green-50 py-24">
                 <div className="container mx-auto max-w-4xl px-6">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -484,8 +482,9 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                                 <AccordionItem
                                     key={index}
                                     value={`item-${index + 1}`}
+                                    className="border-green-200"
                                 >
-                                    <AccordionTrigger className="text-left text-lg font-semibold text-gray-800">
+                                    <AccordionTrigger className="text-left text-lg font-semibold text-green-800 hover:no-underline">
                                         {faq.q}
                                     </AccordionTrigger>
                                     <AccordionContent className="text-base text-slate-600">
@@ -499,15 +498,14 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
             </section>
 
             {/* 7. Seksi Final Call to Action */}
-            <section className="relative bg-gradient-to-br from-green-600 to-green-800 py-20 text-white">
-                <div className="absolute inset-0 bg-[url('/images/islamic-pattern.svg')] opacity-10"></div>
-                <div className="relative z-10 container mx-auto max-w-7xl px-6 text-center">
+            <section className="border-t border-gray-100 bg-white py-20">
+                <div className="container mx-auto max-w-7xl px-6 text-center">
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, amount: 0.5 }}
                         transition={{ duration: 0.5 }}
-                        className="text-4xl font-extrabold"
+                        className="text-4xl font-extrabold text-gray-800"
                     >
                         Siap Menjadi Bagian dari Kebaikan?
                     </motion.h2>
@@ -516,7 +514,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, amount: 0.5 }}
                         transition={{ duration: 0.5, delay: 0.1 }}
-                        className="mx-auto mt-4 max-w-2xl text-lg text-green-100"
+                        className="mx-auto mt-4 max-w-2xl text-lg text-slate-600"
                     >
                         Salurkan zakat Anda atau ajukan permohonan bantuan
                         melalui platform kami sekarang juga.
@@ -530,13 +528,13 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                     >
                         <Link
                             href="/bayar-zakat"
-                            className="inline-block transform rounded-lg bg-white px-8 py-3 text-center font-bold text-green-700 transition duration-300 hover:-translate-y-1 hover:bg-gray-200 hover:shadow-lg"
+                            className="inline-block transform rounded-lg bg-green-600 px-8 py-3 text-center font-bold text-white transition duration-300 hover:-translate-y-1 hover:bg-green-700 hover:shadow-lg"
                         >
                             Bayar Zakat Sekarang
                         </Link>
                         <Link
                             href="/ajukan-bantuan"
-                            className="inline-block transform rounded-lg border-2 border-white px-8 py-3 text-center font-bold text-white transition duration-300 hover:-translate-y-1 hover:bg-white hover:text-green-700"
+                            className="inline-block transform rounded-lg border-2 border-green-600 px-8 py-3 text-center font-bold text-green-600 transition duration-300 hover:-translate-y-1 hover:bg-green-600 hover:text-white"
                         >
                             Ajukan Bantuan
                         </Link>

@@ -1,3 +1,4 @@
+import { PublicFooter } from '@/components/public-footer';
 import { PublicHeader } from '@/components/public-header'; // Sesuaikan path jika berbeda
 
 export default function PublicLayout({ children }) {
@@ -5,7 +6,7 @@ export default function PublicLayout({ children }) {
         <div className="min-h-screen bg-white">
             <PublicHeader />
             <main>{children}</main>
-            {/* Anda bisa menambahkan Footer di sini nanti */}
+            <PublicFooter />
         </div>
     );
 }
