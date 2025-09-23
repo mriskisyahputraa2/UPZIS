@@ -110,7 +110,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
 
     return (
         <PublicLayout>
-            <Head title="Selamat Datang di Sistem Informasi Zakat" />
+            <Head title="Beranda" />
 
             {/* 1. Hero Section */}
             <section className="relative overflow-hidden bg-gradient-to-br from-green-600 to-green-800 pt-36 pb-32 text-white">
