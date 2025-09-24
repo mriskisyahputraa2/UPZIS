@@ -15,6 +15,7 @@ class Mustahik extends Model
         'kk_number',
         'address',
         'phone_number',
+        'photo'
     ];
 
     public function permohonans()

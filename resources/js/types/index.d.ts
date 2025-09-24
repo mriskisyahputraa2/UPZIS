@@ -41,3 +41,18 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+interface PageProps {
+    flash?: {
+        success?: string;
+        error?: string;
+    };
+    // ... properti lainnya
+}
+
+interface MustahiksPageProps extends PageProps {
+    mustahiks: {
+        data: Mustahik[];
+        links: any[];
+    };
+}
