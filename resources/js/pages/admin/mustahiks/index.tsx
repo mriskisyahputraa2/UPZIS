@@ -1,5 +1,32 @@
+// resources/js/Pages/Admin/Mustahiks/Index.jsx
+
+// import { PaginationComponent } from '@/components/pagination';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { Pagination } from '@/components/ui/pagination';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -9,75 +36,125 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type PageProps } from '@/types';
-import { Head, Link } from '@inertiajs/react';
-import { FilePen, PlusCircle, Trash2 } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { Ellipsis, FilePen, PlusCircle, Search, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
-// Tipe data untuk prop mustahiks (sesuaikan jika perlu)
-interface Mustahik {
-    id: number;
-    name: string;
-    nik: string;
-    phone_number: string;
-    address: string;
-    photo: string | null; // Tambahkan photo
-}
-
-interface MustahiksPageProps extends PageProps {
-    mustahiks: {
-        data: Mustahik[];
-        links: any[]; // Tipe untuk links dari paginator Laravel
-        from: number;
-    };
-}
-
-// Definisikan breadcrumbs untuk halaman ini
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/admin/dashboard' },
+const breadcrumbs = [
+    { title: 'Dashboard', href: '/dashboard' },
     { title: 'Manajemen Mustahik', href: '/admin/mustahiks' },
 ];
 
-export default function Index({ mustahiks, flash }: MustahiksPageProps) {
+export default function Index({ mustahiks, flash, filters }) {
+    const [search, setSearch] = useState(filters.search || '');
+    const [deleteId, setDeleteId] = useState(null);
+    const isInitialMount = useRef(true);
+
+    useEffect(() => {
+        // Jangan jalankan efek pada saat komponen pertama kali dimuat
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+
+        const timeout = setTimeout(() => {
+            router.get(
+                '/admin/mustahiks',
+                { search: search, per_page: filters.per_page },
+                { preserveState: true, replace: true },
+            );
+        }, 500);
+
+        return () => clearTimeout(timeout);
+    }, [search]);
+
+    // Fungsi untuk mengubah jumlah data per halaman
+    const handlePerPageChange = (perPage) => {
+        router.get(
+            '/admin/mustahiks',
+            { search: filters.search, per_page: perPage },
+            { preserveState: true, replace: true },
+        );
+    };
+
+    // Fungsi untuk menghapus data
+    const handleDelete = () => {
+        if (deleteId) {
+            router.delete(`/admin/mustahiks/${deleteId}`, {
+                onSuccess: () =>
+                    toast.success('Data mustahik berhasil dihapus!'),
+                onError: () => toast.error('Gagal menghapus data.'),
+                onFinish: () => setDeleteId(null),
+                preserveScroll: true,
+            });
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Manajemen Mustahik" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold">Data Mustahik</h1>
-                        <p className="text-gray-500">
-                            Daftar semua calon penerima manfaat yang terdaftar.
-                        </p>
-                    </div>
+                    <h1 className="text-2xl font-bold">Daftar Mustahik</h1>
                     <Link href="/admin/mustahiks/create">
                         <Button>
                             <PlusCircle className="mr-2 h-4 w-4" />
-                            Tambah Data
+                            Tambah Mustahik
                         </Button>
                     </Link>
                 </div>
 
-                {/* Tampilkan notifikasi flash message jika ada */}
-                {flash?.success && (
-                    <div
-                        className="mb-4 rounded-lg bg-green-100 p-4 text-sm text-green-700"
-                        role="alert"
-                    >
-                        {flash.success}
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
+                        <div className="relative w-full max-w-xs">
+                            <Input
+                                type="search"
+                                placeholder="Cari nama atau NIK..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="pl-9"
+                            />
+                            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        </div>
+                        <Select
+                            onValueChange={handlePerPageChange}
+                            defaultValue={filters.per_page || '5'}
+                        >
+                            <SelectTrigger className="w-[120px]">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="5">5 Data</SelectItem>
+                                <SelectItem value="10">10 Data</SelectItem>
+                                <SelectItem value="20">20 Data</SelectItem>
+                                <SelectItem value="50">50 Data</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
-                )}
+                </div>
 
-                <div className="overflow-hidden rounded-xl border border-sidebar-border/70">
+                <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
                     <Table>
-                        <TableHeader>
+                        <TableHeader className="bg-gray-50 uppercase dark:bg-gray-800">
                             <TableRow>
-                                <TableHead className="w-[50px]">No.</TableHead>
-                                <TableHead>Foto</TableHead>
-                                <TableHead>Nama Lengkap</TableHead>
-                                <TableHead>NIK</TableHead>
-                                <TableHead>No. Telepon</TableHead>
-                                <TableHead className="w-[100px] text-right">
+                                <TableHead className="w-[50px] font-bold">
+                                    No.
+                                </TableHead>
+                                <TableHead className="font-bold">
+                                    Foto
+                                </TableHead>
+                                <TableHead className="font-bold">
+                                    Nama Lengkap
+                                </TableHead>
+                                <TableHead className="font-bold">
+                                    Nomor Induk Kependudukan
+                                </TableHead>
+                                <TableHead className="font-bold">
+                                    No. Telepon
+                                </TableHead>
+                                <TableHead className="w-[100px] text-right font-bold">
                                     Aksi
                                 </TableHead>
                             </TableRow>
@@ -85,7 +162,10 @@ export default function Index({ mustahiks, flash }: MustahiksPageProps) {
                         <TableBody>
                             {mustahiks.data.length > 0 ? (
                                 mustahiks.data.map((mustahik, index) => (
-                                    <TableRow key={mustahik.id}>
+                                    <TableRow
+                                        key={mustahik.id}
+                                        className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50"
+                                    >
                                         <TableCell>
                                             {mustahiks.from + index}
                                         </TableCell>
@@ -98,10 +178,8 @@ export default function Index({ mustahiks, flash }: MustahiksPageProps) {
                                                     loading="lazy"
                                                 />
                                             ) : (
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
-                                                    <span className="text-sm text-gray-500">
-                                                        No Photo
-                                                    </span>
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-xs text-gray-500">
+                                                    No Img
                                                 </div>
                                             )}
                                         </TableCell>
@@ -113,35 +191,37 @@ export default function Index({ mustahiks, flash }: MustahiksPageProps) {
                                             {mustahik.phone_number || '-'}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <div className="flex justify-end space-x-2">
-                                                <Link
-                                                    href={`/admin/mustahiks/${mustahik.id}/edit`}
-                                                >
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
                                                     <Button
-                                                        variant="outline"
                                                         size="icon"
+                                                        variant="ghost"
                                                     >
-                                                        <FilePen className="h-4 w-4" />
+                                                        <Ellipsis className="h-4 w-4" />
                                                     </Button>
-                                                </Link>
-                                                <Link
-                                                    href={`/admin/mustahiks/${mustahik.id}`}
-                                                    method="delete"
-                                                    as="button"
-                                                    onBefore={() =>
-                                                        confirm(
-                                                            'Apakah Anda yakin ingin menghapus data ini?',
-                                                        )
-                                                    }
-                                                >
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="icon"
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuItem asChild>
+                                                        <Link
+                                                            href={`/admin/mustahiks/${mustahik.id}/edit`}
+                                                        >
+                                                            <FilePen className="mr-2 h-4 w-4" />{' '}
+                                                            Edit
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        className="text-red-600 focus:bg-red-50 focus:text-red-600"
+                                                        onClick={() =>
+                                                            setDeleteId(
+                                                                mustahik.id,
+                                                            )
+                                                        }
                                                     >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </Link>
-                                            </div>
+                                                        <Trash2 className="mr-2 h-4 w-4" />{' '}
+                                                        Hapus
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -151,7 +231,7 @@ export default function Index({ mustahiks, flash }: MustahiksPageProps) {
                                         colSpan={6}
                                         className="h-24 text-center"
                                     >
-                                        Tidak ada data.
+                                        Tidak ada data ditemukan.
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -159,9 +239,34 @@ export default function Index({ mustahiks, flash }: MustahiksPageProps) {
                     </Table>
                 </div>
 
-                {/* Tampilkan Paginasi */}
                 <Pagination links={mustahiks.links} />
             </div>
+
+            <AlertDialog
+                open={!!deleteId}
+                onOpenChange={() => setDeleteId(null)}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Tindakan ini akan menghapus data mustahik secara
+                            permanen dan tidak dapat dibatalkan.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setDeleteId(null)}>
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            Hapus
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </AppLayout>
     );
 }

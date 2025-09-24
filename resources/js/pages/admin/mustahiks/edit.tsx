@@ -55,7 +55,8 @@ export default function Edit({
         phone_number: mustahik.phone_number || '',
         address: mustahik.address || '',
         kk_number: mustahik.kk_number || '',
-        photo: null as File | null,
+        // photo: null as File | null,
+        photo: null,
         remove_photo: false,
         _method: 'PUT',
     });
@@ -89,6 +90,9 @@ export default function Edit({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        // post(`/admin/mustahiks/${mustahik.id}`, {
+        //     forceFormData: true,
+        // });
         post(`/admin/mustahiks/${mustahik.id}`, {
             forceFormData: true,
         });
@@ -213,11 +217,14 @@ export default function Edit({
                                         }
                                         placeholder="Masukkan 16 digit NIK"
                                         maxLength={16}
-                                        showCharCount
                                         className={
                                             errors.nik ? 'border-red-500' : ''
                                         }
                                     />
+                                    {/* --- PERBAIKAN POSISI COUNTER DI SINI --- */}
+                                    <p className="text-left text-xs text-gray-500">
+                                        {data.nik.length}/16
+                                    </p>
                                     {errors.nik && (
                                         <p className="text-sm text-red-500">
                                             {errors.nik}
@@ -266,13 +273,16 @@ export default function Edit({
                                         }
                                         placeholder="Masukkan 16 digit nomor KK"
                                         maxLength={16}
-                                        showCharCount
                                         className={
                                             errors.kk_number
                                                 ? 'border-red-500'
                                                 : ''
                                         }
                                     />
+                                    {/* --- TAMBAHKAN CHARACTER COUNTER DI SINI --- */}
+                                    <p className="text-left text-xs text-gray-500">
+                                        {data.kk_number.length}/16
+                                    </p>
                                     {errors.kk_number && (
                                         <p className="text-sm text-red-500">
                                             {errors.kk_number}
