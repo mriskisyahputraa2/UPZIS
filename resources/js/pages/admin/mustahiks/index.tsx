@@ -190,7 +190,7 @@ export default function Index({ mustahiks, filters }) {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="overflow-hidden rounded-md border">
+                    <div className="overflow-hidden rounded-md border uppercase">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -198,7 +198,9 @@ export default function Index({ mustahiks, filters }) {
                                         No.
                                     </TableHead>
                                     <TableHead>Nama Lengkap</TableHead>
-                                    <TableHead>NIK</TableHead>
+                                    <TableHead>
+                                        Nomor Induk Kependudukan
+                                    </TableHead>
                                     <TableHead>No. Telepon</TableHead>
                                     <TableHead className="w-[100px] text-right">
                                         Aksi

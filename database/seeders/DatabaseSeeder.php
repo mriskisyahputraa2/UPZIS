@@ -28,6 +28,9 @@ class DatabaseSeeder extends Seeder
             SuperadminSeeder::class,
             SettingsSeeder::class,
             JenisZakatSeeder::class,
+            PeriodeSeeder::class,
+            MustahikSeeder::class,
+            PermohonanSeeder::class,
         ]);
     }
 }

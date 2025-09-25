@@ -12,7 +12,7 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Users } from 'lucide-react';
+import { FileText, LayoutGrid, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -21,10 +21,17 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
+
     {
         title: 'Manajement Mustahik',
         href: '/admin/mustahiks', // URL dari Route::resource
         icon: Users,
+    },
+
+    {
+        title: 'Manajemen Permohonan',
+        href: '/admin/permohonan',
+        icon: FileText,
     },
 ];
 

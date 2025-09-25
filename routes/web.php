@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MustahikController;
+use App\Http\Controllers\Admin\PermohonanController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\PermohonanBantuanController;
 use Illuminate\Support\Facades\Route;
@@ -41,13 +42,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 */
 Route::middleware(['auth', 'verified', 'role:admin,superadmin'])->prefix('admin')->name('admin.')->group(function () {
 
-    // Rute Dashboard Admin
-    // Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
     // Rute untuk Manajemen Mustahik (CRUD)
     Route::resource('mustahiks', MustahikController::class);
 
-    // Rute untuk fitur admin lainnya akan ditambahkan di sini
+    // Rute ini untuk menampilkan daftar permohonan, detail, dan mengubah statusnya.
+    Route::resource('permohonan', PermohonanController::class)->only(['index', 'show', 'update']);
+    Route::post('permohonan/bulk-update-status', [PermohonanController::class, 'bulkUpdateStatus'])->name('permohonan.bulkUpdateStatus');
 });
 
 
