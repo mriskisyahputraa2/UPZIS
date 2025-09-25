@@ -112,7 +112,16 @@ class MustahikController extends Controller
     // Menghapus data mustahik dari database
     public function destroy(Mustahik $mustahik)
     {
+        // $mustahik->delete();
+        // return redirect()->route('admin.mustahiks.index')->with('success', 'Data Mustahik berhasil dihapus.');
+        // TAMBAHAN: Hapus foto dari storage jika ada sebelum menghapus record
+        if ($mustahik->photo) {
+            Storage::disk('public')->delete($mustahik->photo);
+        }
+
+        // Hapus record dari database
         $mustahik->delete();
+
         return redirect()->route('admin.mustahiks.index')->with('success', 'Data Mustahik berhasil dihapus.');
     }
 }

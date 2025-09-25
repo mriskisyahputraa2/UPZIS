@@ -1,6 +1,5 @@
 // resources/js/Pages/Admin/Mustahiks/Index.jsx
 
-// import { PaginationComponent } from '@/components/pagination';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -11,7 +10,15 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -19,7 +26,14 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Pagination } from '@/components/ui/pagination';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
 import {
     Select,
     SelectContent,
@@ -27,6 +41,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -46,35 +61,70 @@ const breadcrumbs = [
     { title: 'Manajemen Mustahik', href: '/admin/mustahiks' },
 ];
 
-export default function Index({ mustahiks, flash, filters }) {
+// Helper function untuk mendapatkan inisial nama
+const getInitials = (name) => {
+    if (!name) return '??';
+    const names = name.split(' ');
+    if (names.length === 1) return names[0].substring(0, 2).toUpperCase();
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+};
+
+export default function Index({ mustahiks, filters }) {
+    // State lokal untuk input, diinisialisasi dari props
     const [search, setSearch] = useState(filters.search || '');
     const [deleteId, setDeleteId] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Tandai render pertama kali untuk mencegah useEffect berjalan
     const isInitialMount = useRef(true);
 
+    // EFEK #1: Memicu pencarian saat pengguna mengetik (dengan debounce)
     useEffect(() => {
-        // Jangan jalankan efek pada saat komponen pertama kali dimuat
+        // Jangan jalankan apa pun saat komponen pertama kali dimuat
         if (isInitialMount.current) {
             isInitialMount.current = false;
             return;
         }
 
-        const timeout = setTimeout(() => {
+        // Mulai loading spinner saat pengguna mulai mengetik
+        setIsLoading(true);
+
+        // Atur timer untuk debounce
+        const handler = setTimeout(() => {
             router.get(
                 '/admin/mustahiks',
                 { search: search, per_page: filters.per_page },
-                { preserveState: true, replace: true },
+                {
+                    preserveState: true,
+                    replace: true, // replace agar tidak menumpuk history browser
+                    onFinish: () => setIsLoading(false),
+                },
             );
-        }, 500);
+        }, 500); // Jeda 500ms sebelum request
 
-        return () => clearTimeout(timeout);
-    }, [search]);
+        // Fungsi cleanup: batalkan timer jika user mengetik lagi
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [search]); // Dependency hanya 'search'
+
+    // EFEK #2: Sinkronisasi state lokal jika props dari server berubah
+    // Ini penting untuk tombol back/forward browser
+    useEffect(() => {
+        setSearch(filters.search || '');
+    }, [filters.search]);
 
     // Fungsi untuk mengubah jumlah data per halaman
     const handlePerPageChange = (perPage) => {
+        setIsLoading(true);
         router.get(
             '/admin/mustahiks',
             { search: filters.search, per_page: perPage },
-            { preserveState: true, replace: true },
+            {
+                preserveState: true,
+                replace: true,
+                onFinish: () => setIsLoading(false),
+            },
         );
     };
 
@@ -95,19 +145,20 @@ export default function Index({ mustahiks, flash, filters }) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Manajemen Mustahik" />
 
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Daftar Mustahik</h1>
-                    <Link href="/admin/mustahiks/create">
-                        <Button>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Tambah Mustahik
-                        </Button>
-                    </Link>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-2">
+            <Card className="h-full">
+                <CardHeader>
+                    <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+                        <CardTitle>Daftar Mustahik</CardTitle>
+                        <Link href="/admin/mustahiks/create">
+                            <Button className="text-white">
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Tambah Mustahik
+                            </Button>
+                        </Link>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-between gap-2 pb-4">
                         <div className="relative w-full max-w-xs">
                             <Input
                                 type="search"
@@ -133,114 +184,197 @@ export default function Index({ mustahiks, flash, filters }) {
                             </SelectContent>
                         </Select>
                     </div>
-                </div>
-
-                <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
-                    <Table>
-                        <TableHeader className="bg-gray-50 uppercase dark:bg-gray-800">
-                            <TableRow>
-                                <TableHead className="w-[50px] font-bold">
-                                    No.
-                                </TableHead>
-                                <TableHead className="font-bold">
-                                    Foto
-                                </TableHead>
-                                <TableHead className="font-bold">
-                                    Nama Lengkap
-                                </TableHead>
-                                <TableHead className="font-bold">
-                                    Nomor Induk Kependudukan
-                                </TableHead>
-                                <TableHead className="font-bold">
-                                    No. Telepon
-                                </TableHead>
-                                <TableHead className="w-[100px] text-right font-bold">
-                                    Aksi
-                                </TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {mustahiks.data.length > 0 ? (
-                                mustahiks.data.map((mustahik, index) => (
-                                    <TableRow
-                                        key={mustahik.id}
-                                        className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50"
-                                    >
-                                        <TableCell>
-                                            {mustahiks.from + index}
-                                        </TableCell>
-                                        <TableCell>
-                                            {mustahik.photo ? (
-                                                <img
-                                                    src={`/storage/${mustahik.photo}`}
-                                                    alt={mustahik.name}
-                                                    className="h-10 w-10 rounded-full object-cover"
-                                                    loading="lazy"
-                                                />
-                                            ) : (
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-xs text-gray-500">
-                                                    No Img
+                    <div className="overflow-hidden rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[50px]">
+                                        No.
+                                    </TableHead>
+                                    <TableHead>Nama Lengkap</TableHead>
+                                    <TableHead>NIK</TableHead>
+                                    <TableHead>No. Telepon</TableHead>
+                                    <TableHead className="w-[100px] text-right">
+                                        Aksi
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading ? (
+                                    // Skeleton Loading
+                                    Array.from({ length: 5 }).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell>
+                                                <Skeleton className="h-5 w-5 rounded" />
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <Skeleton className="h-10 w-10 rounded-full" />
+                                                    <Skeleton className="h-5 w-32 rounded" />
                                                 </div>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="font-medium">
-                                            {mustahik.name}
-                                        </TableCell>
-                                        <TableCell>{mustahik.nik}</TableCell>
-                                        <TableCell>
-                                            {mustahik.phone_number || '-'}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
+                                            </TableCell>
+                                            <TableCell>
+                                                <Skeleton className="h-5 w-40 rounded" />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Skeleton className="h-5 w-28 rounded" />
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Skeleton className="ml-auto h-8 w-8 rounded" />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : mustahiks.data.length > 0 ? (
+                                    mustahiks.data.map((mustahik, index) => (
+                                        <TableRow key={mustahik.id}>
+                                            <TableCell className="font-medium">
+                                                {mustahiks.from + index}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar>
+                                                        <AvatarImage
+                                                            src={
+                                                                mustahik.photo
+                                                                    ? `/storage/${mustahik.photo}`
+                                                                    : ''
+                                                            }
+                                                            alt={mustahik.name}
+                                                        />
+                                                        <AvatarFallback>
+                                                            {getInitials(
+                                                                mustahik.name,
+                                                            )}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="font-medium">
+                                                        {mustahik.name}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                {mustahik.nik}
+                                            </TableCell>
+                                            <TableCell>
+                                                {mustahik.phone_number || '-'}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger
+                                                        asChild
                                                     >
-                                                        <Ellipsis className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent>
-                                                    <DropdownMenuItem asChild>
-                                                        <Link
-                                                            href={`/admin/mustahiks/${mustahik.id}/edit`}
+                                                        <Button
+                                                            size="icon"
+                                                            variant="ghost"
                                                         >
-                                                            <FilePen className="mr-2 h-4 w-4" />{' '}
-                                                            Edit
-                                                        </Link>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        className="text-red-600 focus:bg-red-50 focus:text-red-600"
-                                                        onClick={() =>
-                                                            setDeleteId(
-                                                                mustahik.id,
-                                                            )
-                                                        }
-                                                    >
-                                                        <Trash2 className="mr-2 h-4 w-4" />{' '}
-                                                        Hapus
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                                            <Ellipsis className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem
+                                                            asChild
+                                                        >
+                                                            <Link
+                                                                href={`/admin/mustahiks/${mustahik.id}/edit`}
+                                                            >
+                                                                <FilePen className="mr-2 h-4 w-4" />
+                                                                Edit
+                                                            </Link>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            className="text-red-600 focus:text-red-600"
+                                                            onClick={() =>
+                                                                setDeleteId(
+                                                                    mustahik.id,
+                                                                )
+                                                            }
+                                                        >
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Hapus
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={5}
+                                            className="h-24 text-center"
+                                        >
+                                            Tidak ada data ditemukan.
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell
-                                        colSpan={6}
-                                        className="h-24 text-center"
-                                    >
-                                        Tidak ada data ditemukan.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
-
-                <Pagination links={mustahiks.links} />
-            </div>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+                <CardFooter className="flex flex-col items-center justify-between gap-4 md:flex-row">
+                    <div className="text-sm text-muted-foreground">
+                        Menampilkan{' '}
+                        <span className="font-semibold">
+                            {mustahiks.from || 0}
+                        </span>{' '}
+                        -{' '}
+                        <span className="font-semibold">
+                            {mustahiks.to || 0}
+                        </span>{' '}
+                        dari{' '}
+                        <span className="font-semibold">
+                            {mustahiks.total || 0}
+                        </span>{' '}
+                        hasil
+                    </div>
+                    <Pagination>
+                        <PaginationContent>
+                            {/* ======================================================= */}
+                            {/* LOGIKA PAGINATION BARU UNTUK TAMPILAN KONSISTEN         */}
+                            {/* ======================================================= */}
+                            {mustahiks.links.map((link, index) => {
+                                // Render tombol "Previous"
+                                if (link.label.includes('Previous')) {
+                                    return (
+                                        <PaginationItem key={index}>
+                                            <PaginationPrevious
+                                                href={link.url}
+                                                preserveScroll
+                                                preserveState
+                                            />
+                                        </PaginationItem>
+                                    );
+                                }
+                                // Render tombol "Next"
+                                if (link.label.includes('Next')) {
+                                    return (
+                                        <PaginationItem key={index}>
+                                            <PaginationNext
+                                                href={link.url}
+                                                preserveScroll
+                                                preserveState
+                                            />
+                                        </PaginationItem>
+                                    );
+                                }
+                                // Render tombol angka
+                                return (
+                                    <PaginationItem key={index}>
+                                        <PaginationLink
+                                            href={link.url}
+                                            isActive={link.active}
+                                            preserveScroll
+                                            preserveState
+                                        >
+                                            {link.label}
+                                        </PaginationLink>
+                                    </PaginationItem>
+                                );
+                            })}
+                        </PaginationContent>
+                    </Pagination>
+                </CardFooter>
+            </Card>
 
             <AlertDialog
                 open={!!deleteId}
