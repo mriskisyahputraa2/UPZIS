@@ -1,4 +1,4 @@
-// resources/js/Pages/Admin/Mustahiks/Index.jsx
+// resources/js/Pages/Admin/Mustahiks/Index.jsx (Perbaikan Final)
 
 import {
     AlertDialog,
@@ -51,9 +51,16 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, router } from '@inertiajs/react';
-import { Ellipsis, FilePen, PlusCircle, Search, Trash2 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import {
+    Ellipsis,
+    Eye,
+    FilePen,
+    PlusCircle,
+    Search,
+    Trash2,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react'; // ## 1. TAMBAHKAN `useRef`
 import { toast } from 'sonner';
 
 const breadcrumbs = [
@@ -61,7 +68,6 @@ const breadcrumbs = [
     { title: 'Manajemen Mustahik', href: '/admin/mustahiks' },
 ];
 
-// Helper function untuk mendapatkan inisial nama
 const getInitials = (name) => {
     if (!name) return '??';
     const names = name.split(' ');
@@ -70,51 +76,53 @@ const getInitials = (name) => {
 };
 
 export default function Index({ mustahiks, filters }) {
-    // State lokal untuk input, diinisialisasi dari props
+    const { flash } = usePage().props;
+    console.log('Flash props:', flash);
+
     const [search, setSearch] = useState(filters.search || '');
     const [deleteId, setDeleteId] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Tandai render pertama kali untuk mencegah useEffect berjalan
+    // ## 2. BUAT "PENANDA" UNTUK RENDER PERTAMA KALI ##
     const isInitialMount = useRef(true);
 
-    // EFEK #1: Memicu pencarian saat pengguna mengetik (dengan debounce)
+    // useEffect untuk Toast (Sudah Benar)
     useEffect(() => {
-        // Jangan jalankan apa pun saat komponen pertama kali dimuat
+        if (flash && flash.success) {
+            toast.success(flash.success);
+        }
+        if (flash && flash.error) {
+            toast.error(flash.error);
+        }
+    }, [flash]);
+
+    // ## 3. TULIS ULANG useEffect UNTUK PENCARIAN ##
+    useEffect(() => {
+        // Jika ini adalah render pertama, jangan lakukan apa-apa.
+        // Cukup ubah penanda menjadi false dan keluar dari fungsi.
         if (isInitialMount.current) {
             isInitialMount.current = false;
             return;
         }
 
-        // Mulai loading spinner saat pengguna mulai mengetik
-        setIsLoading(true);
-
-        // Atur timer untuk debounce
-        const handler = setTimeout(() => {
+        // Kode di bawah ini HANYA akan berjalan setelah render pertama
+        // (yaitu, ketika pengguna benar-benar mengetik di input search)
+        const timeout = setTimeout(() => {
+            setIsLoading(true);
             router.get(
                 '/admin/mustahiks',
-                { search: search, per_page: filters.per_page },
+                { search, per_page: filters.per_page },
                 {
                     preserveState: true,
-                    replace: true, // replace agar tidak menumpuk history browser
+                    replace: true,
                     onFinish: () => setIsLoading(false),
                 },
             );
-        }, 500); // Jeda 500ms sebelum request
+        }, 500);
 
-        // Fungsi cleanup: batalkan timer jika user mengetik lagi
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [search]); // Dependency hanya 'search'
+        return () => clearTimeout(timeout);
+    }, [search]); // <-- Dependensi sekarang HANYA `search`
 
-    // EFEK #2: Sinkronisasi state lokal jika props dari server berubah
-    // Ini penting untuk tombol back/forward browser
-    useEffect(() => {
-        setSearch(filters.search || '');
-    }, [filters.search]);
-
-    // Fungsi untuk mengubah jumlah data per halaman
     const handlePerPageChange = (perPage) => {
         setIsLoading(true);
         router.get(
@@ -128,12 +136,9 @@ export default function Index({ mustahiks, filters }) {
         );
     };
 
-    // Fungsi untuk menghapus data
     const handleDelete = () => {
         if (deleteId) {
             router.delete(`/admin/mustahiks/${deleteId}`, {
-                onSuccess: () =>
-                    toast.success('Data mustahik berhasil dihapus!'),
                 onError: () => toast.error('Gagal menghapus data.'),
                 onFinish: () => setDeleteId(null),
                 preserveScroll: true,
@@ -145,12 +150,13 @@ export default function Index({ mustahiks, filters }) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Manajemen Mustahik" />
 
-            <Card className="h-full">
+            <Card>
+                {/* ... Sisa kode JSX di sini tidak ada yang berubah sama sekali ... */}
                 <CardHeader>
                     <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
                         <CardTitle>Daftar Mustahik</CardTitle>
                         <Link href="/admin/mustahiks/create">
-                            <Button className="text-white">
+                            <Button>
                                 <PlusCircle className="mr-2 h-4 w-4" />
                                 Tambah Mustahik
                             </Button>
@@ -171,7 +177,7 @@ export default function Index({ mustahiks, filters }) {
                         </div>
                         <Select
                             onValueChange={handlePerPageChange}
-                            defaultValue={filters.per_page || '5'}
+                            defaultValue={String(filters.per_page || '5')}
                         >
                             <SelectTrigger className="w-[120px]">
                                 <SelectValue />
@@ -201,8 +207,9 @@ export default function Index({ mustahiks, filters }) {
                             </TableHeader>
                             <TableBody>
                                 {isLoading ? (
-                                    // Skeleton Loading
-                                    Array.from({ length: 5 }).map((_, i) => (
+                                    Array.from({
+                                        length: filters.per_page || 5,
+                                    }).map((_, i) => (
                                         <TableRow key={i}>
                                             <TableCell>
                                                 <Skeleton className="h-5 w-5 rounded" />
@@ -275,6 +282,16 @@ export default function Index({ mustahiks, filters }) {
                                                             asChild
                                                         >
                                                             <Link
+                                                                href={`/admin/mustahiks/${mustahik.id}`}
+                                                            >
+                                                                <Eye className="mr-2 h-4 w-4" />
+                                                                Detail
+                                                            </Link>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            asChild
+                                                        >
+                                                            <Link
                                                                 href={`/admin/mustahiks/${mustahik.id}/edit`}
                                                             >
                                                                 <FilePen className="mr-2 h-4 w-4" />
@@ -329,11 +346,7 @@ export default function Index({ mustahiks, filters }) {
                     </div>
                     <Pagination>
                         <PaginationContent>
-                            {/* ======================================================= */}
-                            {/* LOGIKA PAGINATION BARU UNTUK TAMPILAN KONSISTEN         */}
-                            {/* ======================================================= */}
                             {mustahiks.links.map((link, index) => {
-                                // Render tombol "Previous"
                                 if (link.label.includes('Previous')) {
                                     return (
                                         <PaginationItem key={index}>
@@ -345,7 +358,6 @@ export default function Index({ mustahiks, filters }) {
                                         </PaginationItem>
                                     );
                                 }
-                                // Render tombol "Next"
                                 if (link.label.includes('Next')) {
                                     return (
                                         <PaginationItem key={index}>
@@ -357,7 +369,6 @@ export default function Index({ mustahiks, filters }) {
                                         </PaginationItem>
                                     );
                                 }
-                                // Render tombol angka
                                 return (
                                     <PaginationItem key={index}>
                                         <PaginationLink
@@ -394,7 +405,7 @@ export default function Index({ mustahiks, filters }) {
                         </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleDelete}
-                            className="bg-red-600 hover:bg-red-700"
+                            className="bg-red-600 text-white hover:bg-red-700"
                         >
                             Hapus
                         </AlertDialogAction>

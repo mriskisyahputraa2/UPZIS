@@ -124,4 +124,11 @@ class MustahikController extends Controller
 
         return redirect()->route('admin.mustahiks.index')->with('success', 'Data Mustahik berhasil dihapus.');
     }
+
+    public function show(Mustahik $mustahik)
+    {
+        return Inertia::render('admin/mustahiks/show', [
+            'mustahik' => $mustahik,
+        ]);
+    }
 }
