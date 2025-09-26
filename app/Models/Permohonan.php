@@ -20,6 +20,7 @@ class Permohonan extends Model
         'file_kk',
         'file_khs',
         'notes_admin',
+        'photo',
     ];
 
     public function mustahik()

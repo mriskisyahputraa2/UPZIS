@@ -1,6 +1,3 @@
-// resources/js/Pages/Admin/Permohonan/Index.jsx
-
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -10,6 +7,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import {
     Pagination,
@@ -35,33 +33,47 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, router } from '@inertiajs/react';
-import { Eye, Search } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { CheckCircle, Eye, FileText, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/admin/dashboard' },
     { title: 'Manajemen Permohonan' },
 ];
 
-const getStatusBadgeColor = (status) => {
+// Fungsi untuk styling <SelectTrigger> berdasarkan status
+const getStatusTriggerClass = (status) => {
     switch (status) {
         case 'Baru':
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300';
+            return 'border-blue-500 bg-blue-50 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300';
         case 'Diverifikasi':
-            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
+            return 'border-yellow-500 bg-yellow-50 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
         case 'Disetujui':
-            return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
+            return 'border-green-500 bg-green-50 text-green-800 dark:bg-green-900/50 dark:text-green-300';
         case 'Ditolak':
-            return 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
+            return 'border-red-500 bg-red-50 text-red-800 dark:bg-red-900/50 dark:text-red-300';
         default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-300';
+            return '';
     }
 };
 
 export default function Index({ permohonans, filters }) {
+    const { flash } = usePage().props;
     const [search, setSearch] = useState(filters.search || '');
+    const [selectedRows, setSelectedRows] = useState([]);
+    const [bulkStatus, setBulkStatus] = useState('');
     const isInitialMount = useRef(true);
+
+    useEffect(() => {
+        if (flash && flash.success) {
+            toast.success(flash.success);
+        }
+        if (flash && flash.error) {
+            toast.error(flash.error);
+        }
+    }, [flash]);
 
     useEffect(() => {
         if (isInitialMount.current) {
@@ -86,37 +98,114 @@ export default function Index({ permohonans, filters }) {
         );
     };
 
+    const handleRowSelect = (id) => {
+        setSelectedRows((prev) =>
+            prev.includes(id)
+                ? prev.filter((rowId) => rowId !== id)
+                : [...prev, id],
+        );
+    };
+
+    const handleSelectAll = (checked) => {
+        setSelectedRows(checked ? permohonans.data.map((p) => p.id) : []);
+    };
+
+    const handleInlineStatusChange = (id, newStatus) => {
+        router.patch(
+            `/admin/permohonan/${id}`,
+            { status: newStatus },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onError: () => toast.error('Gagal memperbarui status.'),
+            },
+        );
+    };
+
+    const handleBulkUpdate = () => {
+        if (selectedRows.length === 0 || !bulkStatus) {
+            toast.error(
+                'Pilih minimal satu permohonan dan tentukan statusnya.',
+            );
+            return;
+        }
+        router.post(
+            `/admin/permohonan/bulk-update-status`,
+            {
+                ids: selectedRows,
+                status: bulkStatus,
+            },
+            {
+                preserveState: false, // <-- Ini kunci untuk auto-refresh
+                onSuccess: () => setSelectedRows([]),
+            },
+        );
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Manajemen Permohonan" />
 
-            <Card>
+            <Card className="flex h-full flex-1 flex-col">
                 <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <CardTitle>Daftar Permohonan Bantuan</CardTitle>
-                    </div>
+                    <CardTitle>Daftar Permohonan Bantuan</CardTitle>
                     <CardDescription>
                         Verifikasi dan kelola semua permohonan bantuan yang
                         masuk.
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="mb-4 flex items-center justify-between">
-                        <div className="relative w-full max-w-xs">
-                            <Input
-                                type="search"
-                                placeholder="Cari nama atau NIK pemohon..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="pl-9"
-                            />
-                            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <CardContent className="flex flex-1 flex-col">
+                    <div className="mb-4 flex flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="flex w-full flex-col items-start gap-2 sm:flex-row sm:items-center">
+                            <div className="relative w-full flex-1 sm:max-w-xs">
+                                <Input
+                                    type="search"
+                                    placeholder="Cari nama atau NIK..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="pl-9"
+                                />
+                                <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            </div>
+                            {selectedRows.length > 0 && (
+                                <>
+                                    <span className="text-sm font-medium text-muted-foreground">
+                                        ({selectedRows.length} dipilih)
+                                    </span>
+                                    <Select onValueChange={setBulkStatus}>
+                                        <SelectTrigger className="w-full sm:w-[180px]">
+                                            <SelectValue placeholder="Ubah Status..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Baru">
+                                                Baru
+                                            </SelectItem>
+                                            <SelectItem value="Diverifikasi">
+                                                Diverifikasi
+                                            </SelectItem>
+                                            <SelectItem value="Disetujui">
+                                                Disetujui
+                                            </SelectItem>
+                                            <SelectItem value="Ditolak">
+                                                Ditolak
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <Button
+                                        onClick={handleBulkUpdate}
+                                        size="sm"
+                                    >
+                                        <CheckCircle className="mr-2 h-4 w-4" />{' '}
+                                        Terapkan
+                                    </Button>
+                                </>
+                            )}
                         </div>
                         <Select
                             onValueChange={handlePerPageChange}
                             defaultValue={String(filters.per_page || '5')}
                         >
-                            <SelectTrigger className="w-[120px]">
+                            <SelectTrigger className="w-full sm:w-[120px]">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -127,17 +216,37 @@ export default function Index({ permohonans, filters }) {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="overflow-hidden rounded-md border uppercase">
+
+                    <div className="flex-1 overflow-auto rounded-md border">
                         <Table>
-                            <TableHeader>
+                            <TableHeader className="uppercase">
                                 <TableRow>
+                                    <TableHead className="w-12 px-4">
+                                        <Checkbox
+                                            checked={
+                                                permohonans.data.length > 0 &&
+                                                selectedRows.length ===
+                                                    permohonans.data.length
+                                            }
+                                            onCheckedChange={handleSelectAll}
+                                            aria-label="Pilih semua"
+                                        />
+                                    </TableHead>
                                     <TableHead className="w-[50px]">
                                         No.
                                     </TableHead>
-                                    <TableHead>Nama Pemohon</TableHead>
-                                    <TableHead>Periode</TableHead>
-                                    <TableHead>Tgl. Pengajuan</TableHead>
-                                    <TableHead>Status</TableHead>
+                                    <TableHead className="min-w-[150px]">
+                                        Nama Pemohon
+                                    </TableHead>
+                                    <TableHead className="min-w-[150px]">
+                                        Periode
+                                    </TableHead>
+                                    <TableHead className="min-w-[120px]">
+                                        Tgl. Pengajuan
+                                    </TableHead>
+                                    <TableHead className="w-48">
+                                        Status
+                                    </TableHead>
                                     <TableHead className="w-[100px] text-right">
                                         Aksi
                                     </TableHead>
@@ -147,7 +256,26 @@ export default function Index({ permohonans, filters }) {
                                 {permohonans.data.length > 0 ? (
                                     permohonans.data.map(
                                         (permohonan, index) => (
-                                            <TableRow key={permohonan.id}>
+                                            <TableRow
+                                                key={permohonan.id}
+                                                data-state={
+                                                    selectedRows.includes(
+                                                        permohonan.id,
+                                                    ) && 'selected'
+                                                }
+                                            >
+                                                <TableCell className="px-4">
+                                                    <Checkbox
+                                                        checked={selectedRows.includes(
+                                                            permohonan.id,
+                                                        )}
+                                                        onCheckedChange={() =>
+                                                            handleRowSelect(
+                                                                permohonan.id,
+                                                            )
+                                                        }
+                                                    />
+                                                </TableCell>
                                                 <TableCell className="font-medium">
                                                     {permohonans.from + index}
                                                 </TableCell>
@@ -165,13 +293,41 @@ export default function Index({ permohonans, filters }) {
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Badge
-                                                        className={getStatusBadgeColor(
-                                                            permohonan.status,
-                                                        )}
+                                                    <Select
+                                                        defaultValue={
+                                                            permohonan.status
+                                                        }
+                                                        onValueChange={(
+                                                            newStatus,
+                                                        ) =>
+                                                            handleInlineStatusChange(
+                                                                permohonan.id,
+                                                                newStatus,
+                                                            )
+                                                        }
                                                     >
-                                                        {permohonan.status}
-                                                    </Badge>
+                                                        <SelectTrigger
+                                                            className={getStatusTriggerClass(
+                                                                permohonan.status,
+                                                            )}
+                                                        >
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="Baru">
+                                                                Baru
+                                                            </SelectItem>
+                                                            <SelectItem value="Diverifikasi">
+                                                                Diverifikasi
+                                                            </SelectItem>
+                                                            <SelectItem value="Disetujui">
+                                                                Disetujui
+                                                            </SelectItem>
+                                                            <SelectItem value="Ditolak">
+                                                                Ditolak
+                                                            </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <Link
@@ -192,10 +348,20 @@ export default function Index({ permohonans, filters }) {
                                 ) : (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={6}
+                                            colSpan={7}
                                             className="h-24 text-center"
                                         >
-                                            Tidak ada data permohonan ditemukan.
+                                            <div className="flex flex-col items-center justify-center gap-4">
+                                                <FileText className="h-16 w-16 text-gray-300 dark:text-gray-700" />
+                                                <h3 className="text-xl font-bold">
+                                                    Belum Ada Permohonan
+                                                </h3>
+                                                <p className="text-gray-500">
+                                                    Saat ini belum ada
+                                                    permohonan bantuan yang
+                                                    masuk.
+                                                </p>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -203,49 +369,42 @@ export default function Index({ permohonans, filters }) {
                         </Table>
                     </div>
                 </CardContent>
-                <CardFooter>
-                    {/* <PaginationComponent meta={permohonans} /> */}
-                    <Pagination>
-                        <PaginationContent>
-                            {permohonans.links.map((link, index) => {
-                                if (link.label.includes('Previous')) {
-                                    return (
-                                        <PaginationItem key={index}>
+                {permohonans.data.length > 0 && (
+                    <CardFooter className="flex-col items-center justify-between gap-4 pt-4 md:flex-row">
+                        <div className="text-sm text-muted-foreground">
+                            Menampilkan <strong>{permohonans.from || 0}</strong>{' '}
+                            - <strong>{permohonans.to || 0}</strong> dari{' '}
+                            <strong>{permohonans.total || 0}</strong> hasil
+                        </div>
+                        <Pagination>
+                            <PaginationContent>
+                                {permohonans.links.map((link, index) => (
+                                    <PaginationItem key={index}>
+                                        {link.label.includes('Previous') ? (
                                             <PaginationPrevious
                                                 href={link.url}
                                                 preserveScroll
-                                                preserveState
                                             />
-                                        </PaginationItem>
-                                    );
-                                }
-                                if (link.label.includes('Next')) {
-                                    return (
-                                        <PaginationItem key={index}>
+                                        ) : link.label.includes('Next') ? (
                                             <PaginationNext
                                                 href={link.url}
                                                 preserveScroll
-                                                preserveState
                                             />
-                                        </PaginationItem>
-                                    );
-                                }
-                                return (
-                                    <PaginationItem key={index}>
-                                        <PaginationLink
-                                            href={link.url}
-                                            isActive={link.active}
-                                            preserveScroll
-                                            preserveState
-                                        >
-                                            {link.label}
-                                        </PaginationLink>
+                                        ) : (
+                                            <PaginationLink
+                                                href={link.url}
+                                                isActive={link.active}
+                                                preserveScroll
+                                            >
+                                                {link.label}
+                                            </PaginationLink>
+                                        )}
                                     </PaginationItem>
-                                );
-                            })}
-                        </PaginationContent>
-                    </Pagination>
-                </CardFooter>
+                                ))}
+                            </PaginationContent>
+                        </Pagination>
+                    </CardFooter>
+                )}
             </Card>
         </AppLayout>
     );

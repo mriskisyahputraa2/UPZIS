@@ -1,5 +1,3 @@
-// resources/js/Pages/Admin/Mustahiks/Index.jsx (Perbaikan Final)
-
 import {
     AlertDialog,
     AlertDialogAction,
@@ -15,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
+    CardDescription,
     CardFooter,
     CardHeader,
     CardTitle,
@@ -41,7 +40,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -59,15 +57,17 @@ import {
     PlusCircle,
     Search,
     Trash2,
+    Users,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react'; // ## 1. TAMBAHKAN `useRef`
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Manajemen Mustahik', href: '/admin/mustahiks' },
+    { title: 'Dashboard', href: '/admin/dashboard' },
+    { title: 'Manajemen Mustahik' },
 ];
 
+// Fungsi untuk mendapatkan inisial nama
 const getInitials = (name) => {
     if (!name) return '??';
     const names = name.split(' ');
@@ -77,16 +77,10 @@ const getInitials = (name) => {
 
 export default function Index({ mustahiks, filters }) {
     const { flash } = usePage().props;
-    console.log('Flash props:', flash);
-
     const [search, setSearch] = useState(filters.search || '');
     const [deleteId, setDeleteId] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
-
-    // ## 2. BUAT "PENANDA" UNTUK RENDER PERTAMA KALI ##
     const isInitialMount = useRef(true);
 
-    // useEffect untuk Toast (Sudah Benar)
     useEffect(() => {
         if (flash && flash.success) {
             toast.success(flash.success);
@@ -96,49 +90,34 @@ export default function Index({ mustahiks, filters }) {
         }
     }, [flash]);
 
-    // ## 3. TULIS ULANG useEffect UNTUK PENCARIAN ##
     useEffect(() => {
-        // Jika ini adalah render pertama, jangan lakukan apa-apa.
-        // Cukup ubah penanda menjadi false dan keluar dari fungsi.
         if (isInitialMount.current) {
             isInitialMount.current = false;
             return;
         }
-
-        // Kode di bawah ini HANYA akan berjalan setelah render pertama
-        // (yaitu, ketika pengguna benar-benar mengetik di input search)
         const timeout = setTimeout(() => {
-            setIsLoading(true);
             router.get(
                 '/admin/mustahiks',
                 { search, per_page: filters.per_page },
-                {
-                    preserveState: true,
-                    replace: true,
-                    onFinish: () => setIsLoading(false),
-                },
+                { preserveState: true, replace: true },
             );
         }, 500);
-
         return () => clearTimeout(timeout);
-    }, [search]); // <-- Dependensi sekarang HANYA `search`
+    }, [search]);
 
     const handlePerPageChange = (perPage) => {
-        setIsLoading(true);
         router.get(
             '/admin/mustahiks',
             { search: filters.search, per_page: perPage },
-            {
-                preserveState: true,
-                replace: true,
-                onFinish: () => setIsLoading(false),
-            },
+            { preserveState: true, replace: true },
         );
     };
 
     const handleDelete = () => {
         if (deleteId) {
             router.delete(`/admin/mustahiks/${deleteId}`, {
+                onSuccess: () =>
+                    toast.success('Data mustahik berhasil dihapus!'),
                 onError: () => toast.error('Gagal menghapus data.'),
                 onFinish: () => setDeleteId(null),
                 preserveScroll: true,
@@ -150,10 +129,9 @@ export default function Index({ mustahiks, filters }) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Manajemen Mustahik" />
 
-            <Card>
-                {/* ... Sisa kode JSX di sini tidak ada yang berubah sama sekali ... */}
+            <Card className="flex h-full flex-1 flex-col">
                 <CardHeader>
-                    <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center justify-between">
                         <CardTitle>Daftar Mustahik</CardTitle>
                         <Link href="/admin/mustahiks/create">
                             <Button>
@@ -162,9 +140,12 @@ export default function Index({ mustahiks, filters }) {
                             </Button>
                         </Link>
                     </div>
+                    <CardDescription>
+                        Kelola data induk semua calon penerima manfaat di sini.
+                    </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-between gap-2 pb-4">
+                <CardContent className="flex flex-1 flex-col">
+                    <div className="mb-4 flex items-center justify-between">
                         <div className="relative w-full max-w-xs">
                             <Input
                                 type="search"
@@ -190,9 +171,9 @@ export default function Index({ mustahiks, filters }) {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="overflow-hidden rounded-md border uppercase">
+                    <div className="flex-1 overflow-auto rounded-md border">
                         <Table>
-                            <TableHeader>
+                            <TableHeader className="font-bold uppercase">
                                 <TableRow>
                                     <TableHead className="w-[50px]">
                                         No.
@@ -208,32 +189,7 @@ export default function Index({ mustahiks, filters }) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {isLoading ? (
-                                    Array.from({
-                                        length: filters.per_page || 5,
-                                    }).map((_, i) => (
-                                        <TableRow key={i}>
-                                            <TableCell>
-                                                <Skeleton className="h-5 w-5 rounded" />
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-3">
-                                                    <Skeleton className="h-10 w-10 rounded-full" />
-                                                    <Skeleton className="h-5 w-32 rounded" />
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Skeleton className="h-5 w-40 rounded" />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Skeleton className="h-5 w-28 rounded" />
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Skeleton className="ml-auto h-8 w-8 rounded" />
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : mustahiks.data.length > 0 ? (
+                                {mustahiks.data.length > 0 ? (
                                     mustahiks.data.map((mustahik, index) => (
                                         <TableRow key={mustahik.id}>
                                             <TableCell className="font-medium">
@@ -295,20 +251,21 @@ export default function Index({ mustahiks, filters }) {
                                                         >
                                                             <Link
                                                                 href={`/admin/mustahiks/${mustahik.id}/edit`}
+                                                                className="cursor-pointer"
                                                             >
-                                                                <FilePen className="mr-2 h-4 w-4" />
+                                                                <FilePen className="mr-2 h-4 w-4" />{' '}
                                                                 Edit
                                                             </Link>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
-                                                            className="text-red-600 focus:text-red-600"
+                                                            className="cursor-pointer text-red-600 focus:text-red-600"
                                                             onClick={() =>
                                                                 setDeleteId(
                                                                     mustahik.id,
                                                                 )
                                                             }
                                                         >
-                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            <Trash2 className="mr-2 h-4 w-4" />{' '}
                                                             Hapus
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>
@@ -322,7 +279,23 @@ export default function Index({ mustahiks, filters }) {
                                             colSpan={5}
                                             className="h-24 text-center"
                                         >
-                                            Tidak ada data ditemukan.
+                                            <div className="flex flex-col items-center justify-center gap-4">
+                                                <Users className="h-16 w-16 text-gray-300 dark:text-gray-700" />
+                                                <h3 className="text-xl font-bold">
+                                                    Belum Ada Data Mustahik
+                                                </h3>
+                                                <p className="text-gray-500">
+                                                    Mulai tambahkan data
+                                                    mustahik baru untuk
+                                                    menampilkannya di sini.
+                                                </p>
+                                                <Link href="/admin/mustahiks/create">
+                                                    <Button className="mt-2">
+                                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                                        Tambah Mustahik Pertama
+                                                    </Button>
+                                                </Link>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -330,63 +303,55 @@ export default function Index({ mustahiks, filters }) {
                         </Table>
                     </div>
                 </CardContent>
-                <CardFooter className="flex flex-col items-center justify-between gap-4 md:flex-row">
-                    <div className="text-sm text-muted-foreground">
-                        Menampilkan{' '}
-                        <span className="font-semibold">
-                            {mustahiks.from || 0}
-                        </span>{' '}
-                        -{' '}
-                        <span className="font-semibold">
-                            {mustahiks.to || 0}
-                        </span>{' '}
-                        dari{' '}
-                        <span className="font-semibold">
-                            {mustahiks.total || 0}
-                        </span>{' '}
-                        hasil
-                    </div>
-                    <Pagination>
-                        <PaginationContent>
-                            {mustahiks.links.map((link, index) => {
-                                if (link.label.includes('Previous')) {
-                                    return (
-                                        <PaginationItem key={index}>
+                {mustahiks.data.length > 0 && (
+                    <CardFooter className="flex flex-col items-center justify-between gap-4 md:flex-row">
+                        <div className="text-sm text-muted-foreground">
+                            Menampilkan{' '}
+                            <span className="font-semibold">
+                                {mustahiks.from || 0}
+                            </span>{' '}
+                            -{' '}
+                            <span className="font-semibold">
+                                {mustahiks.to || 0}
+                            </span>{' '}
+                            dari{' '}
+                            <span className="font-semibold">
+                                {mustahiks.total || 0}
+                            </span>{' '}
+                            hasil
+                        </div>
+                        <Pagination>
+                            <PaginationContent>
+                                {mustahiks.links.map((link, index) => (
+                                    <PaginationItem key={index}>
+                                        {link.label.includes('Previous') ? (
                                             <PaginationPrevious
                                                 href={link.url}
                                                 preserveScroll
                                                 preserveState
                                             />
-                                        </PaginationItem>
-                                    );
-                                }
-                                if (link.label.includes('Next')) {
-                                    return (
-                                        <PaginationItem key={index}>
+                                        ) : link.label.includes('Next') ? (
                                             <PaginationNext
                                                 href={link.url}
                                                 preserveScroll
                                                 preserveState
                                             />
-                                        </PaginationItem>
-                                    );
-                                }
-                                return (
-                                    <PaginationItem key={index}>
-                                        <PaginationLink
-                                            href={link.url}
-                                            isActive={link.active}
-                                            preserveScroll
-                                            preserveState
-                                        >
-                                            {link.label}
-                                        </PaginationLink>
+                                        ) : (
+                                            <PaginationLink
+                                                href={link.url}
+                                                isActive={link.active}
+                                                preserveScroll
+                                                preserveState
+                                            >
+                                                {link.label}
+                                            </PaginationLink>
+                                        )}
                                     </PaginationItem>
-                                );
-                            })}
-                        </PaginationContent>
-                    </Pagination>
-                </CardFooter>
+                                ))}
+                            </PaginationContent>
+                        </Pagination>
+                    </CardFooter>
+                )}
             </Card>
 
             <AlertDialog
@@ -407,7 +372,7 @@ export default function Index({ mustahiks, filters }) {
                         </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleDelete}
-                            className="bg-red-600 text-white hover:bg-red-700"
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
                             Hapus
                         </AlertDialogAction>
