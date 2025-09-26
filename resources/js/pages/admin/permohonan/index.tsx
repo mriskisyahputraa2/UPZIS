@@ -227,7 +227,7 @@ export default function Index({ permohonans, filters }) {
                             </span>
                             <Select onValueChange={setBulkStatus}>
                                 <SelectTrigger className="w-full md:w-[180px]">
-                                    <SelectValue placeholder="Ubah Status Massal..." />
+                                    <SelectValue placeholder="Ubah Status" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="Baru">Baru</SelectItem>
