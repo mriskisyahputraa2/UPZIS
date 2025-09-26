@@ -46,7 +46,7 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])->prefix('admin'
     Route::resource('mustahiks', MustahikController::class);
 
     // Rute ini untuk menampilkan daftar permohonan, detail, dan mengubah statusnya.
-    Route::resource('permohonan', PermohonanController::class)->only(['index', 'show', 'update']);
+    Route::resource('permohonan', PermohonanController::class)->only(['index', 'show', 'update', 'destroy']);
     Route::post('permohonan/bulk-update-status', [PermohonanController::class, 'bulkUpdateStatus'])->name('permohonan.bulkUpdateStatus');
 });
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Permohonan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class PermohonanController extends Controller
@@ -78,5 +79,29 @@ class PermohonanController extends Controller
         Permohonan::whereIn('id', $request->ids)->update(['status' => $request->status]);
 
         return back()->with('success', count($request->ids) . ' status permohonan berhasil diperbarui.');
+    }
+
+    /**
+     * Menghapus data permohonan dari database.
+     */
+    public function destroy(Permohonan $permohonan)
+    {
+        // Hapus file-file terkait dari storage untuk membersihkan server
+        if ($permohonan->photo) {
+            Storage::disk('public')->delete($permohonan->photo);
+        }
+        if ($permohonan->file_ktp) {
+            Storage::disk('public')->delete($permohonan->file_ktp);
+        }
+        if ($permohonan->file_kk) {
+            Storage::disk('public')->delete($permohonan->file_kk);
+        }
+        if ($permohonan->file_khs) {
+            Storage::disk('public')->delete($permohonan->file_khs);
+        }
+
+        $permohonan->delete();
+
+        return redirect()->route('admin.permohonan.index')->with('success', 'Data permohonan berhasil dihapus.');
     }
 }

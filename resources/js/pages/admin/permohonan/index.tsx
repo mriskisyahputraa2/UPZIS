@@ -1,3 +1,13 @@
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -8,6 +18,12 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
     Pagination,
@@ -34,7 +50,14 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { CheckCircle, Eye, FileText, Search } from 'lucide-react';
+import {
+    CheckCircle,
+    Ellipsis,
+    Eye,
+    FileText,
+    Search,
+    Trash2,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -43,7 +66,6 @@ const breadcrumbs = [
     { title: 'Manajemen Permohonan' },
 ];
 
-// Fungsi untuk styling <SelectTrigger> berdasarkan status
 const getStatusTriggerClass = (status) => {
     switch (status) {
         case 'Baru':
@@ -64,6 +86,7 @@ export default function Index({ permohonans, filters }) {
     const [search, setSearch] = useState(filters.search || '');
     const [selectedRows, setSelectedRows] = useState([]);
     const [bulkStatus, setBulkStatus] = useState('');
+    const [deleteTarget, setDeleteTarget] = useState(null);
     const isInitialMount = useRef(true);
 
     useEffect(() => {
@@ -136,10 +159,21 @@ export default function Index({ permohonans, filters }) {
                 status: bulkStatus,
             },
             {
-                preserveState: false, // <-- Ini kunci untuk auto-refresh
+                preserveState: false,
                 onSuccess: () => setSelectedRows([]),
             },
         );
+    };
+
+    const handleDelete = () => {
+        if (!deleteTarget) return;
+
+        router.delete(`/admin/permohonan/${deleteTarget.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setDeleteTarget(null);
+            },
+        });
     };
 
     return (
@@ -155,7 +189,7 @@ export default function Index({ permohonans, filters }) {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-1 flex-col">
-                    <div className="mb-4 flex flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="mb-4 flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
                         <div className="flex w-full flex-col items-start gap-2 sm:flex-row sm:items-center">
                             <div className="relative w-full flex-1 sm:max-w-xs">
                                 <Input
@@ -167,59 +201,57 @@ export default function Index({ permohonans, filters }) {
                                 />
                                 <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             </div>
-                            {selectedRows.length > 0 && (
-                                <>
-                                    <span className="text-sm font-medium text-muted-foreground">
-                                        ({selectedRows.length} dipilih)
-                                    </span>
-                                    <Select onValueChange={setBulkStatus}>
-                                        <SelectTrigger className="w-full sm:w-[180px]">
-                                            <SelectValue placeholder="Ubah Status..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Baru">
-                                                Baru
-                                            </SelectItem>
-                                            <SelectItem value="Diverifikasi">
-                                                Diverifikasi
-                                            </SelectItem>
-                                            <SelectItem value="Disetujui">
-                                                Disetujui
-                                            </SelectItem>
-                                            <SelectItem value="Ditolak">
-                                                Ditolak
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <Button
-                                        onClick={handleBulkUpdate}
-                                        size="sm"
-                                    >
-                                        <CheckCircle className="mr-2 h-4 w-4" />{' '}
-                                        Terapkan
-                                    </Button>
-                                </>
-                            )}
                         </div>
-                        <Select
-                            onValueChange={handlePerPageChange}
-                            defaultValue={String(filters.per_page || '5')}
-                        >
-                            <SelectTrigger className="w-full sm:w-[120px]">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="5">5 Data</SelectItem>
-                                <SelectItem value="10">10 Data</SelectItem>
-                                <SelectItem value="20">20 Data</SelectItem>
-                                <SelectItem value="50">50 Data</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <div className="w-full sm:w-auto">
+                            <Select
+                                onValueChange={handlePerPageChange}
+                                defaultValue={String(filters.per_page || '5')}
+                            >
+                                <SelectTrigger className="w-full sm:w-[120px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="5">5 Data</SelectItem>
+                                    <SelectItem value="10">10 Data</SelectItem>
+                                    <SelectItem value="20">20 Data</SelectItem>
+                                    <SelectItem value="50">50 Data</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
+
+                    {selectedRows.length > 0 && (
+                        <div className="mb-4 flex flex-col items-start gap-2 rounded-lg border bg-slate-50 p-3 md:flex-row md:items-center dark:bg-slate-800/50">
+                            <span className="text-sm font-medium text-muted-foreground">
+                                {selectedRows.length} data dipilih
+                            </span>
+                            <Select onValueChange={setBulkStatus}>
+                                <SelectTrigger className="w-full md:w-[180px]">
+                                    <SelectValue placeholder="Ubah Status Massal..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Baru">Baru</SelectItem>
+                                    <SelectItem value="Diverifikasi">
+                                        Diverifikasi
+                                    </SelectItem>
+                                    <SelectItem value="Disetujui">
+                                        Disetujui
+                                    </SelectItem>
+                                    <SelectItem value="Ditolak">
+                                        Ditolak
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Button onClick={handleBulkUpdate} size="sm">
+                                <CheckCircle className="mr-2 h-4 w-4" />{' '}
+                                Terapkan
+                            </Button>
+                        </div>
+                    )}
 
                     <div className="flex-1 overflow-auto rounded-md border">
                         <Table>
-                            <TableHeader className="uppercase">
+                            <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-12 px-4">
                                         <Checkbox
@@ -330,17 +362,42 @@ export default function Index({ permohonans, filters }) {
                                                     </Select>
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Link
-                                                        href={`/admin/permohonan/${permohonan.id}`}
-                                                    >
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger
+                                                            asChild
                                                         >
-                                                            <Eye className="mr-2 h-4 w-4" />{' '}
-                                                            Detail
-                                                        </Button>
-                                                    </Link>
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                            >
+                                                                <Ellipsis className="h-5 w-5" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem
+                                                                asChild
+                                                            >
+                                                                <Link
+                                                                    href={`/admin/permohonan/${permohonan.id}`}
+                                                                    className="cursor-pointer"
+                                                                >
+                                                                    <Eye className="mr-2 h-4 w-4" />{' '}
+                                                                    Lihat Detail
+                                                                </Link>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                className="cursor-pointer text-red-600 focus:text-red-600"
+                                                                onClick={() =>
+                                                                    setDeleteTarget(
+                                                                        permohonan,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Trash2 className="mr-2 h-4 w-4" />{' '}
+                                                                Hapus
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </TableCell>
                                             </TableRow>
                                         ),
@@ -406,6 +463,36 @@ export default function Index({ permohonans, filters }) {
                     </CardFooter>
                 )}
             </Card>
+
+            <AlertDialog
+                open={!!deleteTarget}
+                onOpenChange={() => setDeleteTarget(null)}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Tindakan ini akan menghapus data permohonan untuk{' '}
+                            <strong>{deleteTarget?.mustahik.name}</strong>{' '}
+                            secara permanen. Semua dokumen yang terlampir juga
+                            akan dihapus.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
+                            onClick={() => setDeleteTarget(null)}
+                        >
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            className="bg-destructive hover:bg-destructive/90"
+                        >
+                            Ya, Hapus
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </AppLayout>
     );
 }
