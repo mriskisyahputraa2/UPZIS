@@ -239,7 +239,9 @@ export default function Edit({ mustahik }) {
                                 <CardContent className="space-y-4">
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label htmlFor="nik">NIK *</Label>
+                                            <Label htmlFor="nik">
+                                                Nomor Induk Kependudukan (NIK)
+                                            </Label>
                                             <div className="relative">
                                                 <Users className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                                 <Input

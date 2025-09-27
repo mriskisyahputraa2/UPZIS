@@ -251,7 +251,7 @@ export default function Index({ permohonans, filters }) {
 
                     <div className="flex-1 overflow-auto rounded-md border">
                         <Table>
-                            <TableHeader>
+                            <TableHeader className="uppercase">
                                 <TableRow>
                                     <TableHead className="w-12 px-4">
                                         <Checkbox

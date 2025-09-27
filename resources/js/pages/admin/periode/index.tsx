@@ -1,0 +1,346 @@
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import {
+    CalendarDays,
+    Ellipsis,
+    FilePen,
+    PlusCircle,
+    Search,
+    Trash2,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
+
+const breadcrumbs = [
+    { title: 'Dashboard', href: '/admin/dashboard' },
+    { title: 'Manajemen Periode' },
+];
+
+export default function Index({ periodes, filters }) {
+    const { flash } = usePage().props;
+    const [search, setSearch] = useState(filters.search || '');
+    const [deleteId, setDeleteId] = useState(null);
+    const isInitialMount = useRef(true);
+
+    useEffect(() => {
+        if (flash && flash.success) toast.success(flash.success);
+        if (flash && flash.error) toast.error(flash.error);
+    }, [flash]);
+
+    // Menggunakan useRef untuk mencegah useEffect berjalan saat pertama kali render
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+        const timeout = setTimeout(() => {
+            router.get(
+                '/admin/periode',
+                { search, per_page: filters.per_page },
+                { preserveState: true, replace: true },
+            );
+        }, 500);
+        return () => clearTimeout(timeout);
+    }, [search]);
+
+    const handlePerPageChange = (perPage) => {
+        router.get(
+            '/admin/periode',
+            { search: filters.search, per_page: perPage },
+            { preserveState: true, replace: true },
+        );
+    };
+
+    const handleDelete = () => {
+        if (deleteId) {
+            router.delete(`/admin/periode/${deleteId}`, {
+                onFinish: () => setDeleteId(null),
+                preserveScroll: true,
+            });
+        }
+    };
+
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Manajemen Periode" />
+            <Card className="flex h-full flex-1 flex-col">
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <CardTitle>Daftar Periode</CardTitle>
+                        <Link href="/admin/periode/create">
+                            <Button>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Tambah Periode
+                            </Button>
+                        </Link>
+                    </div>
+                    <CardDescription>
+                        Kelola siklus pendaftaran dan penyaluran bantuan di
+                        sini.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-1 flex-col">
+                    <div className="mb-4 flex items-center justify-between">
+                        <div className="relative w-full max-w-xs">
+                            <Input
+                                type="search"
+                                placeholder="Cari nama periode..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="pl-9"
+                            />
+                            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        </div>
+                        <Select
+                            onValueChange={handlePerPageChange}
+                            defaultValue={String(filters.per_page || '5')}
+                        >
+                            <SelectTrigger className="w-[120px]">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="5">5 Data</SelectItem>
+                                <SelectItem value="10">10 Data</SelectItem>
+                                <SelectItem value="20">20 Data</SelectItem>
+                                <SelectItem value="50">50 Data</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex-1 overflow-auto rounded-md border">
+                        <Table>
+                            <TableHeader className="font-bold uppercase">
+                                <TableRow>
+                                    <TableHead className="w-10">No.</TableHead>
+                                    <TableHead>Nama Periode</TableHead>
+                                    <TableHead>Tanggal Mulai</TableHead>
+                                    <TableHead>Tanggal Selesai</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="w-20 text-right">
+                                        Aksi
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {periodes.data.length > 0 ? (
+                                    periodes.data.map((periode, index) => (
+                                        <TableRow key={periode.id}>
+                                            <TableCell>
+                                                {periodes.from + index}
+                                            </TableCell>
+                                            <TableCell className="font-medium">
+                                                {periode.name}
+                                            </TableCell>
+                                            <TableCell>
+                                                {periode.start_date}
+                                            </TableCell>
+                                            <TableCell>
+                                                {periode.end_date}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant={
+                                                        periode.status ===
+                                                        'Aktif'
+                                                            ? 'success'
+                                                            : 'secondary'
+                                                    }
+                                                >
+                                                    {periode.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger
+                                                        asChild
+                                                    >
+                                                        <Button
+                                                            size="icon"
+                                                            variant="ghost"
+                                                        >
+                                                            <Ellipsis className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem
+                                                            asChild
+                                                        >
+                                                            <Link
+                                                                href={`/admin/periode/${periode.id}/edit`}
+                                                            >
+                                                                <FilePen className="mr-2 h-4 w-4" />
+                                                                Edit
+                                                            </Link>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            className="text-red-600 focus:text-red-600"
+                                                            onClick={() =>
+                                                                setDeleteId(
+                                                                    periode.id,
+                                                                )
+                                                            }
+                                                        >
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Hapus
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={6}
+                                            className="h-full p-8 text-center"
+                                        >
+                                            <div className="flex flex-col items-center justify-center gap-4">
+                                                <CalendarDays className="h-16 w-16 text-gray-300 dark:text-gray-700" />
+                                                <h3 className="text-xl font-bold">
+                                                    Belum Ada Periode
+                                                </h3>
+                                                <p className="text-muted-foreground">
+                                                    Buat periode pendaftaran
+                                                    baru untuk memulai siklus
+                                                    bantuan.
+                                                </p>
+                                                <Link href="/admin/periode/create">
+                                                    <Button className="mt-2">
+                                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                                        Buat Periode Pertama
+                                                    </Button>
+                                                </Link>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+                {periodes.data.length > 0 && (
+                    <CardFooter className="flex flex-col items-center justify-between gap-4 md:flex-row">
+                        <div className="text-sm text-muted-foreground">
+                            Menampilkan{' '}
+                            <span className="font-semibold">
+                                {periodes.from || 0}
+                            </span>{' '}
+                            -{' '}
+                            <span className="font-semibold">
+                                {periodes.to || 0}
+                            </span>{' '}
+                            dari{' '}
+                            <span className="font-semibold">
+                                {periodes.total || 0}
+                            </span>{' '}
+                            hasil
+                        </div>
+                        <Pagination>
+                            <PaginationContent>
+                                {periodes.links.map((link, index) =>
+                                    link.label.includes('Previous') ? (
+                                        <PaginationPrevious
+                                            key={index}
+                                            href={link.url}
+                                            preserveScroll
+                                            preserveState
+                                        />
+                                    ) : link.label.includes('Next') ? (
+                                        <PaginationNext
+                                            key={index}
+                                            href={link.url}
+                                            preserveScroll
+                                            preserveState
+                                        />
+                                    ) : (
+                                        <PaginationLink
+                                            key={index}
+                                            href={link.url}
+                                            isActive={link.active}
+                                            preserveScroll
+                                            preserveState
+                                        >
+                                            {link.label}
+                                        </PaginationLink>
+                                    ),
+                                )}
+                            </PaginationContent>
+                        </Pagination>
+                    </CardFooter>
+                )}
+            </Card>
+
+            <AlertDialog
+                open={!!deleteId}
+                onOpenChange={() => setDeleteId(null)}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Tindakan ini akan menghapus data periode secara
+                            permanen.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Hapus
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </AppLayout>
+    );
+}

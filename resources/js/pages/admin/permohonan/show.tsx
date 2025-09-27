@@ -181,10 +181,16 @@ export default function Show({ permohonan }) {
                                 <CardTitle>Informasi Pemohon</CardTitle>
                             </CardHeader>
                             <CardContent className="divide-y">
-                                <DetailItem icon={Hash} label="NIK">
+                                <DetailItem
+                                    icon={Hash}
+                                    label="Nomor Induk Kependudukan (NIK)"
+                                >
                                     {permohonan.mustahik.nik}
                                 </DetailItem>
-                                <DetailItem icon={KkIcon} label="No. KK">
+                                <DetailItem
+                                    icon={KkIcon}
+                                    label="No. Kartu Keluarga (KK)"
+                                >
                                     {permohonan.mustahik.kk_number || '-'}
                                 </DetailItem>
                                 <DetailItem icon={Phone} label="No. Telepon">
@@ -225,7 +231,7 @@ export default function Show({ permohonan }) {
                                 <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3">
                                     <DocumentCard
                                         file_path={permohonan.file_ktp}
-                                        label="KTP"
+                                        label="Kartu Tanda Penduduk (KTP)"
                                     />
                                     <DocumentCard
                                         file_path={permohonan.file_kk}
@@ -233,7 +239,7 @@ export default function Show({ permohonan }) {
                                     />
                                     <DocumentCard
                                         file_path={permohonan.file_khs}
-                                        label="KHS"
+                                        label="Kartu Hasil Studi (KHS)"
                                     />
                                 </div>
                             </CardContent>

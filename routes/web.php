@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MustahikController;
+use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\PermohonanController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\PermohonanBantuanController;
@@ -20,6 +21,7 @@ Route::get('/', [HomePageController::class, "index"])->name('home');
 // Halaman Ajukan Bantuan
 Route::get('ajukan-bantuan', [PermohonanBantuanController::class, "create"])->name('permohonan.create');
 Route::post('ajukan-bantuan', [PermohonanBantuanController::class, "store"])->name('permohonan.store'); // Menambahkan rute POST
+
 
 
 /*
@@ -41,13 +43,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified', 'role:admin,superadmin'])->prefix('admin')->name('admin.')->group(function () {
-
-    // Rute untuk Manajemen Mustahik (CRUD)
+    // Manajemen Mustahik
     Route::resource('mustahiks', MustahikController::class);
 
-    // Rute ini untuk menampilkan daftar permohonan, detail, dan mengubah statusnya.
+    // Manajemen Permohonan dan Status
     Route::resource('permohonan', PermohonanController::class)->only(['index', 'show', 'update', 'destroy']);
     Route::post('permohonan/bulk-update-status', [PermohonanController::class, 'bulkUpdateStatus'])->name('permohonan.bulkUpdateStatus');
+
+    // Manajemen Periode
+    Route::resource('/periode', PeriodeController::class);
 });
 
 
