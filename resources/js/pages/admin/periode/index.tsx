@@ -49,6 +49,8 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
 import {
     CalendarDays,
     Ellipsis,
@@ -59,9 +61,8 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/admin/dashboard' },
+    { title: 'Dashboard', href: '/dashboard' },
     { title: 'Manajemen Periode' },
 ];
 
@@ -180,10 +181,20 @@ export default function Index({ periodes, filters }) {
                                                 {periode.name}
                                             </TableCell>
                                             <TableCell>
-                                                {periode.start_date}
+                                                {format(
+                                                    new Date(
+                                                        periode.start_date,
+                                                    ),
+                                                    'dd MMMM yyyy',
+                                                    { locale: id },
+                                                )}
                                             </TableCell>
                                             <TableCell>
-                                                {periode.end_date}
+                                                {format(
+                                                    new Date(periode.end_date),
+                                                    'dd MMMM yyyy',
+                                                    { locale: id },
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 <Badge

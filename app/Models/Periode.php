@@ -11,14 +11,12 @@ class Periode extends Model
 
     protected $table = 'periodes'; // Nama tabel jamak
 
-    protected $fillable = [
-        'name',
-        'description',
-        'start_date',
-        'end_date',
-        'status',
-    ];
+    protected $fillable = ['name', 'description', 'start_date', 'end_date', 'status'];
 
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+    ];
     public function permohonans()
     {
         return $this->hasMany(Permohonan::class);
