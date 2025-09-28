@@ -20,7 +20,8 @@ Route::get('/', [HomePageController::class, "index"])->name('home');
 
 // Halaman Ajukan Bantuan
 Route::get('ajukan-bantuan', [PermohonanBantuanController::class, "create"])->name('permohonan.create');
-Route::post('ajukan-bantuan', [PermohonanBantuanController::class, "store"])->name('permohonan.store'); // Menambahkan rute POST
+Route::post('ajukan-bantuan', [PermohonanBantuanController::class, "store"])->name('permohonan.store');
+Route::get('pendaftaran-berhasil', [PermohonanBantuanController::class, 'success'])->name('permohonan.success');
 
 
 

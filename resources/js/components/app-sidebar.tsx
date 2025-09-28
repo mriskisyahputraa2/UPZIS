@@ -23,6 +23,12 @@ const mainNavItems: NavItem[] = [
     },
 
     {
+        title: 'Manajemen Periode',
+        href: '/admin/periode',
+        icon: Calendar,
+    },
+
+    {
         title: 'Manajement Mustahik',
         href: '/admin/mustahiks',
         icon: Users,
@@ -32,11 +38,6 @@ const mainNavItems: NavItem[] = [
         title: 'Manajemen Permohonan',
         href: '/admin/permohonan',
         icon: FileText,
-    },
-    {
-        title: 'Manajemen Periode',
-        href: '/admin/periode',
-        icon: Calendar,
     },
 ];
 
