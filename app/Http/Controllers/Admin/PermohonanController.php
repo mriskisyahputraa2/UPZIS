@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Periode;
 use App\Models\Permohonan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -15,22 +16,51 @@ class PermohonanController extends Controller
      */
     public function index(Request $request)
     {
-        // Membangun query secara dinamis
+         $request->validate([
+            'periode_id' => 'nullable|integer|exists:periodes,id',
+            'status' => 'nullable|string|in:Baru,Diverifikasi,Disetujui,Ditolak',
+        ]);
+
+       // Cari periode yang sedang aktif
+        $activePeriode = Periode::where('status', 'Aktif')->first();
+
         $permohonans = Permohonan::query()
-            ->with(['mustahik', 'periode']) // Eager load relasi
+            ->with(['mustahik', 'periode'])
             ->when($request->input('search'), function ($query, $search) {
-                // Mencari berdasarkan nama atau NIK mustahik (melalui relasi)
                 $query->whereHas('mustahik', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")->orWhere('nik', 'like', "%{$search}%");
                 });
             })
+            ->when($request->input('status'), function ($query, $status) {
+                $query->where('status', $status);
+            })
+            // 3. Logika Filter Periode yang Diperbarui
+            ->when($request->filled('periode_id'), function ($query) use ($request) {
+                // Jika user memilih periode spesifik dari filter, gunakan itu.
+                $query->where('periode_id', $request->input('periode_id'));
+            })
+            ->when(!$request->has('periode_id') && $activePeriode, function ($query) use ($activePeriode) {
+                // Jika halaman baru dimuat (tidak ada filter periode di URL),
+                // maka secara default filter berdasarkan periode yang aktif.
+                $query->where('periode_id', $activePeriode->id);
+            })
             ->latest()
-            ->paginate($request->input('per_page', 5)) // <-- Default 5 data per halaman
+            ->paginate($request->input('per_page', 5))
             ->withQueryString();
+
+        $periodes = Periode::latest()->get(['id', 'name']);
+
+        // 4. Pastikan filter yang dikirim ke frontend sesuai dengan yang diterapkan
+        $currentFilters = $request->only(['search', 'per_page', 'status', 'periode_id']);
+        if (!$request->has('periode_id') && $activePeriode) {
+            $currentFilters['periode_id'] = $activePeriode->id;
+        }
 
         return Inertia::render('admin/permohonan/index', [
             'permohonans' => $permohonans,
-            'filters' => $request->only(['search', 'per_page']), // Kirim filter ke view
+            'filters' => $currentFilters,
+            'periodes' => $periodes,
+            'activePeriode' => $activePeriode,
         ]);
     }
 

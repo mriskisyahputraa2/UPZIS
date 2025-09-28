@@ -1,3 +1,4 @@
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -50,13 +51,18 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
 import {
+    AlertTriangle,
     CheckCircle,
     Ellipsis,
     Eye,
     FileText,
+    Info,
     Search,
     Trash2,
+    X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -81,13 +87,26 @@ const getStatusTriggerClass = (status) => {
     }
 };
 
-export default function Index({ permohonans, filters }) {
+export default function Index({
+    permohonans,
+    filters,
+    periodes,
+    activePeriode,
+}) {
     const { flash } = usePage().props;
     const [search, setSearch] = useState(filters.search || '');
+    const [filterStatus, setFilterStatus] = useState(filters.status || 'all');
+    const [filterPeriode, setFilterPeriode] = useState(
+        filters.periode_id || 'all',
+    );
     const [selectedRows, setSelectedRows] = useState([]);
     const [bulkStatus, setBulkStatus] = useState('');
     const [deleteTarget, setDeleteTarget] = useState(null);
     const isInitialMount = useRef(true);
+    // ## BUAT VARIABEL UNTUK MENYIMPAN NAMA PERIODE YANG AKTIF DIFILTER ##
+    const filteredPeriodeName = filters.periode_id
+        ? periodes.find((p) => p.id == filters.periode_id)?.name
+        : null;
 
     useEffect(() => {
         if (flash && flash.success) {
@@ -103,22 +122,38 @@ export default function Index({ permohonans, filters }) {
             isInitialMount.current = false;
             return;
         }
+        const params = {
+            search,
+            per_page: filters.per_page,
+            status: filterStatus === 'all' ? '' : filterStatus,
+            periode_id: filterPeriode === 'all' ? '' : filterPeriode,
+        };
         const timeout = setTimeout(() => {
-            router.get(
-                '/admin/permohonan',
-                { search, per_page: filters.per_page },
-                { preserveState: true, replace: true },
-            );
+            router.get('/admin/permohonan', params, {
+                preserveState: true,
+                replace: true,
+            });
         }, 500);
         return () => clearTimeout(timeout);
-    }, [search]);
+    }, [search, filterStatus, filterPeriode]);
+
+    const resetFilters = () => {
+        setSearch('');
+        setFilterStatus('all');
+        setFilterPeriode('all');
+    };
 
     const handlePerPageChange = (perPage) => {
-        router.get(
-            '/admin/permohonan',
-            { search: filters.search, per_page: perPage },
-            { preserveState: true, replace: true },
-        );
+        const params = {
+            search: filters.search,
+            per_page: perPage,
+            status: filters.status,
+            periode_id: filters.periode_id,
+        };
+        router.get('/admin/permohonan', params, {
+            preserveState: true,
+            replace: true,
+        });
     };
 
     const handleRowSelect = (id) => {
@@ -134,7 +169,7 @@ export default function Index({ permohonans, filters }) {
     };
 
     const handleInlineStatusChange = (id, newStatus) => {
-        router.patch(
+        router.put(
             `/admin/permohonan/${id}`,
             { status: newStatus },
             {
@@ -187,6 +222,43 @@ export default function Index({ permohonans, filters }) {
                         Verifikasi dan kelola semua permohonan bantuan yang
                         masuk.
                     </CardDescription>
+                    {/* ## TAMBAHKAN KETERANGAN PERIODE AKTIF DI SINI ## */}
+                    <div className="!mt-4">
+                        {activePeriode ? (
+                            <Alert variant="info">
+                                <Info className="h-4 w-4" />
+                                <AlertTitle>
+                                    Periode Pendaftaran Aktif
+                                </AlertTitle>
+                                <AlertDescription>
+                                    Saat ini sistem sedang menampilkan
+                                    permohonan untuk periode{' '}
+                                    <strong className="text-green-600">
+                                        {activePeriode.name}
+                                    </strong>
+                                </AlertDescription>
+                            </Alert>
+                        ) : (
+                            <Alert variant="warning">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>Tidak Ada Periode Aktif</AlertTitle>
+                                <AlertDescription>
+                                    Formulir pendaftaran publik saat ini sedang
+                                    ditutup. Silakan aktifkan salah satu periode
+                                    agar pendaftaran dibuka.{' '}
+                                    <Button
+                                        variant="link"
+                                        asChild
+                                        className="h-auto p-0"
+                                    >
+                                        <Link href="/admin/periode">
+                                            Buka Manajemen Periode.
+                                        </Link>
+                                    </Button>
+                                </AlertDescription>
+                            </Alert>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent className="flex flex-1 flex-col">
                     <div className="mb-4 flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
@@ -201,6 +273,64 @@ export default function Index({ permohonans, filters }) {
                                 />
                                 <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             </div>
+
+                            <Select
+                                value={String(filterPeriode)}
+                                onValueChange={setFilterPeriode}
+                            >
+                                <SelectTrigger className="w-full sm:w-[200px]">
+                                    <SelectValue placeholder="Semua Periode" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">
+                                        Semua Periode
+                                    </SelectItem>
+                                    {periodes.map((periode) => (
+                                        <SelectItem
+                                            key={periode.id}
+                                            value={String(periode.id)}
+                                        >
+                                            {periode.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            <Select
+                                value={filterStatus}
+                                onValueChange={setFilterStatus}
+                            >
+                                <SelectTrigger className="w-full sm:w-[180px]">
+                                    <SelectValue placeholder="Semua Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">
+                                        Semua Status
+                                    </SelectItem>
+                                    <SelectItem value="Baru">Baru</SelectItem>
+                                    <SelectItem value="Diverifikasi">
+                                        Diverifikasi
+                                    </SelectItem>
+                                    <SelectItem value="Disetujui">
+                                        Disetujui
+                                    </SelectItem>
+                                    <SelectItem value="Ditolak">
+                                        Ditolak
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+
+                            {(filters.search ||
+                                filters.status ||
+                                filters.periode_id) && (
+                                <Button
+                                    variant="destructive-outline"
+                                    onClick={resetFilters}
+                                >
+                                    <X className="mr-2 h-4 w-4" />
+                                    Reset
+                                </Button>
+                            )}
                         </div>
                         <div className="w-full sm:w-auto">
                             <Select
@@ -318,10 +448,12 @@ export default function Index({ permohonans, filters }) {
                                                     {permohonan.periode.name}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {new Date(
-                                                        permohonan.created_at,
-                                                    ).toLocaleDateString(
-                                                        'id-ID',
+                                                    {format(
+                                                        new Date(
+                                                            permohonan.created_at,
+                                                        ),
+                                                        'dd MMM yyyy',
+                                                        { locale: id },
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
@@ -414,9 +546,9 @@ export default function Index({ permohonans, filters }) {
                                                     Belum Ada Permohonan
                                                 </h3>
                                                 <p className="text-gray-500">
-                                                    Saat ini belum ada
-                                                    permohonan bantuan yang
-                                                    masuk.
+                                                    Data tidak ditemukan. Coba
+                                                    ubah filter atau tunggu
+                                                    permohonan baru masuk.
                                                 </p>
                                             </div>
                                         </TableCell>
