@@ -45,7 +45,7 @@ class MustahikController extends Controller
             'nik' => 'required|string|size:16|unique:mustahiks',
             'phone_number' => 'required|string|max:20',
             'address' => 'required|string',
-            'kk_number' => 'required|string|size:16',
+            'kk_number' => 'required|string|size:16|unique:mustahiks',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -79,8 +79,8 @@ class MustahikController extends Controller
             'nik' => ['required', 'string', 'size:16', Rule::unique('mustahiks')->ignore($mustahik->id)],
             'phone_number' => 'required|string|max:20',
             'address' => 'required|string',
-            'kk_number' => 'required|string|size:16',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Validasi untuk file baru
+            'kk_number' => ['required', 'string', 'size:16', Rule::unique('mustahiks')->ignore($mustahik->id)],
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         // Ambil semua data yang tervalidasi kecuali 'photo'

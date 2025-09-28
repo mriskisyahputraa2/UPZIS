@@ -9,49 +9,95 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule; // <-- 1. TAMBAHKAN IMPORT INI
 
 class PermohonanBantuanController extends Controller
 {
-    /**
-     * Menampilkan formulir pendaftaran jika ada periode aktif.
-     */
+    // ... method create() tidak berubah ...
     public function create()
     {
         $activePeriode = Periode::where('status', 'Aktif')->first();
 
-        // PERUBAHAN: Path disesuaikan menjadi 'user/permohonan/create'
         return Inertia::render('user/permohonan/create', [
             'activePeriode' => $activePeriode,
         ]);
     }
 
-    /**
-     * Menyimpan data permohonan baru.
-     */
-    public function store(Request $request)
+
+    // ## GANTI SELURUH METHOD STORE ANDA DENGAN INI ##
+   public function store(Request $request)
     {
         $activePeriode = Periode::where('status', 'Aktif')->first();
         if (!$activePeriode) {
             return back()->with('error', 'Saat ini tidak ada periode pendaftaran yang dibuka.');
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'nik' => 'required|string|size:16',
-            'kk_number' => 'required|string|size:16',
-            'phone_number' => 'required|string|max:20',
-            'address' => 'required|string',
-            'photo' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-            'file_ktp' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'file_kk' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'file_khs' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ]);
+        // Langkah 1: Validasi format dasar
+        $validated = $request->validate(
+            [
+                'name' => 'required|string|max:255',
+                'nik' => 'required|string|size:16',
+                'kk_number' => 'required|string|size:16',
+                'phone_number' => 'required|string|max:20',
+                'address' => 'required|string',
+                'photo' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+                'file_ktp' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+                'file_kk' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+                'file_khs' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            ],
+            [
+                // Pesan kustom untuk setiap aturan validasi
+                'photo.required' => 'Foto profil wajib diunggah.',
+                'photo.image' => 'File yang diunggah harus berupa gambar.',
+                'photo.mimes' => 'Format foto harus jpg, jpeg, atau png.',
+                'name.required' => 'Kolom Nama Lengkap wajib diisi.',
+                'nik.required' => 'Kolom NIK wajib diisi.',
+                'kk_number.required' => 'Kolom No. KK wajib diisi.',
+                'phone_number.required' => 'Kolom No. Telepon wajib diisi.',
+                'address.required' => 'Kolom Alamat wajib diisi.',
+                'file_ktp.required' => 'Kolom KTP wajib diisi ',
+                'file_kk.required' => 'Kolom KK wajib diisi ',
+                'file_khs.required' => 'Kolom KHS wajib diisi ',
+                'file_ktp.mimes' => 'Format file harus jpg, jpeg, png dan pdf',
+                'file_kk.mimes' => 'Format file harus jpg, jpeg, png dan pdf',
+                'file_khs.mimes' => 'Format file harus jpg, jpeg, png dan pdf',
+                'kk_number.size' => 'Kolom KK harus 16 karakter',
+                'nik.size' => 'Kolom NIK harus 16 karakter',
 
+            ]
+        );
+
+        // Langkah 2: Lakukan semua pengecekan duplikasi secara manual
+        $customErrors = [];
+        $mustahikByNik = Mustahik::where('nik', $validated['nik'])->first();
+        $mustahikByKk = Mustahik::where('kk_number', $validated['kk_number'])->first();
+
+        // Cek #1: Apakah NIK sudah mendaftar di periode ini?
+        if ($mustahikByNik) {
+            $existingPermohonan = Permohonan::where('mustahik_id', $mustahikByNik->id)
+                ->where('periode_id', $activePeriode->id)
+                ->exists();
+            if ($existingPermohonan) {
+                $customErrors['nik'] = 'NIK Anda sudah terdaftar pada periode bantuan ini.';
+            }
+        }
+
+        // Cek #2: Apakah No. KK sudah digunakan oleh NIK yang berbeda?
+        if ($mustahikByKk && (!$mustahikByNik || $mustahikByNik->id !== $mustahikByKk->id)) {
+            $customErrors['kk_number'] = 'No. KK ini sudah terdaftar untuk NIK yang berbeda.';
+        }
+
+        // Langkah 3: Jika ada error terkumpul, kirim semuanya sekaligus
+        if (!empty($customErrors)) {
+            return back()->withErrors($customErrors)->withInput();
+        }
+
+        // Langkah 4: Jika tidak ada error, lanjutkan proses
         try {
             DB::beginTransaction();
 
-            // Simpan foto profil terlebih dahulu
-            $photoPath = $request->file('photo')->store('mustahiks', 'public');
+            $photoPath = $request->file('photo')->store('mustahik-photos', 'public');
+
             $mustahik = Mustahik::updateOrCreate(
                 ['nik' => $validated['nik']],
                 [
@@ -60,16 +106,8 @@ class PermohonanBantuanController extends Controller
                     'phone_number' => $validated['phone_number'],
                     'address' => $validated['address'],
                     'photo' => $photoPath,
-                ],
+                ]
             );
-
-            $existingPermohonan = Permohonan::where('mustahik_id', $mustahik->id)->where('periode_id', $activePeriode->id)->exists();
-
-            if ($existingPermohonan) {
-                return back()
-                    ->withErrors(['nik' => 'Anda sudah terdaftar pada periode bantuan ini.'])
-                    ->withInput();
-            }
 
             $paths = [];
             foreach (['file_ktp', 'file_kk', 'file_khs'] as $fileKey) {
@@ -78,7 +116,7 @@ class PermohonanBantuanController extends Controller
                 }
             }
 
-            $uniqueCode = 'UPZ-' . time() . Str::upper(Str::random(4));
+            $uniqueCode = 'UPZIS-' . time() . Str::upper(Str::random(4));
 
             Permohonan::create([
                 'mustahik_id' => $mustahik->id,
@@ -99,18 +137,15 @@ class PermohonanBantuanController extends Controller
         }
     }
 
-    /**
-     * Menampilkan halaman sukses setelah pendaftaran.
-     */
+    // ... method success() tidak berubah ...
     public function success()
     {
         if (!session('unique_code')) {
             return redirect()->route('home');
         }
 
-        // PERUBAHAN: Path disesuaikan menjadi 'user/permohonan/success'
         return Inertia::render('user/permohonan/success', [
-            'unique_code' => session('unique_code'),
+            'unique_code' => session('unique_code')
         ]);
     }
 }

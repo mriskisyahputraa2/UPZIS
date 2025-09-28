@@ -24,14 +24,10 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-// Komponen File Input Kustom dengan perbaikan tampilan nama file
+// Komponen File Input Kustom
 const FileInput = ({ id, label, file, onFileChange, error }) => {
     const [isDragging, setIsDragging] = useState(false);
-
-    const handleFileChange = (e) => {
-        onFileChange(e.target.files[0]);
-    };
-
+    const handleFileChange = (e) => onFileChange(e.target.files[0]);
     const handleDrop = (e) => {
         e.preventDefault();
         setIsDragging(false);
@@ -90,6 +86,7 @@ const FileInput = ({ id, label, file, onFileChange, error }) => {
                 type="file"
                 onChange={handleFileChange}
                 className="hidden"
+                required
             />
             <InputError message={error} />
         </div>
@@ -97,7 +94,6 @@ const FileInput = ({ id, label, file, onFileChange, error }) => {
 };
 
 export default function Create({ activePeriode }) {
-    const [previewImage, setPreviewImage] = useState(null);
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         nik: '',
@@ -130,12 +126,14 @@ export default function Create({ activePeriode }) {
         }
     };
 
+    const [previewImage, setPreviewImage] = useState(null);
+
     return (
         <PublicLayout>
             <Head title="Ajukan Bantuan" />
 
             <section className="bg-green-700 pt-32 pb-16 text-white">
-                <div className="container mx-auto max-w-4xl px-6 text-center">
+                <div className="container mx-auto max-w-4xl px-4 text-center">
                     <h1 className="text-4xl font-bold md:text-5xl">
                         Formulir Pengajuan Bantuan
                     </h1>
@@ -146,281 +144,291 @@ export default function Create({ activePeriode }) {
                 </div>
             </section>
 
-            <section className="container mx-auto -mt-10 max-w-4xl px-6 pb-24">
-                {activePeriode ? (
-                    <form onSubmit={handleSubmit} className="space-y-8">
-                        <Card className="shadow-lg duration-500 animate-in fade-in slide-in-from-bottom-5">
-                            <CardHeader>
-                                <div className="flex items-center gap-4">
-                                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
-                                        1
-                                    </span>
-                                    <div>
-                                        <CardTitle className="text-2xl">
+            <section className="-mt-10 pb-24">
+                <div className="container mx-auto max-w-4xl px-4">
+                    {activePeriode ? (
+                        <form
+                            onSubmit={handleSubmit}
+                            className="space-y-8"
+                            noValidate
+                        >
+                            {/* Langkah 1: Unggah Foto Profil */}
+                            <Card className="shadow-lg duration-500 animate-in fade-in slide-in-from-bottom-5">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-4">
+                                        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-base font-bold text-white">
+                                            1
+                                        </span>
+                                        <span className="text-xl">
                                             Unggah Foto Profil
-                                        </CardTitle>
-                                        <CardDescription className="pt-1">
-                                            Unggah foto formal atau semi-formal
-                                            Anda (wajah terlihat jelas).
-                                        </CardDescription>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="flex flex-col items-center gap-4">
-                                <label
-                                    htmlFor="photo"
-                                    className="group relative h-48 w-48 cursor-pointer"
-                                >
-                                    {previewImage ? (
-                                        <img
-                                            src={previewImage}
-                                            alt="Preview"
-                                            className="h-full w-full rounded-full object-cover shadow-md transition-opacity group-hover:opacity-50"
-                                        />
-                                    ) : (
-                                        <div className="flex h-full w-full items-center justify-center rounded-full border-2 border-dashed bg-gray-50 transition-colors group-hover:border-primary">
-                                            <UserIcon className="h-16 w-16 text-gray-400" />
+                                        </span>
+                                    </CardTitle>
+                                    <CardDescription className="pt-1 pl-12">
+                                        Unggah foto formal atau semi-formal Anda
+                                        (wajah terlihat jelas).
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="flex flex-col items-center gap-4 pl-12">
+                                    <label
+                                        htmlFor="photo"
+                                        className="group relative h-48 w-48 cursor-pointer"
+                                    >
+                                        {previewImage ? (
+                                            <img
+                                                src={previewImage}
+                                                alt="Preview"
+                                                className="h-full w-full rounded-full object-cover shadow-md transition-opacity group-hover:opacity-50"
+                                            />
+                                        ) : (
+                                            <div className="flex h-full w-full items-center justify-center rounded-full border-2 border-dashed bg-gray-50 transition-colors group-hover:border-primary">
+                                                <UserIcon className="h-16 w-16 text-gray-400" />
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                                            <FileUp className="h-8 w-8 text-white" />
                                         </div>
-                                    )}
-                                    <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                                        <FileUp className="h-8 w-8 text-white" />
-                                    </div>
-                                </label>
-                                <Input
-                                    id="photo"
-                                    type="file"
-                                    accept="image/png, image/jpeg, image/jpg"
-                                    onChange={handlePhotoChange}
-                                    className="hidden"
-                                    required
-                                />
-                                <InputError message={errors.photo} />
-                            </CardContent>
-                        </Card>
-
-                        <Card className="shadow-lg delay-100 duration-500 animate-in fade-in slide-in-from-bottom-5">
-                            <CardHeader>
-                                <div className="flex items-center gap-4">
-                                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
-                                        2
-                                    </span>
-                                    <div>
-                                        <CardTitle className="text-2xl">
-                                            Data Diri Pemohon
-                                        </CardTitle>
-                                        <CardDescription className="pt-1">
-                                            Isi data pribadi Anda sesuai dengan
-                                            KTP dan Kartu Keluarga.
-                                        </CardDescription>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="name">
-                                            Nama Lengkap
-                                        </Label>
-                                        <Input
-                                            id="name"
-                                            value={data.name}
-                                            onChange={(e) =>
-                                                setData('name', e.target.value)
-                                            }
-                                            required
-                                        />
-                                        <InputError message={errors.name} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="phone_number">
-                                            No. Handphone (WhatsApp)
-                                        </Label>
-                                        <Input
-                                            id="phone_number"
-                                            value={data.phone_number}
-                                            onChange={(e) =>
-                                                handleNumericInput(
-                                                    e,
-                                                    'phone_number',
-                                                )
-                                            }
-                                            required
-                                        />
-                                        <InputError
-                                            message={errors.phone_number}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="address">
-                                        Alamat Lengkap
-                                    </Label>
-                                    <Textarea
-                                        id="address"
-                                        value={data.address}
-                                        onChange={(e) =>
-                                            setData('address', e.target.value)
-                                        }
+                                    </label>
+                                    <Input
+                                        id="photo"
+                                        type="file"
+                                        accept="image/png, image/jpeg, image/jpg"
+                                        onChange={handlePhotoChange}
+                                        className="hidden"
                                         required
                                     />
-                                    <InputError message={errors.address} />
-                                </div>
-                            </CardContent>
-                        </Card>
+                                    <InputError message={errors.photo} />
+                                </CardContent>
+                            </Card>
 
-                        <Card className="shadow-lg delay-200 duration-500 animate-in fade-in slide-in-from-bottom-5">
-                            <CardHeader>
-                                <div className="flex items-center gap-4">
-                                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
-                                        3
-                                    </span>
-                                    <div>
-                                        <CardTitle className="text-2xl">
-                                            Data Kependudukan & Dokumen
-                                        </CardTitle>
-                                        <CardDescription className="pt-1">
-                                            Siapkan dokumen Anda dalam format
-                                            JPG, PNG, atau PDF (Maks. 2MB).
-                                        </CardDescription>
+                            {/* Langkah 2: Data Diri Pemohon */}
+                            <Card className="shadow-lg delay-100 duration-500 animate-in fade-in slide-in-from-bottom-5">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-4">
+                                        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-base font-bold text-white">
+                                            2
+                                        </span>
+                                        <span className="text-xl">
+                                            Data Diri Pemohon
+                                        </span>
+                                    </CardTitle>
+                                    <CardDescription className="pt-1 pl-12">
+                                        Isi data pribadi Anda sesuai dengan KTP
+                                        dan Kartu Keluarga.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6 pl-12">
+                                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="name">
+                                                Nama Lengkap
+                                            </Label>
+                                            <Input
+                                                id="name"
+                                                value={data.name}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'name',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                required
+                                            />
+                                            <InputError message={errors.name} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="phone_number">
+                                                No. Handphone (WhatsApp)
+                                            </Label>
+                                            <Input
+                                                id="phone_number"
+                                                value={data.phone_number}
+                                                onChange={(e) =>
+                                                    handleNumericInput(
+                                                        e,
+                                                        'phone_number',
+                                                    )
+                                                }
+                                                required
+                                            />
+                                            <InputError
+                                                message={errors.phone_number}
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                     <div className="space-y-2">
-                                        <Label htmlFor="nik">
-                                            Nomor Induk Kependudukan (NIK)
+                                        <Label htmlFor="address">
+                                            Alamat Lengkap
                                         </Label>
-                                        <Input
-                                            id="nik"
-                                            value={data.nik}
+                                        <Textarea
+                                            id="address"
+                                            value={data.address}
                                             onChange={(e) =>
-                                                handleNumericInput(e, 'nik')
-                                            }
-                                            maxLength={16}
-                                            required
-                                        />
-                                        <InputError message={errors.nik} />
-                                        <p className="text-right text-xs text-muted-foreground">
-                                            Sisa {16 - data.nik.length} karakter
-                                        </p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="kk_number">
-                                            Nomor Kartu Keluarga (KK)
-                                        </Label>
-                                        <Input
-                                            id="kk_number"
-                                            value={data.kk_number}
-                                            onChange={(e) =>
-                                                handleNumericInput(
-                                                    e,
-                                                    'kk_number',
+                                                setData(
+                                                    'address',
+                                                    e.target.value,
                                                 )
                                             }
-                                            maxLength={16}
                                             required
                                         />
-                                        <InputError
-                                            message={errors.kk_number}
-                                        />
-                                        <p className="text-right text-xs text-muted-foreground">
-                                            Sisa {16 - data.kk_number.length}{' '}
-                                            karakter
-                                        </p>
+                                        <InputError message={errors.address} />
                                     </div>
-                                </div>
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                                    <FileInput
-                                        id="file_ktp"
-                                        label="Scan/Foto KTP"
-                                        file={data.file_ktp}
-                                        onFileChange={(file) =>
-                                            setData('file_ktp', file)
-                                        }
-                                        error={errors.file_ktp}
-                                    />
-                                    <FileInput
-                                        id="file_kk"
-                                        label="Scan/Foto KK"
-                                        file={data.file_kk}
-                                        onFileChange={(file) =>
-                                            setData('file_kk', file)
-                                        }
-                                        error={errors.file_kk}
-                                    />
-                                    <FileInput
-                                        id="file_khs"
-                                        label="Scan/Foto KHS"
-                                        file={data.file_khs}
-                                        onFileChange={(file) =>
-                                            setData('file_khs', file)
-                                        }
-                                        error={errors.file_khs}
-                                    />
-                                </div>
-                            </CardContent>
-                        </Card>
+                                </CardContent>
+                            </Card>
 
-                        <Card className="shadow-lg delay-300 duration-500 animate-in fade-in slide-in-from-bottom-5">
-                            <CardHeader>
-                                <div className="flex items-center gap-4">
-                                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
-                                        4
-                                    </span>
-                                    <div>
-                                        <CardTitle className="text-2xl">
-                                            Konfirmasi & Kirim
-                                        </CardTitle>
-                                        <CardDescription className="pt-1">
-                                            Periksa kembali data Anda. Pastikan
-                                            semua informasi dan dokumen sudah
-                                            benar sebelum mengirim.
-                                        </CardDescription>
+                            {/* Langkah 3: Data Kependudukan & Dokumen */}
+                            <Card className="shadow-lg delay-200 duration-500 animate-in fade-in slide-in-from-bottom-5">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-4">
+                                        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-base font-bold text-white">
+                                            3
+                                        </span>
+                                        <span className="text-xl">
+                                            Data Kependudukan & Dokumen
+                                        </span>
+                                    </CardTitle>
+                                    <CardDescription className="pt-1 pl-12">
+                                        Siapkan dokumen Anda dalam format JPG,
+                                        PNG, atau PDF (Maks. 2MB).
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6 pl-12">
+                                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="nik">
+                                                Nomor Induk Kependudukan (NIK)
+                                            </Label>
+                                            <Input
+                                                id="nik"
+                                                value={data.nik}
+                                                onChange={(e) =>
+                                                    handleNumericInput(e, 'nik')
+                                                }
+                                                maxLength={16}
+                                                required
+                                            />
+                                            <InputError message={errors.nik} />
+                                            <p className="text-right text-xs text-muted-foreground">
+                                                Sisa {16 - data.nik.length}{' '}
+                                                karakter
+                                            </p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="kk_number">
+                                                Nomor Kartu Keluarga (KK)
+                                            </Label>
+                                            <Input
+                                                id="kk_number"
+                                                value={data.kk_number}
+                                                onChange={(e) =>
+                                                    handleNumericInput(
+                                                        e,
+                                                        'kk_number',
+                                                    )
+                                                }
+                                                maxLength={16}
+                                                required
+                                            />
+                                            <InputError
+                                                message={errors.kk_number}
+                                            />
+                                            <p className="text-right text-xs text-muted-foreground">
+                                                Sisa{' '}
+                                                {16 - data.kk_number.length}{' '}
+                                                karakter
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex justify-end pt-4">
+                                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                        <FileInput
+                                            id="file_ktp"
+                                            label="Scan/Foto KTP"
+                                            file={data.file_ktp}
+                                            onFileChange={(file) =>
+                                                setData('file_ktp', file)
+                                            }
+                                            error={errors.file_ktp}
+                                        />
+                                        <FileInput
+                                            id="file_kk"
+                                            label="Scan/Foto KK"
+                                            file={data.file_kk}
+                                            onFileChange={(file) =>
+                                                setData('file_kk', file)
+                                            }
+                                            error={errors.file_kk}
+                                        />
+                                        <FileInput
+                                            id="file_khs"
+                                            label="Scan/Foto KHS"
+                                            file={data.file_khs}
+                                            onFileChange={(file) =>
+                                                setData('file_khs', file)
+                                            }
+                                            error={errors.file_khs}
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Langkah 4: Konfirmasi & Kirim */}
+                            <Card className="shadow-lg delay-300 duration-500 animate-in fade-in slide-in-from-bottom-5">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-4">
+                                        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-base font-bold text-white">
+                                            4
+                                        </span>
+                                        <span className="text-xl">
+                                            Konfirmasi & Kirim
+                                        </span>
+                                    </CardTitle>
+                                    <CardDescription className="pt-1 pl-12">
+                                        Periksa kembali data Anda. Pastikan
+                                        semua informasi dan dokumen sudah benar
+                                        sebelum mengirim.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="pl-12">
+                                    <div className="flex justify-end pt-4">
+                                        <Button
+                                            type="submit"
+                                            size="lg"
+                                            disabled={processing}
+                                            className="text-base font-bold"
+                                        >
+                                            <Check className="mr-2 h-5 w-5" />
+                                            {processing
+                                                ? 'Mengirim Data...'
+                                                : 'Saya Setuju & Kirim Pengajuan'}
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </form>
+                    ) : (
+                        <Card className="shadow-lg duration-500 animate-in fade-in">
+                            <CardContent className="flex flex-col items-center p-10 text-center">
+                                <AlertTriangle className="h-20 w-20 text-yellow-500" />
+                                <h2 className="mt-6 text-3xl font-bold">
+                                    Pendaftaran Saat Ini Ditutup
+                                </h2>
+                                <p className="mt-3 text-lg text-muted-foreground">
+                                    Mohon maaf, periode pendaftaran bantuan
+                                    belum dibuka. Pantau terus informasi dari
+                                    kami untuk jadwal pendaftaran berikutnya.
+                                </p>
+                                <Link href="/">
                                     <Button
-                                        type="submit"
+                                        className="mt-8 text-base font-bold"
                                         size="lg"
-                                        disabled={processing}
-                                        className="text-base font-bold"
                                     >
-                                        <Check className="mr-2 h-5 w-5" />
-                                        {processing
-                                            ? 'Mengirim Data...'
-                                            : 'Saya Setuju & Kirim Pengajuan'}
+                                        <ArrowLeft className="mr-2 h-4 w-4" />
+                                        Kembali ke Beranda
                                     </Button>
-                                </div>
+                                </Link>
                             </CardContent>
                         </Card>
-                    </form>
-                ) : (
-                    <Card className="shadow-lg duration-500 animate-in fade-in">
-                        <CardContent className="flex flex-col items-center p-10 text-center">
-                            <AlertTriangle className="h-20 w-20 text-yellow-500" />
-                            <h2 className="mt-6 text-3xl font-bold">
-                                Pendaftaran Saat Ini Ditutup
-                            </h2>
-                            <p className="mt-3 text-lg text-muted-foreground">
-                                Mohon maaf, periode pendaftaran bantuan belum
-                                dibuka. Pantau terus informasi dari kami untuk
-                                jadwal pendaftaran berikutnya.
-                            </p>
-                            <Link href="/">
-                                <Button
-                                    className="mt-8 text-base font-bold"
-                                    size="lg"
-                                >
-                                    <ArrowLeft className="mr-2 h-4 w-4" />
-                                    Kembali ke Beranda
-                                </Button>
-                            </Link>
-                        </CardContent>
-                    </Card>
-                )}
+                    )}
+                </div>
             </section>
         </PublicLayout>
     );
