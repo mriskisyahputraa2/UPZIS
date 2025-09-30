@@ -21,6 +21,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import {
     ArrowLeft,
     Calendar,
+    Copy,
     Download,
     FileText,
     Hash,
@@ -58,16 +59,26 @@ const DocumentCard = ({ file_path, label }) => {
 
     const fileUrl = `/storage/${file_path}`;
     const isImage = /\.(jpe?g|png|gif|webp)$/i.test(file_path);
+    const isPdf = /\.pdf$/i.test(file_path);
 
     return (
         <div className="group relative overflow-hidden rounded-lg border">
             {isImage ? (
+                // Jika file adalah gambar, tampilkan <img>
                 <img
                     src={fileUrl}
                     alt={label}
                     className="h-40 w-full object-cover"
                 />
+            ) : isPdf ? (
+                // Jika file adalah PDF, tampilkan <iframe>
+                <iframe
+                    src={fileUrl}
+                    className="h-40 w-full border-0"
+                    title={label}
+                ></iframe>
             ) : (
+                // Jika file tipe lain, tampilkan ikon generik
                 <div className="flex h-40 w-full flex-col items-center justify-center bg-gray-100 dark:bg-gray-800">
                     <FileText className="h-12 w-12 text-gray-400" />
                     <span className="mt-2 text-xs text-gray-500">
@@ -115,6 +126,12 @@ export default function Show({ permohonan }) {
         });
     };
 
+    // 3. Buat fungsi untuk menyalin teks
+    const copyToClipboard = (text, label) => {
+        navigator.clipboard.writeText(text);
+        toast.success(`"${label}" berhasil disalin!`);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Detail Permohonan - ${permohonan.mustahik.name}`} />
@@ -149,9 +166,9 @@ export default function Show({ permohonan }) {
                         <Card className="overflow-hidden text-center">
                             <CardContent className="flex flex-col items-center gap-4 p-6">
                                 <div className="h-48 w-full">
-                                    {permohonan.photo ? (
+                                    {permohonan.mustahik.photo ? (
                                         <img
-                                            src={`/storage/${permohonan.photo}`}
+                                            src={`/storage/${permohonan.mustahik.photo}`}
                                             alt={permohonan.mustahik.name}
                                             className="h-full w-full rounded-xl object-cover"
                                         />
@@ -169,6 +186,32 @@ export default function Show({ permohonan }) {
                                         <User className="h-4 w-4" />
                                         <span>Calon Mustahik</span>
                                     </p>
+                                </div>
+                                {/* ## 4. TAMBAHKAN TAMPILAN KODE UNIK DI SINI ## */}
+                                <div className="w-full pt-4 text-left">
+                                    <Label className="text-xs text-muted-foreground">
+                                        Kode Pendaftaran
+                                    </Label>
+                                    {/* ## DESAIN BARU GAYA "CHIP" ## */}
+                                    <div className="mt-1 flex items-center justify-between rounded-md border bg-muted px-3 py-2">
+                                        <code className="font-mono text-sm font-semibold text-primary">
+                                            {permohonan.unique_code}
+                                        </code>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            onClick={() =>
+                                                copyToClipboard(
+                                                    permohonan.unique_code,
+                                                    'Kode Pendaftaran',
+                                                )
+                                            }
+                                        >
+                                            <Copy className="h-4 w-4 text-muted-foreground" />
+                                        </Button>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>

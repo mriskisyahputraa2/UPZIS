@@ -47,21 +47,21 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
     // Data statis untuk Galeri Program (ganti dengan data asli nanti)
     const programItems = [
         {
-            image: '/images/program-1.jpg',
+            image: heroLogo,
             title: 'Bantuan UKT Mahasiswa 2024',
             description:
                 'Penyaluran dana zakat untuk membantu biaya Uang Kuliah Tunggal bagi mahasiswa semester akhir yang membutuhkan.',
             amount: 'Rp 25.000.000',
         },
         {
-            image: '/images/program-2.jpg',
+            image: heroLogo,
             title: 'Santunan Anak Yatim Piatu',
             description:
                 'Program santunan dan pemberian paket sembako untuk anak-anak yatim piatu di lingkungan sekitar kampus.',
             amount: 'Rp 15.000.000',
         },
         {
-            image: '/images/program-3.jpg',
+            image: heroLogo,
             title: 'Modal Usaha Mikro (UMKM)',
             description:
                 'Pemberian modal usaha produktif bagi para pedagang kecil untuk membantu meningkatkan perekonomian keluarga.',

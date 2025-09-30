@@ -19,6 +19,11 @@ const badgeVariants = cva(
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
         success:
             'border-transparent bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-900/20 dark:text-green-400',
+
+        warning: // Kuning untuk 'Diverifikasi'
+                    'border-transparent bg-yellow-50 text-yellow-800 hover:bg-yellow-50/80 dark:bg-yellow-900/20 dark:text-yellow-300',
+                info: // Biru untuk 'Baru'
+                    'border-transparent bg-blue-50 text-blue-800 hover:bg-blue-50/80 dark:bg-blue-900/20 dark:text-blue-300',
       },
     },
     defaultVariants: {

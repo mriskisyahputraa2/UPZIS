@@ -1,16 +1,25 @@
-import AppLogoIcon from './app-logo-icon';
+// resources/js/components/app-logo.tsx (Diperbarui)
 
-export default function AppLogo() {
+import { cn } from '@/lib/utils'; // Import cn jika perlu class tambahan
+import { Link } from '@inertiajs/react';
+
+// Impor logo Anda dari folder assets
+import logoImage from '../../assets/images/logo-icon.png';
+
+export default function AppLogo({ className }) {
     return (
-        <>
-            <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-                <AppLogoIcon className="size-5 fill-current text-white dark:text-black" />
-            </div>
-            <div className="ml-1 grid flex-1 text-left text-sm">
-                <span className="mb-0.5 truncate leading-tight font-semibold">
-                    UPZIS
-                </span>
-            </div>
-        </>
+        // Gunakan Link agar logo bisa diklik untuk kembali ke beranda
+        <Link href="/" className={cn('flex items-center gap-2', className)}>
+            {/* Tampilkan gambar logo */}
+            <img
+                src={logoImage}
+                alt="UPZIS Logo"
+                className="h-8 w-auto" // Atur ukuran logo di sini
+            />
+            {/* Tampilkan teks UPZIS */}
+            <span className="text-lg leading-tight font-semibold text-inherit">
+                UPZIS
+            </span>
+        </Link>
     );
 }

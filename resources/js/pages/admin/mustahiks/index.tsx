@@ -1,3 +1,4 @@
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -28,7 +29,6 @@ import { Input } from '@/components/ui/input';
 import {
     Pagination,
     PaginationContent,
-    PaginationItem,
     PaginationLink,
     PaginationNext,
     PaginationPrevious,
@@ -48,16 +48,25 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
+    AlertTriangle,
     Ellipsis,
     Eye,
     FilePen,
+    Info,
     PlusCircle,
     Search,
     Trash2,
     Users,
+    X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -67,7 +76,6 @@ const breadcrumbs = [
     { title: 'Manajemen Mustahik' },
 ];
 
-// Fungsi untuk mendapatkan inisial nama
 const getInitials = (name) => {
     if (!name) return '??';
     const names = name.split(' ');
@@ -75,19 +83,18 @@ const getInitials = (name) => {
     return (names[0][0] + names[names.length - 1][0]).toUpperCase();
 };
 
-export default function Index({ mustahiks, filters }) {
+export default function Index({ mustahiks, filters, periodes, activePeriode }) {
     const { flash } = usePage().props;
     const [search, setSearch] = useState(filters.search || '');
+    const [filterPeriode, setFilterPeriode] = useState(
+        filters.periode_id || 'all',
+    );
     const [deleteId, setDeleteId] = useState(null);
     const isInitialMount = useRef(true);
 
     useEffect(() => {
-        if (flash && flash.success) {
-            toast.success(flash.success);
-        }
-        if (flash && flash.error) {
-            toast.error(flash.error);
-        }
+        if (flash && flash.success) toast.success(flash.success);
+        if (flash && flash.error) toast.error(flash.error);
     }, [flash]);
 
     useEffect(() => {
@@ -95,32 +102,42 @@ export default function Index({ mustahiks, filters }) {
             isInitialMount.current = false;
             return;
         }
+        const params = {
+            search,
+            per_page: filters.per_page,
+            periode_id: filterPeriode === 'all' ? '' : filterPeriode,
+        };
         const timeout = setTimeout(() => {
-            router.get(
-                '/admin/mustahiks',
-                { search, per_page: filters.per_page },
-                { preserveState: true, replace: true },
-            );
+            router.get('/admin/mustahiks', params, {
+                preserveState: true,
+                replace: true,
+            });
         }, 500);
         return () => clearTimeout(timeout);
-    }, [search]);
+    }, [search, filterPeriode]);
 
     const handlePerPageChange = (perPage) => {
-        router.get(
-            '/admin/mustahiks',
-            { search: filters.search, per_page: perPage },
-            { preserveState: true, replace: true },
-        );
+        const params = {
+            search: filters.search,
+            per_page: perPage,
+            periode_id: filters.periode_id,
+        };
+        router.get('/admin/mustahiks', params, {
+            preserveState: true,
+            replace: true,
+        });
+    };
+
+    const resetFilters = () => {
+        setSearch('');
+        setFilterPeriode('all');
     };
 
     const handleDelete = () => {
         if (deleteId) {
             router.delete(`/admin/mustahiks/${deleteId}`, {
-                onSuccess: () =>
-                    toast.success('Data mustahik berhasil dihapus!'),
-                onError: () => toast.error('Gagal menghapus data.'),
-                onFinish: () => setDeleteId(null),
                 preserveScroll: true,
+                onFinish: () => setDeleteId(null),
             });
         }
     };
@@ -133,34 +150,128 @@ export default function Index({ mustahiks, filters }) {
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <CardTitle>Daftar Mustahik</CardTitle>
-                        <Link href="/admin/mustahiks/create">
-                            <Button>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Tambah Mustahik
-                            </Button>
-                        </Link>
+                        {activePeriode ? (
+                            // Jika ada periode aktif, tombol bisa diklik
+                            <Link href="/admin/mustahiks/create">
+                                <Button>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Tambah Mustahik
+                                </Button>
+                            </Link>
+                        ) : (
+                            // Jika tidak ada periode aktif, tombol nonaktif dengan tooltip
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span tabIndex="0">
+                                            <Button disabled>
+                                                <PlusCircle className="mr-2 h-4 w-4" />
+                                                Tambah Mustahik
+                                            </Button>
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>
+                                            Aktifkan satu periode terlebih
+                                            dahulu untuk menambah data.
+                                        </p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
                     </div>
                     <CardDescription>
                         Kelola data induk semua calon penerima manfaat di sini.
                     </CardDescription>
+
+                    <div className="!mt-4">
+                        {activePeriode ? (
+                            <Alert variant="info">
+                                <Info className="h-4 w-4" />
+                                <AlertTitle>
+                                    Periode Pendaftaran Aktif
+                                </AlertTitle>
+                                <AlertDescription>
+                                    Saat ini periode pendaftaran yang sedang
+                                    aktif adalah{' '}
+                                    <strong className="text-green-600">
+                                        {activePeriode.name}
+                                    </strong>
+                                    .
+                                </AlertDescription>
+                            </Alert>
+                        ) : (
+                            <Alert variant="warning">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>Tidak Ada Periode Aktif</AlertTitle>
+                                <AlertDescription>
+                                    Formulir pendaftaran publik saat ini sedang
+                                    ditutup.
+                                    <Button
+                                        variant="link"
+                                        asChild
+                                        className="ml-1 h-auto p-0"
+                                    >
+                                        <Link href="/admin/periode">
+                                            Aktifkan periode.
+                                        </Link>
+                                    </Button>
+                                </AlertDescription>
+                            </Alert>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent className="flex flex-1 flex-col">
-                    <div className="mb-4 flex items-center justify-between">
-                        <div className="relative w-full max-w-xs">
-                            <Input
-                                type="search"
-                                placeholder="Cari nama atau NIK..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="pl-9"
-                            />
-                            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <div className="mb-4 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+                            <div className="relative w-full sm:w-auto sm:max-w-xs">
+                                <Input
+                                    type="search"
+                                    placeholder="Cari nama atau NIK..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="pl-9"
+                                />
+                                <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            </div>
+
+                            <Select
+                                value={String(filterPeriode)}
+                                onValueChange={setFilterPeriode}
+                            >
+                                <SelectTrigger className="w-full sm:w-[200px]">
+                                    <SelectValue placeholder="Semua Periode" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">
+                                        Semua Periode
+                                    </SelectItem>
+                                    {periodes.map((periode) => (
+                                        <SelectItem
+                                            key={periode.id}
+                                            value={String(periode.id)}
+                                        >
+                                            {periode.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            {(filters.search || filters.periode_id) && (
+                                <Button
+                                    variant="destructive-outline"
+                                    onClick={resetFilters}
+                                >
+                                    <X className="mr-2 h-4 w-4" />
+                                    Reset
+                                </Button>
+                            )}
                         </div>
                         <Select
                             onValueChange={handlePerPageChange}
                             defaultValue={String(filters.per_page || '5')}
                         >
-                            <SelectTrigger className="w-[120px]">
+                            <SelectTrigger className="w-full sm:w-[120px]">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -251,21 +362,20 @@ export default function Index({ mustahiks, filters }) {
                                                         >
                                                             <Link
                                                                 href={`/admin/mustahiks/${mustahik.id}/edit`}
-                                                                className="cursor-pointer"
                                                             >
-                                                                <FilePen className="mr-2 h-4 w-4" />{' '}
+                                                                <FilePen className="mr-2 h-4 w-4" />
                                                                 Edit
                                                             </Link>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
-                                                            className="cursor-pointer text-red-600 focus:text-red-600"
+                                                            className="text-red-600 focus:text-red-600"
                                                             onClick={() =>
                                                                 setDeleteId(
                                                                     mustahik.id,
                                                                 )
                                                             }
                                                         >
-                                                            <Trash2 className="mr-2 h-4 w-4" />{' '}
+                                                            <Trash2 className="mr-2 h-4 w-4" />
                                                             Hapus
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>
@@ -277,22 +387,22 @@ export default function Index({ mustahiks, filters }) {
                                     <TableRow>
                                         <TableCell
                                             colSpan={5}
-                                            className="h-24 text-center"
+                                            className="h-24 p-8 text-center"
                                         >
                                             <div className="flex flex-col items-center justify-center gap-4">
                                                 <Users className="h-16 w-16 text-gray-300 dark:text-gray-700" />
                                                 <h3 className="text-xl font-bold">
                                                     Belum Ada Data Mustahik
                                                 </h3>
-                                                <p className="text-gray-500">
-                                                    Mulai tambahkan data
-                                                    mustahik baru untuk
-                                                    menampilkannya di sini.
+                                                <p className="text-muted-foreground">
+                                                    Data tidak ditemukan. Coba
+                                                    ubah filter atau tambahkan
+                                                    data baru.
                                                 </p>
                                                 <Link href="/admin/mustahiks/create">
                                                     <Button className="mt-2">
                                                         <PlusCircle className="mr-2 h-4 w-4" />
-                                                        Tambah Mustahik Pertama
+                                                        Tambah Mustahik
                                                     </Button>
                                                 </Link>
                                             </div>
@@ -322,32 +432,33 @@ export default function Index({ mustahiks, filters }) {
                         </div>
                         <Pagination>
                             <PaginationContent>
-                                {mustahiks.links.map((link, index) => (
-                                    <PaginationItem key={index}>
-                                        {link.label.includes('Previous') ? (
-                                            <PaginationPrevious
-                                                href={link.url}
-                                                preserveScroll
-                                                preserveState
-                                            />
-                                        ) : link.label.includes('Next') ? (
-                                            <PaginationNext
-                                                href={link.url}
-                                                preserveScroll
-                                                preserveState
-                                            />
-                                        ) : (
-                                            <PaginationLink
-                                                href={link.url}
-                                                isActive={link.active}
-                                                preserveScroll
-                                                preserveState
-                                            >
-                                                {link.label}
-                                            </PaginationLink>
-                                        )}
-                                    </PaginationItem>
-                                ))}
+                                {mustahiks.links.map((link, index) =>
+                                    link.label.includes('Previous') ? (
+                                        <PaginationPrevious
+                                            key={index}
+                                            href={link.url}
+                                            preserveScroll
+                                            preserveState
+                                        />
+                                    ) : link.label.includes('Next') ? (
+                                        <PaginationNext
+                                            key={index}
+                                            href={link.url}
+                                            preserveScroll
+                                            preserveState
+                                        />
+                                    ) : (
+                                        <PaginationLink
+                                            key={index}
+                                            href={link.url}
+                                            isActive={link.active}
+                                            preserveScroll
+                                            preserveState
+                                        >
+                                            {link.label}
+                                        </PaginationLink>
+                                    ),
+                                )}
                             </PaginationContent>
                         </Pagination>
                     </CardFooter>

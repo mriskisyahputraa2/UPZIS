@@ -288,7 +288,7 @@ export default function Create({ activePeriode }) {
                                     </CardTitle>
                                     <CardDescription className="pt-1 pl-12">
                                         Siapkan dokumen Anda dalam format JPG,
-                                        PNG, atau PDF (Maks. 2MB).
+                                        JPEG, PNG, atau PDF (Maks. 2MB).
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-6 pl-12">
