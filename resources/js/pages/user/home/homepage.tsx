@@ -14,6 +14,7 @@ import {
     HandHeart,
     ListChecks,
     MessageSquareQuote,
+    Search,
     UserCheck,
     Users,
 } from 'lucide-react';
@@ -282,8 +283,9 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true, amount: 0.3 }}
-                        className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2"
+                        className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3"
                     >
+                        {/* Kartu Untuk Muzakki */}
                         <motion.div variants={itemVariants}>
                             <Link
                                 href="/bayar-zakat"
@@ -297,11 +299,13 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                                 </h3>
                                 <p className="mt-2 text-slate-600">
                                     Hitung dan tunaikan zakat Anda dengan mudah
-                                    melalui berbagai metode pembayaran yang aman
-                                    dan terverifikasi otomatis.
+                                    melalui pembayaran yang aman dan
+                                    terverifikasi otomatis.
                                 </p>
                             </Link>
                         </motion.div>
+
+                        {/* Kartu Untuk Mustahik */}
                         <motion.div variants={itemVariants}>
                             <Link
                                 href="/ajukan-bantuan"
@@ -311,12 +315,33 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                                     <ListChecks className="h-8 w-8 text-green-600" />
                                 </div>
                                 <h3 className="mt-4 text-xl font-bold text-gray-800">
-                                    Untuk Mustahik
+                                    Ajukan Bantuan
                                 </h3>
                                 <p className="mt-2 text-slate-600">
                                     Ajukan permohonan bantuan zakat secara
                                     online. Proses yang adil, transparan, dan
-                                    mudah untuk diikuti.
+                                    mudah diikuti.
+                                </p>
+                            </Link>
+                        </motion.div>
+
+                        {/* ## TAMBAHKAN KARTU BARU INI ## */}
+                        <motion.div variants={itemVariants}>
+                            <Link
+                                href="/lacak-status"
+                                className="block h-full transform rounded-xl border-t-4 border-green-500 bg-white p-8 text-left shadow-lg transition-shadow duration-300 hover:-translate-y-2 hover:shadow-2xl"
+                            >
+                                <div className="inline-block rounded-full bg-green-100 p-4">
+                                    <Search className="h-8 w-8 text-green-600" />{' '}
+                                    {/* Menggunakan ikon Search */}
+                                </div>
+                                <h3 className="mt-4 text-xl font-bold text-gray-800">
+                                    Lacak Status
+                                </h3>
+                                <p className="mt-2 text-slate-600">
+                                    Sudah mendaftar? Periksa status progres
+                                    permohonan bantuan Anda di sini menggunakan
+                                    kode unik.
                                 </p>
                             </Link>
                         </motion.div>

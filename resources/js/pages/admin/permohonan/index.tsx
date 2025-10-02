@@ -217,7 +217,7 @@ export default function Index({
 
             <Card className="flex h-full flex-1 flex-col">
                 <CardHeader>
-                    <CardTitle>Daftar Permohonan Bantuan</CardTitle>
+                    <CardTitle>Daftar Calon Permohonan Bantuan</CardTitle>
                     <CardDescription>
                         Verifikasi dan kelola semua permohonan bantuan yang
                         masuk.

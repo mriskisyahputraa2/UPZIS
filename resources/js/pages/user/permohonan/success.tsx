@@ -90,7 +90,7 @@ export default function Success({ unique_code }) {
                             Langkah Selanjutnya
                         </h3>
                         <div className="mt-4 flex flex-col justify-center gap-4 sm:flex-row">
-                            <Link href="#">
+                            <Link href={`/lacak-status?kode=${unique_code}`}>
                                 {' '}
                                 {/* Ganti dengan rute Cek Status nanti */}
                                 <Button

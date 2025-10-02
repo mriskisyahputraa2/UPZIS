@@ -84,12 +84,14 @@ const DocumentCard = ({ file_path, label }) => {
                     src={fileUrl}
                     alt={label}
                     className="h-28 w-full object-cover"
+                    loading="lazy"
                 />
             ) : isPdf ? (
                 <iframe
                     src={fileUrl}
                     className="h-28 w-full border-0"
                     title={label}
+                    loading="lazy"
                 ></iframe>
             ) : (
                 <div className="flex h-28 w-full flex-col items-center justify-center bg-gray-100 dark:bg-gray-800">
@@ -209,6 +211,7 @@ export default function Show({ mustahik }) {
                                             src={`/storage/${mustahik.photo}`}
                                             alt={mustahik.name}
                                             className="h-full w-full rounded-xl object-cover"
+                                            loading="lazy"
                                         />
                                     ) : (
                                         <div className="flex h-full w-full items-center justify-center rounded-xl bg-muted">

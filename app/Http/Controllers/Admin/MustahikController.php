@@ -16,46 +16,51 @@ use Inertia\Inertia;
 class MustahikController extends Controller
 {
     // Menampilkan halaman daftar mustahik
-    public function index(Request $request)
+  public function index(Request $request)
     {
         $request->validate([
             'periode_id' => 'nullable|integer|exists:periodes,id',
         ]);
 
-        // 2. Cari periode yang aktif untuk ditampilkan di header dan sebagai filter default
+        // 1. Cari periode yang aktif
         $activePeriode = Periode::where('status', 'Aktif')->first();
 
-        // 3. Bangun query secara dinamis
         $mustahiksQuery = Mustahik::query()
+            // Aturan utama: Hanya tampilkan mustahik yang pernah disetujui
+            ->whereHas('permohonans', function ($query) {
+                $query->where('status', 'Disetujui');
+            })
+            // Filter pencarian
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")->orWhere('nik', 'like', "%{$search}%");
             })
-            // 4. Tambahkan logika filter berdasarkan periode
-            ->when($request->filled('periode_id'), function ($query, $periode_id) {
-                // Jika user memilih periode spesifik dari filter, gunakan itu.
-                $query->whereHas('permohonans', function ($q) use ($periode_id) {
-                    $q->where('periode_id', $periode_id);
+            // ## PERUBAHAN LOGIKA FILTER PERIODE DI SINI ##
+            // Jika user memilih periode spesifik dari filter, gunakan itu.
+            ->when($request->filled('periode_id'), function ($query) use ($request) {
+                $query->whereHas('permohonans', function ($q) use ($request) {
+                    $q->where('periode_id', $request->input('periode_id'));
                 });
             })
+            // Jika halaman baru dimuat (tidak ada filter di URL), default ke periode aktif.
             ->when(!$request->has('periode_id') && $activePeriode, function ($query) use ($activePeriode) {
-                // Jika halaman baru dimuat (tidak ada filter di URL), default ke periode aktif.
                 $query->whereHas('permohonans', function ($q) use ($activePeriode) {
                     $q->where('periode_id', $activePeriode->id);
                 });
             });
 
-        $mustahiks = $mustahiksQuery->latest()->paginate($request->input('per_page', 5))->withQueryString();
+        // Gunakan distinct() untuk mencegah duplikasi
+        $mustahiks = $mustahiksQuery->distinct()->latest()
+            ->paginate($request->input('per_page', 5))
+            ->withQueryString();
 
-        // 5. Ambil semua periode untuk dropdown filter
         $periodes = Periode::latest()->get(['id', 'name']);
 
-        // 6. Pastikan filter yang dikirim ke frontend sesuai dengan yang diterapkan
+        // 2. Pastikan filter yang dikirim ke frontend sesuai dengan yang diterapkan
         $currentFilters = $request->only(['search', 'per_page', 'periode_id']);
         if (!$request->has('periode_id') && $activePeriode) {
             $currentFilters['periode_id'] = $activePeriode->id;
         }
 
-        // 7. Mengirim semua data yang dibutuhkan ke frontend
         return Inertia::render('admin/mustahiks/index', [
             'mustahiks' => $mustahiks,
             'filters' => $currentFilters,

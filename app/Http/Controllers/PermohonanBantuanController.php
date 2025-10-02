@@ -148,4 +148,26 @@ class PermohonanBantuanController extends Controller
             'unique_code' => session('unique_code')
         ]);
     }
+
+    /**
+     * Menampilkan halaman dan hasil pelacakan status permohonan.
+     */
+    public function lacak(Request $request)
+    {
+        $request->validate([
+            'kode' => 'nullable|string|max:255',
+        ]);
+
+        $permohonan = null;
+        if ($request->filled('kode')) {
+            $permohonan = Permohonan::where('unique_code', $request->kode)
+                ->with(['mustahik', 'periode']) // Muat relasi untuk ditampilkan
+                ->first();
+        }
+
+        return Inertia::render('user/permohonan/lacak', [
+            'permohonan' => $permohonan,
+            'filters' => $request->only(['kode']), // Kirim kode yang dicari kembali ke view
+        ]);
+    }
 }

@@ -169,3 +169,59 @@
         @apply rounded-lg; /* Memberi efek rounded yang lebih lembut */
     }
 }
+
+/* ====================================================================== */
+/* ## KODE KUSTOM UNTUK ANIMASI LOGIN (DITAMBAHKAN DI SINI) ##            */
+/* ====================================================================== */
+
+/* Animasi untuk latar belakang gambar login */
+@keyframes zoom-in-pan {
+    0% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1.15);
+    }
+}
+
+.bg-zoom-in-pan {
+    animation: zoom-in-pan 20s ease-in-out infinite alternate;
+}
+
+/* Animasi untuk efek kilau pada tombol */
+.shine-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+.shine-effect::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background-image: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(25deg);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.shine-effect:hover::after {
+    opacity: 1;
+    animation: shine 1.5s ease-out;
+}
+
+@keyframes shine {
+    0% {
+        transform: translateX(-75%) translateY(-75%) rotate(25deg);
+    }
+    100% {
+        transform: translateX(75%) translateY(75%) rotate(25deg);
+    }
+}
