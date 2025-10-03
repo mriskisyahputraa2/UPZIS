@@ -448,13 +448,27 @@ export default function Index({
                                                     {permohonan.periode.name}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {format(
-                                                        new Date(
-                                                            permohonan.created_at,
-                                                        ),
-                                                        'dd MMM yyyy',
-                                                        { locale: id },
-                                                    )}
+                                                    <div className="flex flex-col">
+                                                        <span>
+                                                            {format(
+                                                                new Date(
+                                                                    permohonan.created_at,
+                                                                ),
+                                                                'dd MMMM yyyy', // Format tanggal tetap panjang dan jelas
+                                                                { locale: id },
+                                                            )}
+                                                        </span>
+                                                        <span className="text-xs text-green-600">
+                                                            {format(
+                                                                new Date(
+                                                                    permohonan.created_at,
+                                                                ),
+                                                                'HH:mm', // Format untuk Jam:Menit (misal: 14:30)
+                                                                { locale: id },
+                                                            )}{' '}
+                                                            WIB
+                                                        </span>
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Select

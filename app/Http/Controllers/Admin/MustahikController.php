@@ -22,29 +22,25 @@ class MustahikController extends Controller
             'periode_id' => 'nullable|integer|exists:periodes,id',
         ]);
 
-        // 1. Cari periode yang aktif
         $activePeriode = Periode::where('status', 'Aktif')->first();
 
         $mustahiksQuery = Mustahik::query()
-            // Aturan utama: Hanya tampilkan mustahik yang pernah disetujui
+            // ## PERUBAHAN UTAMA: Hanya tampilkan mustahik yang SAAT INI punya status 'Disetujui' ##
             ->whereHas('permohonans', function ($query) {
                 $query->where('status', 'Disetujui');
             })
-            // Filter pencarian
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")->orWhere('nik', 'like', "%{$search}%");
             })
-            // ## PERUBAHAN LOGIKA FILTER PERIODE DI SINI ##
-            // Jika user memilih periode spesifik dari filter, gunakan itu.
-            ->when($request->filled('periode_id'), function ($query) use ($request) {
-                $query->whereHas('permohonans', function ($q) use ($request) {
-                    $q->where('periode_id', $request->input('periode_id'));
+            ->when($request->input('periode_id'), function ($query, $periode_id) {
+                $query->whereHas('permohonans', function ($q) use ($periode_id) {
+                    $q->where('periode_id', $periode_id);
                 });
             })
-            // Jika halaman baru dimuat (tidak ada filter di URL), default ke periode aktif.
-            ->when(!$request->has('periode_id') && $activePeriode, function ($query) use ($activePeriode) {
+            ->when(!$request->filled('periode_id') && $activePeriode, function ($query) use ($activePeriode) {
                 $query->whereHas('permohonans', function ($q) use ($activePeriode) {
-                    $q->where('periode_id', $activePeriode->id);
+                    // Kita tambahkan juga filter status di sini agar konsisten
+                    $q->where('periode_id', $activePeriode->id)->where('status', 'Disetujui');
                 });
             });
 
@@ -55,7 +51,6 @@ class MustahikController extends Controller
 
         $periodes = Periode::latest()->get(['id', 'name']);
 
-        // 2. Pastikan filter yang dikirim ke frontend sesuai dengan yang diterapkan
         $currentFilters = $request->only(['search', 'per_page', 'periode_id']);
         if (!$request->has('periode_id') && $activePeriode) {
             $currentFilters['periode_id'] = $activePeriode->id;
@@ -67,6 +62,7 @@ class MustahikController extends Controller
             'periodes' => $periodes,
             'activePeriode' => $activePeriode,
         ]);
+
     }
 
     // Menampilkan form untuk menambah mustahik baru

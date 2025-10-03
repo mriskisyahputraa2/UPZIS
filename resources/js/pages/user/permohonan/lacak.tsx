@@ -1,5 +1,4 @@
-// resources/js/Pages/user/permohonan/lacak.jsx
-
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -10,8 +9,9 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PublicLayout from '@/layouts/publicLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import {
     CheckCircle,
     Circle,
@@ -39,41 +39,39 @@ const StatusStepper = ({ currentStatus }) => {
     return (
         <div className="space-y-4">
             {steps.map((step, index) => {
-                if (isRejected && step.name === 'Disetujui') return null; // Sembunyikan 'Disetujui' jika ditolak
-                if (!isRejected && step.isRejected) return null; // Sembunyikan 'Ditolak' jika tidak ditolak
+                if (isRejected && step.name === 'Disetujui') return null;
+                if (!isRejected && step.isRejected) return null;
 
                 const isActive = index <= currentStepIndex;
                 const isCurrent = index === currentStepIndex;
 
-                let Icon = step.icon;
-                let iconColor = 'text-gray-400';
-                let textColor = 'text-gray-500';
-
-                if (isActive) {
-                    Icon = CheckCircle;
-                    iconColor = isRejected ? 'text-red-500' : 'text-green-500';
-                    textColor = isRejected
+                let Icon = isActive ? CheckCircle : step.icon;
+                let iconColor = isActive
+                    ? isRejected
+                        ? 'text-red-500'
+                        : 'text-green-500'
+                    : 'text-gray-400';
+                let textColor = isActive
+                    ? isRejected
                         ? 'text-red-600 font-semibold'
-                        : 'text-green-600 font-semibold';
+                        : 'text-green-600 font-semibold'
+                    : 'text-gray-500';
+
+                if (isCurrent && !step.isFinal) {
+                    Icon = Loader;
+                    iconColor = 'text-yellow-500';
+                    textColor = 'text-yellow-600 font-semibold';
                 }
-                if (isCurrent) {
-                    Icon = isRejected ? XCircle : Loader;
-                    if (
-                        currentStatus === 'Baru' ||
-                        currentStatus === 'Diverifikasi'
-                    )
-                        Icon = Loader;
-                    if (currentStatus === 'Disetujui') Icon = CheckCircle;
-                }
+                if (isCurrent && currentStatus === 'Ditolak') Icon = XCircle;
 
                 return (
                     <div key={step.name} className="flex items-center gap-4">
                         <Icon
-                            className={`h-6 w-6 flex-shrink-0 ${iconColor} ${isCurrent && !step.isFinal ? 'animate-spin' : ''}`}
+                            className={`h-6 w-6 flex-shrink-0 ${iconColor} ${
+                                isCurrent && !step.isFinal ? 'animate-spin' : ''
+                            }`}
                         />
-                        <span
-                            className={`font-medium ${isActive ? textColor : 'text-gray-400'}`}
-                        >
+                        <span className={`font-medium ${textColor}`}>
                             {step.name}
                         </span>
                     </div>
@@ -84,20 +82,28 @@ const StatusStepper = ({ currentStatus }) => {
 };
 
 export default function Lacak({ permohonan, filters }) {
-    const [kode, setKode] = useState(filters.kode || '');
-    const [isLoading, setIsLoading] = useState(false);
+    const { data, setData, get, processing, errors } = useForm({
+        kode: filters.kode || '',
+        identifier: filters.identifier || '',
+    });
+
+    const [activeTab, setActiveTab] = useState(
+        filters.identifier ? 'dataDiri' : 'kodeUnik',
+    );
 
     const handleSearch = (e) => {
         e.preventDefault();
-        setIsLoading(true);
-        router.get(
-            '/lacak-status',
-            { kode },
-            {
-                preserveState: true,
-                onFinish: () => setIsLoading(false),
-            },
-        );
+
+        const params =
+            activeTab === 'kodeUnik'
+                ? { kode: data.kode }
+                : { identifier: data.identifier };
+
+        get('/lacak-status', {
+            data: params,
+            preserveState: true,
+            preserveScroll: true,
+        });
     };
 
     return (
@@ -110,54 +116,135 @@ export default function Lacak({ permohonan, filters }) {
                         Lacak Status Permohonan
                     </h1>
                     <p className="mt-4 text-lg text-green-100">
-                        Masukkan kode unik pendaftaran Anda untuk melihat
-                        progres permohonan.
+                        Pantau progres permohonan bantuan Anda secara mandiri.
                     </p>
                 </div>
             </section>
 
             <section className="-mt-10 pb-24">
                 <div className="container mx-auto max-w-2xl px-4">
-                    <Card className="shadow-lg">
-                        <CardHeader>
-                            <CardTitle>Masukkan Kode Pendaftaran</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <form
-                                onSubmit={handleSearch}
-                                className="flex flex-col items-start gap-4 sm:flex-row"
-                            >
-                                <div className="w-full space-y-2">
-                                    <Label htmlFor="kode" className="sr-only">
-                                        Kode Unik
-                                    </Label>
-                                    <Input
-                                        id="kode"
-                                        value={kode}
-                                        onChange={(e) =>
-                                            setKode(e.target.value)
-                                        }
-                                        placeholder="Contoh: UPZ-17590..."
-                                        className="h-12 text-lg"
-                                        required
-                                    />
-                                </div>
-                                <Button
-                                    type="submit"
-                                    size="lg"
-                                    disabled={isLoading}
-                                    className="h-12 w-full text-base font-bold sm:w-auto"
-                                >
-                                    {isLoading ? (
-                                        <Loader className="mr-2 h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <Search className="mr-2 h-4 w-4" />
-                                    )}
-                                    Lacak
-                                </Button>
-                            </form>
-                        </CardContent>
-                    </Card>
+                    <Tabs
+                        value={activeTab}
+                        onValueChange={setActiveTab}
+                        className="w-full"
+                    >
+                        <TabsList className="grid h-12 w-full grid-cols-2">
+                            <TabsTrigger value="kodeUnik" className="text-base">
+                                Dengan Kode Unik
+                            </TabsTrigger>
+                            <TabsTrigger value="dataDiri" className="text-base">
+                                Dengan Data Diri
+                            </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="kodeUnik">
+                            <Card className="shadow-lg">
+                                <CardHeader>
+                                    <CardTitle>
+                                        Masukkan Kode Pendaftaran
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <form
+                                        onSubmit={handleSearch}
+                                        className="flex flex-col items-start gap-4 sm:flex-row"
+                                    >
+                                        <div className="w-full space-y-2">
+                                            <Label
+                                                htmlFor="kode"
+                                                className="sr-only"
+                                            >
+                                                Kode Unik
+                                            </Label>
+                                            <Input
+                                                id="kode"
+                                                value={data.kode}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'kode',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Contoh: UPZ-17590..."
+                                                className="h-12 text-lg"
+                                            />
+                                            <InputError message={errors.kode} />
+                                        </div>
+                                        <Button
+                                            type="submit"
+                                            size="lg"
+                                            disabled={processing}
+                                            className="h-12 w-full text-base font-bold sm:w-auto"
+                                        >
+                                            {processing ? (
+                                                <Loader className="mr-2 h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <Search className="mr-2 h-4 w-4" />
+                                            )}
+                                            Lacak
+                                        </Button>
+                                    </form>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        <TabsContent value="dataDiri">
+                            <Card className="shadow-lg">
+                                <CardHeader>
+                                    <CardTitle>
+                                        Masukkan Data Diri Anda
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Anda bisa menggunakan NIK atau Nomor
+                                        Handphone yang terdaftar.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <form
+                                        onSubmit={handleSearch}
+                                        className="flex flex-col items-start gap-4 sm:flex-row"
+                                    >
+                                        <div className="w-full space-y-2">
+                                            <Label
+                                                htmlFor="identifier"
+                                                className="sr-only"
+                                            >
+                                                NIK atau No. HP
+                                            </Label>
+                                            <Input
+                                                id="identifier"
+                                                value={data.identifier}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'identifier',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Masukkan NIK atau No. HP Anda..."
+                                                className="h-12 text-lg"
+                                            />
+                                            <InputError
+                                                message={errors.identifier}
+                                            />
+                                        </div>
+                                        <Button
+                                            type="submit"
+                                            size="lg"
+                                            disabled={processing}
+                                            className="h-12 w-full text-base font-bold sm:w-auto"
+                                        >
+                                            {processing ? (
+                                                <Loader className="mr-2 h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <Search className="mr-2 h-4 w-4" />
+                                            )}
+                                            Lacak
+                                        </Button>
+                                    </form>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    </Tabs>
 
                     {/* Tampilan Hasil Pencarian */}
                     <div className="mt-8">
@@ -196,20 +283,22 @@ export default function Lacak({ permohonan, filters }) {
                             </Card>
                         )}
 
-                        {filters.kode && !permohonan && !isLoading && (
-                            <Card className="duration-500 animate-in fade-in">
-                                <CardContent className="p-10 text-center">
-                                    <HelpCircle className="mx-auto h-16 w-16 text-gray-400" />
-                                    <h2 className="mt-4 text-2xl font-bold">
-                                        Data Tidak Ditemukan
-                                    </h2>
-                                    <p className="mt-2 text-muted-foreground">
-                                        Pastikan kode pendaftaran yang Anda
-                                        masukkan sudah benar.
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        )}
+                        {(filters.kode || filters.identifier) &&
+                            !permohonan &&
+                            !processing && (
+                                <Card className="duration-500 animate-in fade-in">
+                                    <CardContent className="p-10 text-center">
+                                        <HelpCircle className="mx-auto h-16 w-16 text-gray-400" />
+                                        <h2 className="mt-4 text-2xl font-bold">
+                                            Data Tidak Ditemukan
+                                        </h2>
+                                        <p className="mt-2 text-muted-foreground">
+                                            Pastikan kode atau data diri yang
+                                            Anda masukkan sudah benar.
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            )}
                     </div>
                 </div>
             </section>

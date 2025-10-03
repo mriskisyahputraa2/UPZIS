@@ -186,7 +186,6 @@ export default function Show({ mustahik }) {
                             </p>
                         </div>
                     </div>
-                    {/* ## PERUBAHAN #1: Grup tombol disembunyikan di layar mobile (hidden) ## */}
                     <div className="hidden w-full flex-shrink-0 gap-2 md:flex md:w-auto">
                         <Link href="/admin/mustahiks">
                             <Button variant="outline">Kembali</Button>
@@ -343,6 +342,8 @@ export default function Show({ mustahik }) {
                                                                     Lampiran
                                                                     Dokumen:
                                                                 </p>
+
+                                                                {/* ## PERUBAHAN UTAMA DI SINI ## */}
                                                                 <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-3">
                                                                     <DocumentCard
                                                                         file_path={
@@ -362,7 +363,26 @@ export default function Show({ mustahik }) {
                                                                         }
                                                                         label="KHS"
                                                                     />
+                                                                    <DocumentCard
+                                                                        file_path={
+                                                                            permohonan.file_surat_fakir_miskin
+                                                                        }
+                                                                        label="Surat Fakir/Miskin"
+                                                                    />
+                                                                    <DocumentCard
+                                                                        file_path={
+                                                                            permohonan.file_tidak_menerima_beasiswa
+                                                                        }
+                                                                        label="Surat Ket. Tdk Menerima Beasiswa"
+                                                                    />
+                                                                    <DocumentCard
+                                                                        file_path={
+                                                                            permohonan.file_surat_permohonan
+                                                                        }
+                                                                        label="Surat Permohonan"
+                                                                    />
                                                                 </div>
+
                                                                 {permohonan.notes_admin && (
                                                                     <div className="mt-4">
                                                                         <p className="text-sm font-semibold">
@@ -396,7 +416,6 @@ export default function Show({ mustahik }) {
                     </div>
                 </div>
 
-                {/* ## PERUBAHAN #2: Grup tombol ditambahkan di bawah HANYA untuk layar mobile (md:hidden) ## */}
                 <div className="mt-6 flex w-full justify-end gap-2 md:hidden">
                     <Link href="/admin/mustahiks">
                         <Button variant="outline">Kembali</Button>

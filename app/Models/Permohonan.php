@@ -11,17 +11,7 @@ class Permohonan extends Model
 
     protected $table = 'permohonans'; // Nama tabel jamak
 
-    protected $fillable = [
-        'mustahik_id',
-        'periode_id',
-        'unique_code',
-        'status',
-        'file_ktp',
-        'file_kk',
-        'file_khs',
-        'notes_admin',
-        'photo',
-    ];
+    protected $fillable = ['mustahik_id', 'periode_id', 'unique_code', 'status', 'file_ktp', 'file_kk', 'file_khs', 'notes_admin', 'photo', 'file_surat_fakir_miskin', 'file_tidak_menerima_beasiswa', 'file_surat_permohonan'];
 
     public function mustahik()
     {

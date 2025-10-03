@@ -69,6 +69,7 @@ const DocumentCard = ({ file_path, label }) => {
                     src={fileUrl}
                     alt={label}
                     className="h-40 w-full object-cover"
+                    loading="lazy"
                 />
             ) : isPdf ? (
                 // Jika file adalah PDF, tampilkan <iframe>
@@ -76,6 +77,7 @@ const DocumentCard = ({ file_path, label }) => {
                     src={fileUrl}
                     className="h-40 w-full border-0"
                     title={label}
+                    loading="lazy"
                 ></iframe>
             ) : (
                 // Jika file tipe lain, tampilkan ikon generik
@@ -283,6 +285,25 @@ export default function Show({ permohonan }) {
                                     <DocumentCard
                                         file_path={permohonan.file_khs}
                                         label="Kartu Hasil Studi (KHS)"
+                                    />
+                                    {/* ## TAMBAHKAN 3 KARTU DOKUMEN BARU DI SINI ## */}
+                                    <DocumentCard
+                                        file_path={
+                                            permohonan.file_surat_fakir_miskin
+                                        }
+                                        label="Surat Fakir/Miskin"
+                                    />
+                                    <DocumentCard
+                                        file_path={
+                                            permohonan.file_tidak_menerima_beasiswa
+                                        }
+                                        label="Surat Ket. Tdk Menerima Beasiswa"
+                                    />
+                                    <DocumentCard
+                                        file_path={
+                                            permohonan.file_surat_permohonan
+                                        }
+                                        label="Surat Permohonan"
                                     />
                                 </div>
                             </CardContent>

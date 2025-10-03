@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\MustahikController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\PermohonanController;
 use App\Http\Controllers\HomePageController;
+use App\Http\Controllers\KalkulatorController;
 use App\Http\Controllers\PermohonanBantuanController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -23,7 +24,9 @@ Route::get('ajukan-bantuan', [PermohonanBantuanController::class, "create"])->na
 Route::post('ajukan-bantuan', [PermohonanBantuanController::class, "store"])->name('permohonan.store');
 Route::get('pendaftaran-berhasil', [PermohonanBantuanController::class, 'success'])->name('permohonan.success');
 Route::get('lacak-status', [PermohonanBantuanController::class, 'lacak'])->name('permohonan.lacak');
-
+// Rute untuk menampilkan halaman kalkulator
+Route::get('kalkulator-zakat', [KalkulatorController::class, 'index'])->name('kalkulator.index');
+Route::post('kalkulator-zakat/hitung', [KalkulatorController::class, 'hitung'])->name('kalkulator.hitung');
 
 
 /*

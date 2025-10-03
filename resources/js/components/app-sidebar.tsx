@@ -29,7 +29,7 @@ const mainNavItems: NavItem[] = [
     },
 
     {
-        title: 'Manajement Mustahik',
+        title: 'Manajemen Mustahik',
         href: '/admin/mustahiks',
         icon: Users,
     },

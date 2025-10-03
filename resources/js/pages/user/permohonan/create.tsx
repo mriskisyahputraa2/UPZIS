@@ -38,7 +38,7 @@ const FileInput = ({ id, label, file, onFileChange, error }) => {
 
     return (
         <div className="space-y-2">
-            <Label htmlFor={id} className="font-semibold">
+            <Label htmlFor={id} className="truncate font-semibold">
                 {label} <span className="text-red-500">*</span>
             </Label>
             {file ? (
@@ -104,6 +104,9 @@ export default function Create({ activePeriode }) {
         file_ktp: null,
         file_kk: null,
         file_khs: null,
+        file_surat_fakir_miskin: null,
+        file_tidak_menerima_beasiswa: null,
+        file_surat_permohonan: null,
     });
 
     const handleSubmit = (e) => {
@@ -152,7 +155,6 @@ export default function Create({ activePeriode }) {
                             className="space-y-8"
                             noValidate
                         >
-                            {/* Langkah 1: Unggah Foto Profil */}
                             <Card className="shadow-lg duration-500 animate-in fade-in slide-in-from-bottom-5">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-4">
@@ -200,7 +202,6 @@ export default function Create({ activePeriode }) {
                                 </CardContent>
                             </Card>
 
-                            {/* Langkah 2: Data Diri Pemohon */}
                             <Card className="shadow-lg delay-100 duration-500 animate-in fade-in slide-in-from-bottom-5">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-4">
@@ -231,6 +232,7 @@ export default function Create({ activePeriode }) {
                                                         e.target.value,
                                                     )
                                                 }
+                                                placeholder="Masukkan Nama Lengkap..."
                                                 required
                                             />
                                             <InputError message={errors.name} />
@@ -248,6 +250,7 @@ export default function Create({ activePeriode }) {
                                                         'phone_number',
                                                     )
                                                 }
+                                                placeholder="Masukkan No. Handphone (WhatsApp)..."
                                                 required
                                             />
                                             <InputError
@@ -268,6 +271,7 @@ export default function Create({ activePeriode }) {
                                                     e.target.value,
                                                 )
                                             }
+                                            placeholder="Masukkan Alamat Lengkap..."
                                             required
                                         />
                                         <InputError message={errors.address} />
@@ -275,7 +279,6 @@ export default function Create({ activePeriode }) {
                                 </CardContent>
                             </Card>
 
-                            {/* Langkah 3: Data Kependudukan & Dokumen */}
                             <Card className="shadow-lg delay-200 duration-500 animate-in fade-in slide-in-from-bottom-5">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-4">
@@ -304,6 +307,7 @@ export default function Create({ activePeriode }) {
                                                     handleNumericInput(e, 'nik')
                                                 }
                                                 maxLength={16}
+                                                placeholder="Masukkan NIK..."
                                                 required
                                             />
                                             <InputError message={errors.nik} />
@@ -325,6 +329,7 @@ export default function Create({ activePeriode }) {
                                                         'kk_number',
                                                     )
                                                 }
+                                                placeholder="Masukkan KK..."
                                                 maxLength={16}
                                                 required
                                             />
@@ -338,7 +343,7 @@ export default function Create({ activePeriode }) {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
                                         <FileInput
                                             id="file_ktp"
                                             label="Scan/Foto KTP"
@@ -366,11 +371,52 @@ export default function Create({ activePeriode }) {
                                             }
                                             error={errors.file_khs}
                                         />
+                                        <FileInput
+                                            id="file_surat_fakir_miskin"
+                                            label="Surat Fakir/Miskin"
+                                            file={data.file_surat_fakir_miskin}
+                                            onFileChange={(file) =>
+                                                setData(
+                                                    'file_surat_fakir_miskin',
+                                                    file,
+                                                )
+                                            }
+                                            error={
+                                                errors.file_surat_fakir_miskin
+                                            }
+                                        />
+                                        <FileInput
+                                            id="file_tidak_menerima_beasiswa"
+                                            label="Surat Tidak Menerima Beasiswa"
+                                            file={
+                                                data.file_tidak_menerima_beasiswa
+                                            }
+                                            onFileChange={(file) =>
+                                                setData(
+                                                    'file_tidak_menerima_beasiswa',
+                                                    file,
+                                                )
+                                            }
+                                            error={
+                                                errors.file_tidak_menerima_beasiswa
+                                            }
+                                        />
+                                        <FileInput
+                                            id="file_surat_permohonan"
+                                            label="Surat Permohonan"
+                                            file={data.file_surat_permohonan}
+                                            onFileChange={(file) =>
+                                                setData(
+                                                    'file_surat_permohonan',
+                                                    file,
+                                                )
+                                            }
+                                            error={errors.file_surat_permohonan}
+                                        />
                                     </div>
                                 </CardContent>
                             </Card>
 
-                            {/* Langkah 4: Konfirmasi & Kirim */}
                             <Card className="shadow-lg delay-300 duration-500 animate-in fade-in slide-in-from-bottom-5">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-4">
