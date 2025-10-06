@@ -3,9 +3,10 @@ import { PublicHeader } from '@/components/public-header'; // Sesuaikan path jik
 
 export default function PublicLayout({ children }) {
     return (
-        <div className="min-h-screen bg-white">
+        <div className="flex min-h-screen flex-col bg-white">
             <PublicHeader />
-            <main>{children}</main>
+            {/* 2. Tambahkan 'flex-1' pada main content */}
+            <main className="flex-1">{children}</main>
             <PublicFooter />
         </div>
     );

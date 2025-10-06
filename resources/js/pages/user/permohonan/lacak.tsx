@@ -110,8 +110,8 @@ export default function Lacak({ permohonan, filters }) {
         <PublicLayout>
             <Head title="Lacak Status Permohonan" />
 
-            <section className="bg-green-700 pt-32 pb-16 text-white">
-                <div className="container mx-auto max-w-4xl px-4 text-center">
+            <section className="bg-green-700 pt-28 pb-16 text-white md:pt-32">
+                <div className="container mx-auto max-w-4xl px-6 text-center">
                     <h1 className="text-4xl font-bold md:text-5xl">
                         Lacak Status Permohonan
                     </h1>
@@ -121,8 +121,8 @@ export default function Lacak({ permohonan, filters }) {
                 </div>
             </section>
 
-            <section className="-mt-10 pb-24">
-                <div className="container mx-auto max-w-2xl px-4">
+            <section className="-mt-10 pb-16 md:pb-24">
+                <div className="container mx-auto max-w-2xl px-6">
                     <Tabs
                         value={activeTab}
                         onValueChange={setActiveTab}
