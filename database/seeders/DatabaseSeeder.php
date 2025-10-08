@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             PeriodeSeeder::class,
             MustahikSeeder::class,
             PermohonanSeeder::class,
+            PaymentSettingsSeeder::class,
         ]);
     }
 }

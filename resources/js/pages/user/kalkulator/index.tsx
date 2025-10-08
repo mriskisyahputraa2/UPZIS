@@ -43,8 +43,9 @@ const formatCurrency = (value) => {
 
 // Data ikon untuk setiap jenis zakat
 const zakatIcons = {
-    'Zakat Profesi': Wallet,
-    'Zakat Emas & Simpanan': Landmark,
+    'Zakat Profesi / Penghasilan': Wallet,
+    'Zakat Maal (Simpanan & Emas)': Landmark,
+    'Zakat Perdagangan': Landmark,
 };
 
 export default function Kalkulator({ jenisZakat, hargaEmas }) {
@@ -110,11 +111,15 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
     const ActiveIcon = activeZakatDetails
         ? zakatIcons[activeZakatDetails.name] || Wallet
         : Wallet;
-
-    // Cek apakah jenis zakat profesi
     const isProfesi = activeZakatDetails?.name
         .toLowerCase()
         .includes('profesi');
+
+    // Variabel untuk membuat URL dinamis ke halaman pembayaran
+    const bayarZakatUrl =
+        result && result.wajib_zakat && result.nominal_zakat > 0
+            ? `/bayar-zakat?amount=${result.nominal_zakat}`
+            : '/bayar-zakat';
 
     return (
         <PublicLayout>
@@ -342,16 +347,11 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
                                                             : 'Anda Belum Wajib Membayar Zakat'}
                                                     </h4>
                                                     <p className="text-sm text-muted-foreground">
-                                                        Ambang batas (nisab){' '}
-                                                        {isProfesi
-                                                            ? 'bulanan'
-                                                            : 'tahunan'}{' '}
+                                                        Ambang batas (nisab)
                                                         adalah{' '}
-                                                        <strong>
-                                                            {formatCurrency(
-                                                                result.nisab,
-                                                            )}
-                                                        </strong>
+                                                        {formatCurrency(
+                                                            result.nisab,
+                                                        )}
                                                         .
                                                     </p>
                                                 </div>
@@ -374,7 +374,7 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
                                 )}
 
                                 <div className="mt-8 flex justify-center">
-                                    <Link href="/bayar-zakat">
+                                    <Link href={bayarZakatUrl}>
                                         <Button
                                             size="lg"
                                             className="text-base font-bold"

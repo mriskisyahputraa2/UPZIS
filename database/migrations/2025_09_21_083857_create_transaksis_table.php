@@ -12,13 +12,15 @@ return new class extends Migration {
     {
         Schema::create('transaksis', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users');
-            $table->string('order_id')->unique();
-            $table->decimal('amount', 15, 2);
-            $table->string('payment_method')->nullable();
-            $table->string('status', 50)->default('Pending'); // Values: Pending, Berhasil, Gagal, Kadaluarsa
-            $table->string('midtrans_transaction_id')->nullable();
-            $table->string('snap_token')->nullable();
+            // Relasi ke tabel users (Muzakki)
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->string('order_id', 100)->unique(); //
+            $table->decimal('amount', 15, 2); //
+            $table->integer('unique_code')->nullable(); // Kode unik untuk transfer, bisa null jika tidak diperlukan
+            $table->decimal('final_amount', 15, 2); // Nominal akhir setelah ditambah kode unik
+            $table->string('payment_method', 100); //
+            $table->string('payment_proof')->nullable(); // Path ke file bukti, null saat record dibuat
+            $table->string('status', 50)->default('Menunggu Pembayaran');
             $table->timestamps();
         });
     }
