@@ -13,7 +13,6 @@ use Illuminate\Validation\Rule; // <-- 1. TAMBAHKAN IMPORT INI
 
 class PermohonanBantuanController extends Controller
 {
-    // ... method create() tidak berubah ...
     public function create()
     {
         $activePeriode = Periode::where('status', 'Aktif')->first();
@@ -63,6 +62,7 @@ class PermohonanBantuanController extends Controller
                 'file_ktp.mimes' => 'Format file harus jpg, jpeg, png dan pdf',
                 'file_kk.mimes' => 'Format file harus jpg, jpeg, png dan pdf',
                 'file_khs.mimes' => 'Format file harus jpg, jpeg, png dan pdf',
+                'phone_number.max' => 'Kolom No. Telepon maksimal 20 karakter.',
                 'kk_number.size' => 'Kolom KK harus 16 karakter',
                 'nik.size' => 'Kolom NIK harus 16 karakter',
                 'file_surat_fakir_miskin.required' => 'Surat Keterangan Fakir/Miskin wajib diunggah.',
