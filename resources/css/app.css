@@ -116,19 +116,19 @@
 /* ====================================================================== */
 /* PALET WARNA DARK MODE FINAL */
 /* ====================================================================== */
+/*
 .dark {
-    --background: oklch(0.1 0.02 260); /* Latar: Biru-dongker sangat gelap */
+    --background: oklch(0.1 0.02 260);
     --foreground: oklch(0.95 0.01 260);
     --card: oklch(0.13 0.02 260);
     --card-foreground: oklch(0.95 0.01 260);
     --popover: oklch(0.1 0.02 260);
     --popover-foreground: oklch(0.95 0.01 260);
 
-    /* Warna Aksen Utama HIJAU */
     --primary: oklch(
         0.65 0.2 145
-    ); /* Hijau dibuat sedikit lebih cerah di mode gelap */
-    --primary-foreground: oklch(0.12 0.05 145); /* Teks hijau sangat tua */
+    );
+    --primary-foreground: oklch(0.12 0.05 145);
 
     --secondary: oklch(0.22 0.02 260);
     --secondary-foreground: oklch(0.95 0.01 260);
@@ -143,19 +143,20 @@
     --input: oklch(0.18 0.02 260);
     --ring: oklch(0.65 0.2 145 / 0.4);
 
-    /* Pengaturan Sidebar */
     --sidebar: oklch(0.13 0.02 260);
     --sidebar-foreground: oklch(0.95 0.01 260);
     --sidebar-primary: oklch(0.65 0.2 145);
     --sidebar-primary-foreground: oklch(0.12 0.05 145);
     --sidebar-accent: oklch(
         0.65 0.2 145 / 0.1
-    ); /* Latar item aktif: Hijau transparan */
+    );
     --sidebar-accent-foreground: oklch(
         1 0 0
-    ); /* Teks item aktif: Putih Solid */
+    );
     --sidebar-border: oklch(0.18 0.02 260);
 }
+
+*/
 
 @layer base {
     * {

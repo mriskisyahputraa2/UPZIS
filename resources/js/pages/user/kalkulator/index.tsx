@@ -1,5 +1,3 @@
-// resources/js/Pages/Public/Kalkulator/Index.jsx (Dropdown + Logika Benar)
-
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -54,7 +52,10 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
         jenisZakat.length > 0 ? jenisZakat[0].id.toString() : '';
 
     const [activeZakatId, setActiveZakatId] = useState(defaultZakatId);
-    const [nilaiHarta, setNilaiHarta] = useState('');
+    const [pendapatanPokok, setPendapatanPokok] = useState('');
+    const [pendapatanLain, setPendapatanLain] = useState('');
+    const [hutangCicilan, setHutangCicilan] = useState('');
+
     const [result, setResult] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -65,24 +66,24 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
     }, [activeZakatId, jenisZakat]);
 
     useEffect(() => {
-        if (nilaiHarta === '' || !activeZakatId) {
+        if (!activeZakatId) return;
+        if (
+            pendapatanPokok === '' &&
+            pendapatanLain === '' &&
+            hutangCicilan === ''
+        ) {
             setResult(null);
             return;
         }
 
         const delayDebounceFn = setTimeout(() => {
-            let hartaUntukDihitung = parseFloat(nilaiHarta);
-
-            // Jika Zakat Profesi, kalikan pendapatan bulanan dengan 12
-            if (activeZakatDetails?.name.toLowerCase().includes('profesi')) {
-                hartaUntukDihitung = parseFloat(nilaiHarta) * 12;
-            }
-
             setIsLoading(true);
             axios
                 .post('/kalkulator-zakat/hitung', {
                     jenis_zakat_id: activeZakatId,
-                    nilai_harta: hartaUntukDihitung,
+                    pendapatan_pokok: pendapatanPokok || 0,
+                    pendapatan_lain: pendapatanLain || 0,
+                    hutang_cicilan: hutangCicilan || 0,
                 })
                 .then((response) => setResult(response.data))
                 .catch((error) => toast.error('Gagal menghitung. Coba lagi.'))
@@ -90,23 +91,30 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
         }, 700);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [nilaiHarta, activeZakatId]);
+    }, [pendapatanPokok, pendapatanLain, hutangCicilan, activeZakatId]);
 
-    const handleInputChange = (e) => {
+    const handleInputChange = (e, setter) => {
         const value = e.target.value.replace(/\D/g, '');
-        setNilaiHarta(value);
+        setter(value);
     };
 
     const handleTypeChange = (id) => {
         if (!id) return;
         setActiveZakatId(id);
-        setNilaiHarta('');
+        setPendapatanPokok('');
+        setPendapatanLain('');
+        setHutangCicilan('');
         setResult(null);
     };
 
     const ActiveIcon = activeZakatDetails
         ? zakatIcons[activeZakatDetails.name] || Wallet
         : Wallet;
+
+    // Cek apakah jenis zakat profesi
+    const isProfesi = activeZakatDetails?.name
+        .toLowerCase()
+        .includes('profesi');
 
     return (
         <PublicLayout>
@@ -154,7 +162,7 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
                                     >
                                         <SelectTrigger className="h-14 text-base">
                                             <div className="flex items-center gap-3">
-                                                {/* <ActiveIcon className="h-5 w-5 text-muted-foreground" /> */}
+                                                <ActiveIcon className="h-5 w-5 text-muted-foreground" />
                                                 <SelectValue placeholder="Pilih jenis zakat..." />
                                             </div>
                                         </SelectTrigger>
@@ -189,39 +197,122 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
                                 </div>
 
                                 {activeZakatDetails && (
-                                    <div className="space-y-2 pt-4 text-center duration-300 animate-in fade-in">
-                                        <p className="text-sm text-muted-foreground">
+                                    <div className="space-y-6 pt-4 text-left duration-300 animate-in fade-in">
+                                        <p className="text-center text-sm text-muted-foreground">
                                             {activeZakatDetails.description}
                                         </p>
-                                        <Label
-                                            htmlFor="nilai_harta"
-                                            className="text-lg font-bold"
-                                        >
-                                            {activeZakatDetails.name
-                                                .toLowerCase()
-                                                .includes('profesi')
-                                                ? 'Total Pendapatan per Bulan '
-                                                : 'Total Nilai Harta Tersimpan (selama 1 tahun)'}
-                                        </Label>
-                                        <div className="relative">
-                                            <span className="absolute top-1/2 left-4 -translate-y-1/2 text-lg text-muted-foreground">
-                                                Rp
-                                            </span>
-                                            <Input
-                                                id="nilai_harta"
-                                                type="text"
-                                                value={
-                                                    nilaiHarta
-                                                        ? new Intl.NumberFormat(
-                                                              'id-ID',
-                                                          ).format(nilaiHarta)
-                                                        : ''
-                                                }
-                                                onChange={handleInputChange}
-                                                className="h-16 rounded-full pr-4 pl-10 text-center text-3xl font-bold"
-                                                placeholder="0"
-                                            />
+
+                                        <div className="space-y-2">
+                                            <Label
+                                                htmlFor="pendapatan_pokok"
+                                                className="font-bold"
+                                            >
+                                                {isProfesi
+                                                    ? 'Pendapatan Pokok (per bulan)'
+                                                    : 'Total Harta Tersimpan (Per Tahun)'}
+                                            </Label>
+                                            <div className="relative">
+                                                <span className="absolute top-1/2 left-4 -translate-y-1/2 text-muted-foreground">
+                                                    Rp
+                                                </span>
+                                                <Input
+                                                    id="pendapatan_pokok"
+                                                    type="text"
+                                                    value={
+                                                        pendapatanPokok
+                                                            ? new Intl.NumberFormat(
+                                                                  'id-ID',
+                                                              ).format(
+                                                                  pendapatanPokok,
+                                                              )
+                                                            : ''
+                                                    }
+                                                    onChange={(e) =>
+                                                        handleInputChange(
+                                                            e,
+                                                            setPendapatanPokok,
+                                                        )
+                                                    }
+                                                    className="h-12 pr-4 pl-10 text-lg"
+                                                    placeholder="0"
+                                                />
+                                            </div>
                                         </div>
+
+                                        {isProfesi && (
+                                            <>
+                                                <div className="space-y-2">
+                                                    <Label
+                                                        className="font-bold"
+                                                        htmlFor="pendapatan_lain"
+                                                    >
+                                                        Pendapatan Lain (Bonus,
+                                                        THR, dll)
+                                                    </Label>
+                                                    <div className="relative">
+                                                        <span className="absolute top-1/2 left-4 -translate-y-1/2 text-muted-foreground">
+                                                            Rp
+                                                        </span>
+                                                        <Input
+                                                            id="pendapatan_lain"
+                                                            type="text"
+                                                            value={
+                                                                pendapatanLain
+                                                                    ? new Intl.NumberFormat(
+                                                                          'id-ID',
+                                                                      ).format(
+                                                                          pendapatanLain,
+                                                                      )
+                                                                    : ''
+                                                            }
+                                                            onChange={(e) =>
+                                                                handleInputChange(
+                                                                    e,
+                                                                    setPendapatanLain,
+                                                                )
+                                                            }
+                                                            className="h-12 pr-4 pl-10 text-lg"
+                                                            placeholder="0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label
+                                                        className="font-bold"
+                                                        htmlFor="hutang_cicilan"
+                                                    >
+                                                        Hutang/Cicilan Pokok
+                                                        (per bulan)
+                                                    </Label>
+                                                    <div className="relative">
+                                                        <span className="absolute top-1/2 left-4 -translate-y-1/2 text-muted-foreground">
+                                                            Rp
+                                                        </span>
+                                                        <Input
+                                                            id="hutang_cicilan"
+                                                            type="text"
+                                                            value={
+                                                                hutangCicilan
+                                                                    ? new Intl.NumberFormat(
+                                                                          'id-ID',
+                                                                      ).format(
+                                                                          hutangCicilan,
+                                                                      )
+                                                                    : ''
+                                                            }
+                                                            onChange={(e) =>
+                                                                handleInputChange(
+                                                                    e,
+                                                                    setHutangCicilan,
+                                                                )
+                                                            }
+                                                            className="h-12 pr-4 pl-10 text-lg"
+                                                            placeholder="0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -251,11 +342,16 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
                                                             : 'Anda Belum Wajib Membayar Zakat'}
                                                     </h4>
                                                     <p className="text-sm text-muted-foreground">
-                                                        Ambang batas (nisab)
-                                                        tahunan adalah{' '}
-                                                        {formatCurrency(
-                                                            result.nisab,
-                                                        )}
+                                                        Ambang batas (nisab){' '}
+                                                        {isProfesi
+                                                            ? 'bulanan'
+                                                            : 'tahunan'}{' '}
+                                                        adalah{' '}
+                                                        <strong>
+                                                            {formatCurrency(
+                                                                result.nisab,
+                                                            )}
+                                                        </strong>
                                                         .
                                                     </p>
                                                 </div>
