@@ -17,9 +17,13 @@ class TransaksiController extends Controller
      */
     public function create(Request $request)
     {
+        // Ambil harga emas dari settings
+        $hargaEmas = Setting::where('setting_key', 'harga_emas_per_gram')->value('setting_value');
+
         return Inertia::render('user/muzakki/transaksi/create', [
             // Mengambil 'amount' dari query URL dan meneruskannya sebagai prop
             'initialAmount' => $request->query('amount', ''),
+            'hargaEmas' => (float) $hargaEmas,
         ]);
     }
 
