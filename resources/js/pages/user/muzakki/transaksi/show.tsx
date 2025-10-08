@@ -331,7 +331,7 @@ export default function Show({ transaksi, paymentDetails }) {
                     )}
 
                     <div className="text-center">
-                        <Link href="/dashboard">
+                        <Link href="/profile">
                             <Button variant="ghost">
                                 <ArrowLeft className="mr-2 h-4 w-4" />
                                 Kembali ke Riwayat Transaksi

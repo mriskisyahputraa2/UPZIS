@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
     Sheet,
+    SheetClose,
     SheetContent,
     SheetHeader,
     SheetTitle,
@@ -32,6 +33,7 @@ import {
     Search,
     User,
     UserPlus,
+    X,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -55,18 +57,18 @@ const getInitials = (name) => {
 
 export function PublicHeader() {
     const { props } = usePage();
-    const { auth, url } = props; // Ambil data user yang login dan URL saat ini
+    const { auth, url } = props;
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    const isAdmin =
+        auth.user &&
+        (auth.user.role === 'admin' || auth.user.role === 'superadmin');
 
     return (
         <header className="absolute top-0 left-0 z-30 w-full text-white">
             <div className="container mx-auto flex h-20 items-center justify-between px-4 md:max-w-7xl">
-                {/* Logo */}
-                <Link href="/" className="flex shrink-0 items-center space-x-2">
-                    <AppLogo />
-                </Link>
+                <AppLogo />
 
-                {/* Navigasi Desktop */}
                 <nav className="hidden lg:flex">
                     <ul className="flex items-center">
                         {publicNavItems.map((item, index) => (
@@ -95,11 +97,9 @@ export function PublicHeader() {
                     </ul>
                 </nav>
 
-                {/* Aksi di kanan */}
                 <div className="flex items-center space-x-2">
                     <div className="hidden items-center space-x-4 lg:flex">
                         {auth.user ? (
-                            // Tampilan jika SUDAH LOGIN
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button
@@ -111,7 +111,7 @@ export function PublicHeader() {
                                                 {getInitials(auth.user.name)}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <span className="font-medium">
+                                        <span className="max-w-[150px] truncate font-medium lg:max-w-[200px]">
                                             {auth.user.name}
                                         </span>
                                     </Button>
@@ -123,7 +123,7 @@ export function PublicHeader() {
                                 >
                                     <DropdownMenuLabel className="font-normal">
                                         <div className="flex flex-col space-y-1">
-                                            <p className="text-sm leading-none font-medium">
+                                            <p className="truncate text-sm leading-none font-medium">
                                                 {auth.user.name}
                                             </p>
                                             <p className="text-xs leading-none text-muted-foreground">
@@ -132,22 +132,24 @@ export function PublicHeader() {
                                         </div>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
+
                                     <DropdownMenuGroup>
                                         <DropdownMenuItem asChild>
-                                            <Link href="/dashboard">
-                                                <LayoutDashboard className="mr-2 h-4 w-4" />
-                                                <span>Dashboard</span>
-                                            </Link>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem asChild>
-                                            <Link href="#">
-                                                {' '}
-                                                {/* Ganti dengan route profil nanti */}
+                                            <Link href="/profil">
                                                 <User className="mr-2 h-4 w-4" />
                                                 <span>Profil Saya</span>
                                             </Link>
                                         </DropdownMenuItem>
+                                        {isAdmin && (
+                                            <DropdownMenuItem asChild>
+                                                <Link href="/admin/dashboard">
+                                                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                                                    <span>Dashboard Admin</span>
+                                                </Link>
+                                            </DropdownMenuItem>
+                                        )}
                                     </DropdownMenuGroup>
+
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem asChild>
                                         <Link
@@ -163,7 +165,6 @@ export function PublicHeader() {
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         ) : (
-                            // Tampilan jika BELUM LOGIN (tamu)
                             <>
                                 <Link
                                     href="/login"
@@ -181,7 +182,6 @@ export function PublicHeader() {
                         )}
                     </div>
 
-                    {/* Tombol Menu Mobile */}
                     <div className="lg:hidden">
                         <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                             <SheetTrigger asChild>
@@ -195,27 +195,53 @@ export function PublicHeader() {
                             </SheetTrigger>
                             <SheetContent
                                 side="right"
-                                className="flex w-80 flex-col border-l-0 bg-green-700 p-0 text-white"
+                                className="flex w-80 flex-col border-l-0 bg-green-700 p-0 text-white [&>button]:hidden"
                             >
                                 <div className="absolute inset-0 bg-[url('/images/islamic-pattern.svg')] opacity-5"></div>
-                                <SheetHeader className="relative z-10 border-b border-green-600/50 p-6 text-left">
-                                    <SheetTitle>
-                                        <Link
-                                            href="/"
-                                            onClick={() => setIsMenuOpen(false)}
-                                        >
-                                            <AppLogo className="h-8 w-auto" />
-                                        </Link>
-                                    </SheetTitle>
+
+                                <SheetHeader className="relative z-10 border-b border-green-600/50 py-4 pr-12 pl-4 text-left">
+                                    {auth.user ? (
+                                        <div className="flex items-center gap-4">
+                                            <Avatar className="h-12 w-12">
+                                                <AvatarFallback className="bg-green-200 text-lg font-bold text-green-800">
+                                                    {getInitials(
+                                                        auth.user.name,
+                                                    )}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="overflow-hidden">
+                                                <SheetTitle className="truncate text-white">
+                                                    {auth.user.name}
+                                                </SheetTitle>
+                                                <p className="text-sm text-green-200">
+                                                    {auth.user.email}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <SheetTitle>
+                                            <AppLogo
+                                                className="h-8 w-auto text-white"
+                                                onClick={() =>
+                                                    setIsMenuOpen(false)
+                                                }
+                                            />
+                                        </SheetTitle>
+                                    )}
+                                    <SheetClose className="absolute top-4 right-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none">
+                                        <X className="h-6 w-6" />
+                                        <span className="sr-only">Close</span>
+                                    </SheetClose>
                                 </SheetHeader>
-                                <div className="relative z-10 flex flex-1 flex-col justify-between p-6">
-                                    <nav className="flex flex-col space-y-1">
+
+                                <div className="relative z-10 flex flex-1 flex-col justify-between overflow-y-auto">
+                                    <nav className="flex flex-col space-y-1 p-6">
                                         {publicNavItems.map((item) => (
                                             <Link
                                                 key={item.title}
                                                 href={item.href}
                                                 className={cn(
-                                                    'flex items-center gap-4 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-white/10 hover:text-white',
+                                                    'flex items-center gap-4 rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-white/10',
                                                     url === item.href
                                                         ? 'bg-green-600 text-white'
                                                         : 'text-green-200',
@@ -236,29 +262,42 @@ export function PublicHeader() {
                                             </Link>
                                         ))}
                                     </nav>
-                                    <div className="space-y-6">
+
+                                    <div className="mt-auto border-t border-green-600/50 p-6">
                                         {auth.user ? (
-                                            <div className="flex flex-col space-y-3">
+                                            <div className="flex flex-col space-y-1">
                                                 <Link
-                                                    href="/dashboard"
-                                                    className="flex w-full items-center justify-center gap-2 rounded-lg py-3 text-center text-base font-medium text-green-100 transition-colors hover:bg-white/10 hover:text-white"
+                                                    href="/profile"
+                                                    className="flex items-center gap-4 rounded-lg px-4 py-3 text-base font-medium text-green-200 transition-colors hover:bg-white/10"
                                                     onClick={() =>
                                                         setIsMenuOpen(false)
                                                     }
                                                 >
-                                                    <LayoutDashboard className="h-5 w-5" />
-                                                    <span>Dashboard</span>
+                                                    <User className="h-5 w-5 text-green-300" />
+                                                    <span>Profil Saya</span>
                                                 </Link>
+                                                {isAdmin && (
+                                                    <Link
+                                                        href="/admin/dashboard"
+                                                        className="flex items-center gap-4 rounded-lg px-4 py-3 text-base font-medium text-green-200 transition-colors hover:bg-white/10"
+                                                        onClick={() =>
+                                                            setIsMenuOpen(false)
+                                                        }
+                                                    >
+                                                        <LayoutDashboard className="h-5 w-5 text-green-300" />
+                                                        <span>Dashboard</span>
+                                                    </Link>
+                                                )}
                                                 <Link
                                                     href="/logout"
                                                     method="post"
                                                     as="button"
-                                                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 px-4 py-3 text-center text-base font-bold text-white shadow-lg transition hover:bg-white/20"
+                                                    className="flex w-full items-center gap-4 rounded-lg px-4 py-3 text-left text-base font-medium text-green-200 transition-colors hover:bg-white/10"
                                                     onClick={() =>
                                                         setIsMenuOpen(false)
                                                     }
                                                 >
-                                                    <LogOut className="h-5 w-5" />
+                                                    <LogOut className="h-5 w-5 text-green-300" />
                                                     <span>Logout</span>
                                                 </Link>
                                             </div>
@@ -286,19 +325,6 @@ export function PublicHeader() {
                                                 </Link>
                                             </div>
                                         )}
-                                        <div className="text-center text-xs text-green-300">
-                                            <p>
-                                                &copy;{' '}
-                                                {new Date().getFullYear()}{' '}
-                                                UPZIS. Hubungi kami di{' '}
-                                                <a
-                                                    href="mailto:info@upzis.com"
-                                                    className="font-semibold hover:underline"
-                                                >
-                                                    info@upzis.com
-                                                </a>
-                                            </p>
-                                        </div>
                                     </div>
                                 </div>
                             </SheetContent>

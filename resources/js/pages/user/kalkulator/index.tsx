@@ -1,3 +1,9 @@
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -17,11 +23,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import PublicLayout from '@/layouts/publicLayout';
 import { Head, Link } from '@inertiajs/react';
 import axios from 'axios';
 import {
     ArrowRight,
+    Calculator,
     CheckCircle,
     HelpCircle,
     Info,
@@ -32,8 +40,8 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { Toaster, toast } from 'sonner';
 
-// Helper untuk format mata uang
 const formatCurrency = (value) => {
+    if (!value && value !== 0) return '';
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
@@ -41,12 +49,27 @@ const formatCurrency = (value) => {
     }).format(value);
 };
 
-// Data ikon untuk setiap jenis zakat
 const zakatIcons = {
     'Zakat Profesi / Penghasilan': Wallet,
     'Zakat Maal (Simpanan & Emas)': Landmark,
     'Zakat Perdagangan': Landmark,
 };
+
+// Data untuk FAQ
+const faqs = [
+    {
+        q: 'Mengapa nisab zakat diukur dengan emas?',
+        a: 'Nisab zakat maal dianalogikan (qiyas) dengan 85 gram emas murni karena emas memiliki nilai yang stabil dan diterima secara universal sebagai standar kekayaan dari zaman Rasulullah SAW hingga sekarang.',
+    },
+    {
+        q: 'Apakah hutang cicilan bisa menjadi pengurang zakat profesi?',
+        a: 'Ulama kontemporer umumnya berpendapat bahwa hutang yang dapat menjadi pengurang adalah hutang jatuh tempo yang harus dibayarkan saat itu juga dan mengurangi kebutuhan pokok. Cicilan rutin (KPR, kendaraan) umumnya tidak termasuk pengurang.',
+    },
+    {
+        q: 'Bagaimana jika penghasilan saya tidak menentu setiap bulan?',
+        a: 'Jika penghasilan tidak menentu, Anda bisa mengakumulasikannya selama satu tahun. Jika total pendapatan bersih selama satu tahun melebihi nisab tahunan (85 gram emas), maka Anda wajib mengeluarkan zakat sebesar 2.5% dari total pendapatan tersebut.',
+    },
+];
 
 export default function Kalkulator({ jenisZakat, hargaEmas }) {
     const defaultZakatId =
@@ -115,7 +138,6 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
         .toLowerCase()
         .includes('profesi');
 
-    // Variabel untuk membuat URL dinamis ke halaman pembayaran
     const bayarZakatUrl =
         result && result.wajib_zakat && result.nominal_zakat > 0
             ? `/bayar-zakat?amount=${result.nominal_zakat}`
@@ -132,13 +154,13 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
                         Kalkulator Zakat
                     </h1>
                     <p className="mt-4 text-lg text-green-100">
-                        Hitung kewajiban zakat maal Anda dengan mudah dan
-                        akurat.
+                        Hitung kewajiban zakat maal Anda dengan mudah, akurat,
+                        dan transparan.
                     </p>
                 </div>
             </section>
 
-            <section className="-mt-16 pb-24">
+            <section className="-mt-16 pb-16">
                 <div className="container mx-auto max-w-2xl px-4">
                     <Card className="shadow-lg">
                         <CardHeader className="text-center">
@@ -148,15 +170,15 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
                             <CardDescription className="flex items-center justify-center gap-2 pt-2">
                                 <Info className="h-4 w-4" />
                                 <span>
-                                    Perhitungan nisab berdasarkan harga emas:{' '}
+                                    Nisab berdasarkan harga emas:{' '}
                                     <strong>
                                         {formatCurrency(hargaEmas)} / gram
                                     </strong>
                                 </span>
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="px-4 sm:px-6">
-                            <div className="mx-auto max-w-md space-y-8">
+                        <CardContent className="space-y-8 px-4 sm:px-6">
+                            <div className="space-y-6">
                                 <div className="space-y-2">
                                     <Label className="font-semibold">
                                         Pilih Jenis Zakat
@@ -167,7 +189,6 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
                                     >
                                         <SelectTrigger className="h-14 text-base">
                                             <div className="flex items-center gap-3">
-                                                <ActiveIcon className="h-5 w-5 text-muted-foreground" />
                                                 <SelectValue placeholder="Pilih jenis zakat..." />
                                             </div>
                                         </SelectTrigger>
@@ -203,10 +224,6 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
 
                                 {activeZakatDetails && (
                                     <div className="space-y-6 pt-4 text-left duration-300 animate-in fade-in">
-                                        <p className="text-center text-sm text-muted-foreground">
-                                            {activeZakatDetails.description}
-                                        </p>
-
                                         <div className="space-y-2">
                                             <Label
                                                 htmlFor="pendapatan_pokok"
@@ -322,17 +339,46 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
                                 )}
                             </div>
 
-                            <div className="mt-8">
+                            <Separator />
+
+                            <div className="min-h-[200px]">
                                 {isLoading && (
-                                    <div className="flex justify-center pt-10">
+                                    <div className="flex h-full items-center justify-center pt-10">
                                         <Loader className="h-8 w-8 animate-spin text-primary" />
                                     </div>
                                 )}
 
                                 {result && !isLoading && (
-                                    <div className="duration-500 animate-in fade-in">
+                                    <div className="space-y-6 duration-500 animate-in fade-in">
+                                        <h3 className="text-center text-lg font-bold">
+                                            Hasil Perhitungan
+                                        </h3>
+
+                                        <div className="space-y-2 rounded-lg border bg-muted/30 p-4 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">
+                                                    Pendapatan Bersih
+                                                </span>
+                                                <span className="font-semibold">
+                                                    {formatCurrency(
+                                                        result.pendapatan_bersih,
+                                                    )}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">
+                                                    Ambang Batas (Nisab)
+                                                </span>
+                                                <span className="font-semibold">
+                                                    {formatCurrency(
+                                                        result.nisab,
+                                                    )}
+                                                </span>
+                                            </div>
+                                        </div>
+
                                         <div
-                                            className={`rounded-lg border p-6 text-center ${result.wajib_zakat ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/50' : 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/50'}`}
+                                            className={`rounded-lg border p-6 text-center ${result.wajib_zakat ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}`}
                                         >
                                             <div className="flex flex-col items-center gap-2">
                                                 {result.wajib_zakat ? (
@@ -347,12 +393,9 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
                                                             : 'Anda Belum Wajib Membayar Zakat'}
                                                     </h4>
                                                     <p className="text-sm text-muted-foreground">
-                                                        Ambang batas (nisab)
-                                                        adalah{' '}
-                                                        {formatCurrency(
-                                                            result.nisab,
-                                                        )}
-                                                        .
+                                                        {result.wajib_zakat
+                                                            ? 'Penghasilan Anda telah melebihi ambang batas (nisab).'
+                                                            : 'Penghasilan Anda belum mencapai ambang batas (nisab).'}
                                                     </p>
                                                 </div>
                                             </div>
@@ -370,23 +413,67 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
                                                 </div>
                                             )}
                                         </div>
+
+                                        <div className="flex justify-center pt-4">
+                                            <Link href={bayarZakatUrl}>
+                                                <Button
+                                                    size="lg"
+                                                    className="text-base font-bold"
+                                                >
+                                                    Tunaikan Zakat Sekarang{' '}
+                                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                                </Button>
+                                            </Link>
+                                        </div>
                                     </div>
                                 )}
 
-                                <div className="mt-8 flex justify-center">
-                                    <Link href={bayarZakatUrl}>
-                                        <Button
-                                            size="lg"
-                                            className="text-base font-bold"
-                                        >
-                                            Tunaikan Zakat Sekarang{' '}
-                                            <ArrowRight className="ml-2 h-4 w-4" />
-                                        </Button>
-                                    </Link>
-                                </div>
+                                {!isLoading && !result && (
+                                    <div className="flex h-full flex-col items-center justify-center pt-10 text-center text-muted-foreground duration-500 animate-in fade-in">
+                                        <Calculator className="mb-4 h-12 w-12" />
+                                        <h3 className="text-lg font-bold text-foreground">
+                                            Hasil Perhitungan Akan Tampil di
+                                            Sini
+                                        </h3>
+                                        <p className="mt-1 text-sm">
+                                            Silakan isi form di atas untuk
+                                            melihat hasil perhitungan zakat Anda
+                                            secara otomatis.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
+                </div>
+            </section>
+
+            <section className="pb-24">
+                <div className="container mx-auto max-w-4xl px-6">
+                    <div className="mb-12 text-center">
+                        <h2 className="text-3xl font-bold text-gray-800">
+                            Pertanyaan Umum
+                        </h2>
+                        <p className="mx-auto mt-4 max-w-2xl text-slate-600">
+                            Jawaban cepat untuk pertanyaan paling umum seputar
+                            perhitungan zakat.
+                        </p>
+                    </div>
+                    <Accordion type="single" collapsible className="w-full">
+                        {faqs.map((faq, index) => (
+                            <AccordionItem
+                                key={index}
+                                value={`item-${index + 1}`}
+                            >
+                                <AccordionTrigger className="text-left text-lg font-semibold text-green-800 hover:no-underline">
+                                    {faq.q}
+                                </AccordionTrigger>
+                                <AccordionContent className="text-base text-slate-600">
+                                    {faq.a}
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
                 </div>
             </section>
         </PublicLayout>
