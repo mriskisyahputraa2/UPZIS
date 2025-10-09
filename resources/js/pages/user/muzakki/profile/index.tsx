@@ -1,45 +1,37 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import PublicLayout from '@/layouts/publicLayout';
-import { Head, usePage } from '@inertiajs/react';
-import { useEffect } from 'react';
+import { Head } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import { Toaster, toast } from 'sonner';
+import ProfileSidebarNav from './partials/ProfileSidebarNav';
 import TransactionHistory from './partials/TransactionHistory';
 import UpdatePasswordForm from './partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './partials/UpdateProfileInformationForm';
 
 export default function Index({ transactions, status }) {
-    const { props } = usePage();
-    const {
-        recentlySuccessful: profileRecentlySuccessful,
-        errors: profileErrors,
-    } = props.jetstream || {};
-    const {
-        recentlySuccessful: passwordRecentlySuccessful,
-        errors: passwordErrors,
-    } = props.jetstream || {};
+    const [activeView, setActiveView] = useState('profile');
 
     useEffect(() => {
-        if (status === 'profile-updated' || profileRecentlySuccessful) {
-            toast.success('Profil berhasil diperbarui.');
-        } else if (
-            status === 'password-updated' ||
-            passwordRecentlySuccessful
-        ) {
-            toast.success('Password berhasil diubah.');
-        } else if (status === 'photo-updated') {
-            toast.success('Foto profil berhasil diubah.');
+        if (status) {
+            if (status === 'profile-updated' || status === 'photo-updated') {
+                toast.success('Profil berhasil diperbarui.');
+                setActiveView('profile');
+            } else if (status === 'password-updated') {
+                toast.success('Password berhasil diubah.');
+                setActiveView('password');
+            }
         }
-    }, [status, profileRecentlySuccessful, passwordRecentlySuccessful]);
+    }, [status]);
 
     return (
         <PublicLayout>
             <Head title="Profil Saya" />
             <Toaster richColors position="top-center" />
 
-            <section className="bg-green-700 pt-28 pb-16 text-white md:pt-32">
+            <section className="bg-green-700 pt-28 pb-24 text-white md:pt-32">
                 <div className="container mx-auto max-w-7xl px-6">
                     <h1 className="text-4xl font-bold md:text-5xl">
-                        Akun Saya
+                        Profile Saya
                     </h1>
                     <p className="mt-2 text-lg text-green-100">
                         Kelola informasi akun dan lihat riwayat transaksi Anda.
@@ -47,29 +39,37 @@ export default function Index({ transactions, status }) {
                 </div>
             </section>
 
-            <section className="-mt-10 pb-16 md:pb-24">
+            <section className="-mt-16 pb-16 md:pb-24">
                 <div className="container mx-auto max-w-7xl px-6">
-                    <Tabs defaultValue="profile" className="w-full">
-                        <TabsList className="mx-auto grid h-12 w-full max-w-md grid-cols-2">
-                            <TabsTrigger value="profile" className="text-base">
-                                Profil Saya
-                            </TabsTrigger>
-                            <TabsTrigger value="history" className="text-base">
-                                Riwayat Transaksi
-                            </TabsTrigger>
-                        </TabsList>
+                    <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+                        {/* Kolom Kiri: Sidebar Navigasi */}
+                        <div className="lg:col-span-1">
+                            <Card className="shadow-lg">
+                                <CardContent className="p-2">
+                                    <ProfileSidebarNav
+                                        active={activeView}
+                                        setActive={setActiveView}
+                                    />
+                                </CardContent>
+                            </Card>
+                        </div>
 
-                        <TabsContent value="profile" className="mt-6">
-                            <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 md:grid-cols-2">
-                                <UpdateProfileInformationForm />
-                                <UpdatePasswordForm />
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="history" className="mt-6">
-                            <TransactionHistory transactions={transactions} />
-                        </TabsContent>
-                    </Tabs>
+                        {/* Kolom Kanan: Konten Dinamis */}
+                        <div className="lg:col-span-3">
+                            {activeView === 'profile' && (
+                                <UpdateProfileInformationForm className="shadow-lg" />
+                            )}
+                            {activeView === 'password' && (
+                                <UpdatePasswordForm className="shadow-lg" />
+                            )}
+                            {activeView === 'history' && (
+                                <TransactionHistory
+                                    transactions={transactions}
+                                    className="shadow-lg"
+                                />
+                            )}
+                        </div>
+                    </div>
                 </div>
             </section>
         </PublicLayout>

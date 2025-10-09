@@ -78,15 +78,16 @@ export default function UpdateProfileInformationForm({ className = '' }) {
                         Perbarui nama dan foto profil Anda.
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                    <input
-                        type="file"
-                        className="hidden"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        accept="image/*"
-                    />
-                    <div className="flex flex-col items-center space-y-3">
+                <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                    {/* Kolom Kiri: Foto Profil */}
+                    <div className="flex flex-col items-center text-center md:col-span-1">
+                        <input
+                            type="file"
+                            className="hidden"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            accept="image/*"
+                        />
                         <button
                             type="button"
                             className="group relative rounded-full"
@@ -110,50 +111,55 @@ export default function UpdateProfileInformationForm({ className = '' }) {
                                 )}
                             </div>
                         </button>
-                        <div className="text-center">
-                            <Button
-                                type="button"
-                                variant="link"
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={processing}
-                            >
-                                Ubah Foto Profil
-                            </Button>
-                            <p className="text-xs text-muted-foreground">
-                                JPG, atau PNG. Maks 2MB.
-                            </p>
-                            {errors.photo && (
-                                <p className="mt-1 text-sm text-red-500">
-                                    {errors.photo}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Nama</Label>
-                        <Input
-                            id="name"
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                        />
-                        {errors.name && (
+                        <Button
+                            type="button"
+                            variant="link"
+                            className="mt-2"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={processing}
+                        >
+                            Ubah Foto
+                        </Button>
+                        <p className="text-xs text-muted-foreground">
+                            JPG, atau PNG. Maks 2MB.
+                        </p>
+                        {errors.photo && (
                             <p className="mt-1 text-sm text-red-500">
-                                {errors.name}
+                                {errors.photo}
                             </p>
                         )}
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            value={user.email}
-                            readOnly
-                            className="cursor-not-allowed bg-muted/50"
-                        />
+
+                    {/* Kolom Kanan: Input Fields */}
+                    <div className="space-y-4 md:col-span-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Nama</Label>
+                            <Input
+                                id="name"
+                                value={data.name}
+                                onChange={(e) =>
+                                    setData('name', e.target.value)
+                                }
+                            />
+                            {errors.name && (
+                                <p className="mt-1 text-sm text-red-500">
+                                    {errors.name}
+                                </p>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                value={user.email}
+                                readOnly
+                                className="cursor-not-allowed bg-muted/50"
+                            />
+                        </div>
                     </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="justify-end p-6">
                     <Button type="submit" disabled={processing || !isDirty}>
                         {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
                     </Button>

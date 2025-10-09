@@ -32,9 +32,13 @@ export default function UpdatePasswordForm({ className = '' }) {
                 <CardHeader>
                     <CardTitle>Ubah Password</CardTitle>
                     <CardDescription>
-                        Pastikan Anda menggunakan password yang aman.
+                        Pastikan Anda menggunakan password yang aman dan mudah
+                        diingat.
                     </CardDescription>
                 </CardHeader>
+                {/* =============================================================== */}
+                {/* PERBAIKAN FINAL: Gunakan layout vertikal sederhana */}
+                {/* =============================================================== */}
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="current_password">
@@ -47,6 +51,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                             onChange={(e) =>
                                 setData('current_password', e.target.value)
                             }
+                            autoComplete="current-password"
                         />
                         {errors.current_password && (
                             <p className="mt-1 text-sm text-red-500">
@@ -54,6 +59,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                             </p>
                         )}
                     </div>
+
                     <div className="space-y-2">
                         <Label htmlFor="password">Password Baru</Label>
                         <Input
@@ -63,6 +69,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                             onChange={(e) =>
                                 setData('password', e.target.value)
                             }
+                            autoComplete="new-password"
                         />
                         {errors.password && (
                             <p className="mt-1 text-sm text-red-500">
@@ -70,6 +77,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                             </p>
                         )}
                     </div>
+
                     <div className="space-y-2">
                         <Label htmlFor="password_confirmation">
                             Konfirmasi Password Baru
@@ -81,10 +89,12 @@ export default function UpdatePasswordForm({ className = '' }) {
                             onChange={(e) =>
                                 setData('password_confirmation', e.target.value)
                             }
+                            autoComplete="new-password"
                         />
                     </div>
                 </CardContent>
-                <CardFooter>
+                {/* <Separator /> */}
+                <CardFooter className="justify-end p-6">
                     <Button type="submit" disabled={processing}>
                         {processing ? 'Menyimpan...' : 'Ubah Password'}
                     </Button>
