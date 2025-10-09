@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 class User extends Authenticatable
@@ -22,7 +23,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = ['name', 'email', 'password', 'phone_number', 'role'];
+    protected $fillable = ['name', 'email', 'password', 'phone_number', 'role', 'photo'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -30,6 +31,9 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = ['password', 'remember_token'];
+
+    // PERUBAHAN 2: Tambahkan $appends untuk menyertakan photo_url secara otomatis
+    protected $appends = ['photo_url'];
 
     /**
      * Get the attributes that should be cast.
@@ -42,6 +46,18 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // PERUBAHAN 3: Tambahkan Accessor untuk mendapatkan URL foto
+    public function getPhotoUrlAttribute()
+    {
+        if ($this->photo) {
+            // Jika user punya foto, kembalikan URL dari storage
+            return Storage::url($this->photo);
+        }
+
+        // Jika tidak punya, kembalikan URL default dari ui-avatars.com
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=random&color=fff';
     }
 
     public function transaksis()
