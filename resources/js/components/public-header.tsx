@@ -1,5 +1,5 @@
 import AppLogo from '@/components/app-logo';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -107,6 +107,10 @@ export function PublicHeader() {
                                         className="flex items-center gap-2 rounded-full p-1 pr-3 text-white hover:bg-white/10 hover:text-white"
                                     >
                                         <Avatar className="h-8 w-8">
+                                            <AvatarImage
+                                                src={auth.user.photo_url}
+                                                alt={auth.user.name}
+                                            />
                                             <AvatarFallback className="bg-green-200 font-bold text-green-800">
                                                 {getInitials(auth.user.name)}
                                             </AvatarFallback>
@@ -135,7 +139,7 @@ export function PublicHeader() {
 
                                     <DropdownMenuGroup>
                                         <DropdownMenuItem asChild>
-                                            <Link href="/profil">
+                                            <Link href="/profile">
                                                 <User className="mr-2 h-4 w-4" />
                                                 <span>Profil Saya</span>
                                             </Link>
@@ -203,6 +207,10 @@ export function PublicHeader() {
                                     {auth.user ? (
                                         <div className="flex items-center gap-4">
                                             <Avatar className="h-12 w-12">
+                                                <AvatarImage
+                                                    src={auth.user.photo_url}
+                                                    alt={auth.user.name}
+                                                />
                                                 <AvatarFallback className="bg-green-200 text-lg font-bold text-green-800">
                                                     {getInitials(
                                                         auth.user.name,

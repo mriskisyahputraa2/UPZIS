@@ -56,8 +56,8 @@ class User extends Authenticatable
             return Storage::url($this->photo);
         }
 
-        // Jika tidak punya, kembalikan URL default dari ui-avatars.com
-        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=random&color=fff';
+        // Jika tidak punya, kembalikan null agar frontend bisa fallback
+        return null;
     }
 
     public function transaksis()

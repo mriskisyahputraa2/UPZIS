@@ -8,6 +8,7 @@ use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\KalkulatorController;
 use App\Http\Controllers\Muzakki\TransaksiController;
 use App\Http\Controllers\PermohonanBantuanController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -16,9 +17,10 @@ use Inertia\Inertia;
 | HALAMAN PUBLIK (Bisa diakses tanpa login)
 |--------------------------------------------------------------------------
 */
+
+
 // Halaman Beranda
 Route::get('/', [HomePageController::class, 'index'])->name('home');
-
 // Halaman Ajukan Bantuan
 Route::get('ajukan-bantuan', [PermohonanBantuanController::class, 'create'])->name('permohonan.create');
 Route::post('ajukan-bantuan', [PermohonanBantuanController::class, 'store'])->name('permohonan.store');
@@ -39,11 +41,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
-    // ++ ROUTE BARU UNTUK TRANSAKSI ZAKAT ++
+    /*
+    |--------------------------------------------------------------------------
+    | Halaman Profil Pengguna
+    |--------------------------------------------------------------------------
+    | Dikelompokkan di sini untuk kerapian. Menggunakan URL /profile.
+    */
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Halaman Transaksi Pengguna
+    |--------------------------------------------------------------------------
+    */
     Route::get('bayar-zakat', [TransaksiController::class, 'create'])->name('transaksi.create');
     Route::post('bayar-zakat', [TransaksiController::class, 'store'])->name('transaksi.store');
-
-    // Route ini untuk menampilkan detail setelah transaksi dibuat
     Route::get('transaksi/{order_id}', [TransaksiController::class, 'show'])->name('transaksi.show');
     Route::post('transaksi/{order_id}/upload', [TransaksiController::class, 'uploadProof'])->name('transaksi.upload');
 });
