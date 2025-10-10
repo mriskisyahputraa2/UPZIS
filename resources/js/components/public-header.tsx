@@ -148,7 +148,7 @@ export function PublicHeader() {
                                             <DropdownMenuItem asChild>
                                                 <Link href="/admin/dashboard">
                                                     <LayoutDashboard className="mr-2 h-4 w-4" />
-                                                    <span>Dashboard Admin</span>
+                                                    <span>Dashboard</span>
                                                 </Link>
                                             </DropdownMenuItem>
                                         )}
