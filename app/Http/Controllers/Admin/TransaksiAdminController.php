@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -32,31 +33,31 @@ class TransaksiAdminController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        // Ambil data dengan paginasi
-        $transaksis = $query
-            ->paginate($request->input('per_page', 5))
-            ->withQueryString()
-            ->through(
-                fn($transaksi) => [
-                    'id' => $transaksi->id,
-                    'order_id' => $transaksi->order_id,
-                    'final_amount' => $transaksi->final_amount,
-                    'payment_method' => $transaksi->payment_method,
-                    'status' => $transaksi->status,
-                    'created_at' => $transaksi->created_at,
-                    // Kita ambil hanya nama user, bukan seluruh objek user
-                    'user' => [
+        // Ambil data dengan paginasi dan transformasikan hasilnya
+        $transaksis = $query->paginate($request->input('per_page', 5))->withQueryString()->through(
+            fn($transaksi) => [
+                'id' => $transaksi->id,
+                'order_id' => $transaksi->order_id,
+                'final_amount' => $transaksi->final_amount,
+                'payment_method' => $transaksi->payment_method,
+                'status' => $transaksi->status,
+                // Kirim tanggal dan waktu yang sudah diformat dari server
+                'formatted_date' => $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('d F Y'),
+                'formatted_time' => $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('H:i:s T'),
+
+                   'user' => $transaksi->user
+                    ? [
                         'name' => $transaksi->user->name,
-                    ],
-                ],
-            );
+                    ]
+                    : null,
+            ],
+        );
 
         return Inertia::render('admin/transaksi-admin/index', [
             'transaksis' => $transaksis,
             'filters' => $request->only(['search', 'status', 'per_page']),
         ]);
     }
-
 
     /**
      * Memperbarui status transaksi.
@@ -75,10 +76,26 @@ class TransaksiAdminController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan detail satu transaksi untuk verifikasi.
      */
-    public function create()
+    public function show(Transaksi $transaksi)
     {
-        //
+        // Muat relasi user
+        $transaksi->load('user');
+
+        // Tambahkan atribut tanggal dan waktu yang sudah diformat
+        $transaksi->formatted_date = $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('d F Y');
+        $transaksi->formatted_time = $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('H:i:s T');
+
+        // Buat URL untuk bukti pembayaran jika ada
+        if ($transaksi->payment_proof) {
+            $transaksi->payment_proof_url = Storage::url($transaksi->payment_proof);
+        } else {
+            $transaksi->payment_proof_url = null;
+        }
+
+        return Inertia::render('admin/transaksi-admin/show', [
+            'transaksi' => $transaksi,
+        ]);
     }
 }

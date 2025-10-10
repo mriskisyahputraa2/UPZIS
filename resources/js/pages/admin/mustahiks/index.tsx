@@ -350,7 +350,7 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
                                                                 href={`/admin/mustahiks/${mustahik.id}`}
                                                             >
                                                                 <Eye className="mr-2 h-4 w-4" />
-                                                                Detail
+                                                                Lihat Detail
                                                             </Link>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem

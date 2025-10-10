@@ -45,13 +45,8 @@ export default function Index({ transaksis, filters }) {
             {
                 preserveScroll: true,
                 only: ['transaksis', 'flash'],
-                onStart: () => setIsLoading(true), // <-- Mulai loading
-                onFinish: () => setIsLoading(false), // <-- Selesai loading
-                onSuccess: (page) => {
-                    if (page.props.flash.success) {
-                        toast.success(page.props.flash.success);
-                    }
-                },
+                onStart: () => setIsLoading(true),
+                onFinish: () => setIsLoading(false),
                 onError: () => toast.error('Gagal memperbarui status.'),
             },
         );
@@ -63,7 +58,7 @@ export default function Index({ transaksis, filters }) {
 
             <Card className="flex h-full flex-1 flex-col">
                 <CardHeader>
-                    <CardTitle>Daftar Transaksi Muzakki</CardTitle>
+                    <CardTitle>Daftar Verifikasi Transaksi Muzakki</CardTitle>
                     <CardDescription>
                         Kelola dan verifikasi semua transaksi pembayaran zakat
                         yang masuk.

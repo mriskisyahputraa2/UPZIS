@@ -21,21 +21,9 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Link } from '@inertiajs/react';
-import { Ellipsis, Eye, FileText, Loader } from 'lucide-react'; // Import Loader
+import { Ellipsis, Eye, FileText, Loader } from 'lucide-react';
 
-const formatDateOnly = (dateString) =>
-    new Date(dateString).toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
-const formatTimeOnly = (dateString) => {
-    const date = new Date(dateString);
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    return `${hours}:${minutes}:${seconds}`;
-};
+// Helper Functions
 const formatCurrency = (value) =>
     new Intl.NumberFormat('id-ID', {
         style: 'currency',
@@ -45,7 +33,7 @@ const formatCurrency = (value) =>
 const getStatusTriggerClass = (status) => {
     switch (status) {
         case 'Menunggu Pembayaran':
-            return 'border-gray-500 bg-gray-50 text-gray-800';
+            return 'border-blue-500 bg-blue-50 text-gray-800';
         case 'Menunggu Verifikasi':
             return 'border-yellow-500 bg-yellow-50 text-yellow-800';
         case 'Berhasil':
@@ -94,18 +82,16 @@ export default function TransactionTable({
                                 <TableCell className="font-medium">
                                     {trx.order_id}
                                 </TableCell>
-                                <TableCell>{trx.user.name}</TableCell>
+                                <TableCell>{trx.user?.name || 'N/A'}</TableCell>
                                 <TableCell>{trx.payment_method}</TableCell>
                                 <TableCell>
                                     {formatCurrency(trx.final_amount)}
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex flex-col">
-                                        <span>
-                                            {formatDateOnly(trx.created_at)}
-                                        </span>
+                                        <span>{trx.formatted_date}</span>
                                         <span className="text-sm font-medium text-green-600">
-                                            {formatTimeOnly(trx.created_at)} WIB
+                                            {trx.formatted_time}
                                         </span>
                                     </div>
                                 </TableCell>
