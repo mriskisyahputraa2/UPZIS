@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MustahikController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\PermohonanController;
+use App\Http\Controllers\Admin\TransaksiAdminContoller;
+use App\Http\Controllers\Admin\TransaksiAdminController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\KalkulatorController;
 use App\Http\Controllers\Muzakki\TransaksiController;
@@ -31,7 +33,7 @@ Route::post('kalkulator-zakat/hitung', [KalkulatorController::class, 'hitung'])-
 
 /*
 |--------------------------------------------------------------------------
-| DASHBOARD PENGGUNA (Untuk Muzakki)
+| ROUTE PENGGUNA (Untuk Muzakki)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -58,24 +60,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| AREA ADMIN & SUPERADMIN (Fitur Baru)
+| ROUTE ADMIN & SUPERADMIN
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+        // Manajemen Dashboard
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
         // Manajemen Mustahik
         Route::resource('mustahiks', MustahikController::class);
-
         // Manajemen Permohonan dan Status
         Route::resource('permohonan', PermohonanController::class)->only(['index', 'show', 'update', 'destroy']);
         Route::post('permohonan/bulk-update-status', [PermohonanController::class, 'bulkUpdateStatus'])->name('permohonan.bulkUpdateStatus');
-
         // Manajemen Periode
         Route::resource('/periode', PeriodeController::class);
+        // Manajemen Transaksi
+        Route::resource('/transaksi', TransaksiAdminController::class);
+
     });
 
 /*

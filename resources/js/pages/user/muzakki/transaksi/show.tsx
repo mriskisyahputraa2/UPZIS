@@ -178,7 +178,7 @@ export default function Show({ transaksi, paymentDetails }) {
                                     <span className="text-muted-foreground">
                                         Total Pembayaran
                                     </span>
-                                    <span className="text-lg font-bold">
+                                    <span className="text-2xl font-bold">
                                         {formatCurrency(transaksi.final_amount)}
                                     </span>
                                 </div>
@@ -363,12 +363,12 @@ export default function Show({ transaksi, paymentDetails }) {
 
                     {(transaksi.status === 'Gagal' ||
                         transaksi.status === 'Kadaluarsa') && (
-                        <Alert className="border-red-200 bg-red-50 text-red-600 shadow-lg">
+                        <Alert className="border-red-500/50 bg-red-50 shadow-lg">
                             <AlertCircle className="h-4 w-4 text-red-600" />
-                            <AlertTitle className="font-bold">
+                            <AlertTitle className="font-bold text-red-900">
                                 Transaksi Gagal
                             </AlertTitle>
-                            <AlertDescription className="text-red-600">
+                            <AlertDescription className="text-red-700">
                                 {transaksi.status === 'Kadaluarsa'
                                     ? 'Waktu pembayaran telah habis. Anda bisa membuat transaksi baru jika ingin melanjutkan.'
                                     : 'Pembayaran Anda gagal atau ditolak. Silakan coba lagi dengan membuat transaksi baru.'}

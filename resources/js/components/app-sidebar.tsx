@@ -11,7 +11,13 @@ import {
 } from '@/components/ui/sidebar';
 // import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
-import { Calendar, FileText, LayoutGrid, Users } from 'lucide-react';
+import {
+    Calendar,
+    ClipboardList,
+    FileText,
+    LayoutGrid,
+    Users,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -19,6 +25,12 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: '/admin/dashboard',
         icon: LayoutGrid,
+    },
+
+    {
+        title: 'Verifikasi Transaksi',
+        href: '/admin/transaksi',
+        icon: ClipboardList,
     },
 
     {
