@@ -12,12 +12,14 @@ import { Label } from '@/components/ui/label';
 import PublicLayout from '@/layouts/publicLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import {
+    AlertCircle,
     ArrowLeft,
     CheckCircle,
     Circle,
     Loader,
     Upload,
     X,
+    XCircle,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -33,6 +35,22 @@ const formatCurrency = (value) => {
 
 // Komponen Visual untuk Status Stepper
 const StatusStepper = ({ status }) => {
+    if (status === 'Gagal' || status === 'Kadaluarsa') {
+        return (
+            <div className="flex items-center gap-4 rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
+                <XCircle className="h-8 w-8 flex-shrink-0" />
+                <div>
+                    <h3 className="font-bold">Transaksi Gagal</h3>
+                    <p className="text-sm">
+                        {status === 'Kadaluarsa'
+                            ? 'Waktu pembayaran untuk transaksi ini telah habis.'
+                            : 'Pembayaran Anda gagal atau ditolak oleh admin.'}
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     const steps = [
         { id: 'Menunggu Pembayaran', label: 'Lakukan Pembayaran' },
         { id: 'Menunggu Verifikasi', label: 'Menunggu Verifikasi' },
@@ -84,7 +102,6 @@ const StatusStepper = ({ status }) => {
 };
 
 export default function Show({ transaksi, paymentDetails }) {
-    // Guard Clause untuk mencegah error jika data belum ada
     if (!transaksi) {
         return (
             <PublicLayout>
@@ -157,7 +174,7 @@ export default function Show({ transaksi, paymentDetails }) {
                         <CardContent className="space-y-6">
                             <StatusStepper status={transaksi.status} />
                             <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-col items-start justify-between gap-1 sm:flex-row sm:items-center">
                                     <span className="text-muted-foreground">
                                         Total Pembayaran
                                     </span>
@@ -311,21 +328,50 @@ export default function Show({ transaksi, paymentDetails }) {
                         </>
                     )}
 
-                    {transaksi.status !== 'Menunggu Pembayaran' && (
+                    {transaksi.status === 'Menunggu Verifikasi' && (
+                        <Alert
+                            variant="default"
+                            className="border-yellow-200 bg-yellow-50 text-yellow-800 shadow-lg"
+                        >
+                            <Loader className="h-4 w-4 animate-spin text-yellow-600" />
+                            <AlertTitle className="font-bold">
+                                Menunggu Verifikasi
+                            </AlertTitle>
+                            <AlertDescription>
+                                Terima kasih, bukti pembayaran Anda telah kami
+                                terima dan akan segera diverifikasi oleh tim
+                                kami.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
+                    {transaksi.status === 'Berhasil' && (
                         <Alert
                             variant="default"
                             className="border-green-200 bg-green-50 text-green-800 shadow-lg"
                         >
                             <CheckCircle className="h-4 w-4 text-green-600" />
                             <AlertTitle className="font-bold">
-                                {transaksi.status === 'Berhasil'
-                                    ? 'Pembayaran Berhasil'
-                                    : 'Menunggu Verifikasi'}
+                                Pembayaran Berhasil
                             </AlertTitle>
                             <AlertDescription>
-                                {transaksi.status === 'Berhasil'
-                                    ? 'Terima kasih, zakat Anda telah kami terima dan akan segera kami salurkan.'
-                                    : 'Terima kasih, bukti pembayaran Anda telah kami terima dan akan segera diverifikasi oleh tim kami.'}
+                                Terima kasih, zakat Anda telah kami terima dan
+                                akan segera kami salurkan.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
+                    {(transaksi.status === 'Gagal' ||
+                        transaksi.status === 'Kadaluarsa') && (
+                        <Alert className="border-red-200 bg-red-50 text-red-600 shadow-lg">
+                            <AlertCircle className="h-4 w-4 text-red-600" />
+                            <AlertTitle className="font-bold">
+                                Transaksi Gagal
+                            </AlertTitle>
+                            <AlertDescription className="text-red-600">
+                                {transaksi.status === 'Kadaluarsa'
+                                    ? 'Waktu pembayaran telah habis. Anda bisa membuat transaksi baru jika ingin melanjutkan.'
+                                    : 'Pembayaran Anda gagal atau ditolak. Silakan coba lagi dengan membuat transaksi baru.'}
                             </AlertDescription>
                         </Alert>
                     )}

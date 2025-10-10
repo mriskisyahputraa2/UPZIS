@@ -19,12 +19,15 @@ import {
 import { useMemo, useState } from 'react';
 
 // Helper Functions
-const formatDate = (dateString) =>
-    new Date(dateString).toLocaleDateString('id-ID', {
+const formatDateTime = (dateString) =>
+    new Date(dateString).toLocaleString('id-ID', {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
     });
+
 const formatCurrency = (value) =>
     new Intl.NumberFormat('id-ID', {
         style: 'currency',
@@ -62,6 +65,7 @@ const Pagination = ({ links }) => (
                     key={key}
                     href={link.url}
                     preserveScroll
+                    preserveState
                     className={`rounded-md px-3 py-2 text-sm ${link.active ? 'bg-primary text-primary-foreground' : 'bg-muted/50 hover:bg-muted'}`}
                     dangerouslySetInnerHTML={{ __html: link.label }}
                 />
@@ -121,28 +125,28 @@ export default function TransactionHistory({ transactions, className = '' }) {
                                         key={trx.id}
                                         className="transition-all hover:shadow-md"
                                     >
-                                        <CardContent className="flex items-center justify-between gap-4 p-4">
+                                        <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
                                             <div className="flex items-center gap-4">
                                                 <div
-                                                    className={`rounded-full bg-green-50 p-3`}
+                                                    className={`rounded-full p-3 bg-${statusInfo.variant}/10`}
                                                 >
                                                     <statusInfo.icon
-                                                        className={`h-6 w-6 text-green-600`}
+                                                        className={`h-6 w-6 text-${statusInfo.variant}`}
                                                     />
                                                 </div>
-                                                <div>
-                                                    <p className="font-bold">
+                                                <div className="overflow-hidden">
+                                                    <p className="truncate font-bold">
                                                         {trx.order_id}
                                                     </p>
                                                     <p className="text-sm text-muted-foreground">
-                                                        {formatDate(
+                                                        {formatDateTime(
                                                             trx.created_at,
                                                         )}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-4 text-right">
-                                                <div>
+                                            <div className="flex items-center justify-between gap-4 sm:justify-end">
+                                                <div className="text-left sm:text-right">
                                                     <p className="text-lg font-bold">
                                                         {formatCurrency(
                                                             trx.final_amount,
@@ -158,6 +162,7 @@ export default function TransactionHistory({ transactions, className = '' }) {
                                                 </div>
                                                 <Link
                                                     href={`/transaksi/${trx.order_id}`}
+                                                    className="flex-shrink-0"
                                                 >
                                                     <Button
                                                         variant="ghost"
@@ -189,10 +194,3 @@ export default function TransactionHistory({ transactions, className = '' }) {
         </Card>
     );
 }
-
-// Dummy CSS classes to make Tailwind recognize them (add to app.css if needed)
-// bg-success/10 text-success
-// bg-warning/10 text-warning
-// bg-default/10 text-default
-// bg-destructive/10 text-destructive
-// bg-secondary/10 text-secondary

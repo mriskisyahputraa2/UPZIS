@@ -33,10 +33,16 @@ class TransaksiController extends Controller
     public function store(Request $request)
     {
         // 1. Validasi input dari form
-        $request->validate([
-            'amount' => 'required|numeric|min:10000', // Minimal pembayaran Rp 10.000
-            'payment_method' => 'required|string|in:DANA,GoPay,Tunai',
-        ]);
+        $request->validate(
+            [
+                'amount' => 'required|numeric|min:10000|max:9999999999999.99',
+                'payment_method' => 'required|string|in:DANA,GoPay,Tunai',
+            ],
+            [
+                // Pesan error kustom untuk aturan 'max' pada field 'amount'
+                'amount.max' => 'Nominal yang Anda masukkan terlalu besar.',
+            ],
+        );
 
         // 2. Buat record transaksi baru
         $transaksi = Transaksi::create([

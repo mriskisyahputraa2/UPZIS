@@ -18,7 +18,6 @@ use Inertia\Inertia;
 |--------------------------------------------------------------------------
 */
 
-
 // Halaman Beranda
 Route::get('/', [HomePageController::class, 'index'])->name('home');
 // Halaman Ajukan Bantuan
@@ -36,18 +35,13 @@ Route::post('kalkulator-zakat/hitung', [KalkulatorController::class, 'hitung'])-
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        // Ini adalah dashboard untuk Muzakki
-        return Inertia::render('dashboard');
-    })->name('dashboard');
-
     /*
     |--------------------------------------------------------------------------
     | Halaman Profil Pengguna
     |--------------------------------------------------------------------------
     | Dikelompokkan di sini untuk kerapian. Menggunakan URL /profile.
     */
-    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.edit');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
@@ -71,6 +65,8 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
         // Manajemen Mustahik
         Route::resource('mustahiks', MustahikController::class);
 
@@ -87,5 +83,5 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
 | FILE RUTE BAWAAN
 |--------------------------------------------------------------------------
 */
-require __DIR__ . '/settings.php';
+// require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

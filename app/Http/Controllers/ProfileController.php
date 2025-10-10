@@ -16,14 +16,14 @@ class ProfileController extends Controller
      * Menampilkan halaman profil utama pengguna,
      * lengkap dengan riwayat transaksi yang dipaginasi.
      */
-    public function show()
+    public function index()
     {
         $user = Auth::user();
 
         return Inertia::render('user/muzakki/profile/index', [
             'transactions' => Transaksi::where('user_id', $user->id)
                 ->latest()
-                ->paginate(10),
+                ->paginate(3),
             'status' => session('status'),
         ]);
     }
@@ -47,13 +47,13 @@ class ProfileController extends Controller
                 Storage::disk('public')->delete($user->photo);
             }
 
-            $path = $request->file('photo')->store('photos', 'public');
+            $path = $request->file('photo')->store('photos_profile', 'public');
             $user->photo = $path;
         }
 
         $user->save();
 
-        return redirect()->route('profile.show')->with('status', 'profile-updated');
+        return redirect()->route('profile.edit')->with('status', 'profile-updated');
     }
 
     /**
