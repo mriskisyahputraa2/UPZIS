@@ -7,6 +7,16 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -17,21 +27,24 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
     Calendar,
     Copy,
     Download,
     FileText,
+    HandCoins,
     Hash,
     Home,
     Info,
     Users as KkIcon,
     Phone,
-    User,
+    PlusCircle,
+    User as UserIcon,
     ZoomIn,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 const breadcrumbs = [
@@ -40,6 +53,20 @@ const breadcrumbs = [
     { title: 'Detail Permohonan' },
 ];
 
+// Helper Functions
+const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    });
+const formatCurrency = (value) =>
+    new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+    }).format(value);
+
 // Komponen kecil untuk menampilkan item detail agar rapi
 const DetailItem = ({ icon: Icon, label, children }) => (
     <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
@@ -47,8 +74,8 @@ const DetailItem = ({ icon: Icon, label, children }) => (
             <Icon className="mr-2 h-4 w-4 flex-shrink-0" />
             <span>{label}</span>
         </dt>
-        <dd className="mt-1 font-semibold text-foreground sm:col-span-2 sm:mt-0">
-            {children}
+        <dd className="mt-1 font-semibold break-words text-foreground sm:col-span-2 sm:mt-0">
+            {children || '-'}
         </dd>
     </div>
 );
@@ -64,7 +91,6 @@ const DocumentCard = ({ file_path, label }) => {
     return (
         <div className="group relative overflow-hidden rounded-lg border">
             {isImage ? (
-                // Jika file adalah gambar, tampilkan <img>
                 <img
                     src={fileUrl}
                     alt={label}
@@ -72,7 +98,6 @@ const DocumentCard = ({ file_path, label }) => {
                     loading="lazy"
                 />
             ) : isPdf ? (
-                // Jika file adalah PDF, tampilkan <iframe>
                 <iframe
                     src={fileUrl}
                     className="h-40 w-full border-0"
@@ -80,7 +105,6 @@ const DocumentCard = ({ file_path, label }) => {
                     loading="lazy"
                 ></iframe>
             ) : (
-                // Jika file tipe lain, tampilkan ikon generik
                 <div className="flex h-40 w-full flex-col items-center justify-center bg-gray-100 dark:bg-gray-800">
                     <FileText className="h-12 w-12 text-gray-400" />
                     <span className="mt-2 text-xs text-gray-500">
@@ -113,12 +137,42 @@ const DocumentCard = ({ file_path, label }) => {
 };
 
 export default function Show({ permohonan }) {
-    const { data, setData, patch, processing, errors } = useForm({
+    const { flash } = usePage().props;
+    const [isPenyaluranOpen, setIsPenyaluranOpen] = useState(false);
+
+    // Form untuk update status permohonan
+    const {
+        data,
+        setData,
+        patch,
+        processing: verifikasiProcessing,
+        errors: verifikasiErrors,
+    } = useForm({
         status: permohonan.status,
         notes_admin: permohonan.notes_admin || '',
     });
 
-    const handleSubmit = (e) => {
+    // Form untuk mencatat penyaluran
+    const {
+        data: penyaluranData,
+        setData: setPenyaluranData,
+        post: postPenyaluran,
+        processing: penyaluranProcessing,
+        errors: penyaluranErrors,
+        reset: resetPenyaluran,
+    } = useForm({
+        amount: '',
+        distribution_date: '',
+        notes: '',
+    });
+
+    useEffect(() => {
+        if (flash?.success) {
+            toast.success(flash.success);
+        }
+    }, [flash]);
+
+    const handleVerifikasiSubmit = (e) => {
         e.preventDefault();
         patch(`/admin/permohonan/${permohonan.id}`, {
             preserveScroll: true,
@@ -128,11 +182,27 @@ export default function Show({ permohonan }) {
         });
     };
 
-    // 3. Buat fungsi untuk menyalin teks
+    const handlePenyaluranSubmit = (e) => {
+        e.preventDefault();
+        postPenyaluran(`/admin/permohonan/${permohonan.id}/salurkan`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Data penyaluran berhasil dicatat.');
+                setIsPenyaluranOpen(false);
+                resetPenyaluran();
+            },
+        });
+    };
+
     const copyToClipboard = (text, label) => {
         navigator.clipboard.writeText(text);
         toast.success(`"${label}" berhasil disalin!`);
     };
+
+    const totalDisalurkan = permohonan.penyalurans.reduce(
+        (sum, p) => sum + parseFloat(p.amount),
+        0,
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -165,7 +235,7 @@ export default function Show({ permohonan }) {
                 <div className="grid grid-cols-1 gap-8 pt-6 lg:grid-cols-3">
                     {/* Kolom Kiri: Kartu Profil Pemohon */}
                     <div className="lg:col-span-1">
-                        <Card className="overflow-hidden text-center">
+                        <Card className="sticky top-24 overflow-hidden text-center">
                             <CardContent className="flex flex-col items-center gap-4 p-6">
                                 <div className="h-48 w-full">
                                     {permohonan.mustahik.photo ? (
@@ -176,7 +246,7 @@ export default function Show({ permohonan }) {
                                         />
                                     ) : (
                                         <div className="flex h-full w-full items-center justify-center rounded-xl bg-muted">
-                                            <User className="h-24 w-24 text-muted-foreground/30" />
+                                            <UserIcon className="h-24 w-24 text-muted-foreground/30" />
                                         </div>
                                     )}
                                 </div>
@@ -185,16 +255,14 @@ export default function Show({ permohonan }) {
                                         {permohonan.mustahik.name}
                                     </h2>
                                     <p className="flex items-center justify-center gap-2 text-muted-foreground">
-                                        <User className="h-4 w-4" />
+                                        <UserIcon className="h-4 w-4" />
                                         <span>Calon Mustahik</span>
                                     </p>
                                 </div>
-                                {/* ## 4. TAMBAHKAN TAMPILAN KODE UNIK DI SINI ## */}
                                 <div className="w-full pt-4 text-left">
                                     <Label className="text-xs text-muted-foreground">
                                         Kode Pendaftaran
                                     </Label>
-                                    {/* ## DESAIN BARU GAYA "CHIP" ## */}
                                     <div className="mt-1 flex items-center justify-between rounded-md border bg-muted px-3 py-2">
                                         <code className="font-mono text-sm font-semibold text-primary">
                                             {permohonan.unique_code}
@@ -219,7 +287,7 @@ export default function Show({ permohonan }) {
                         </Card>
                     </div>
 
-                    {/* Kolom Kanan: Informasi Detail & Verifikasi */}
+                    {/* Kolom Kanan: Informasi Detail, Penyaluran, & Verifikasi */}
                     <div className="space-y-6 lg:col-span-2">
                         <Card>
                             <CardHeader>
@@ -264,13 +332,7 @@ export default function Show({ permohonan }) {
                                         icon={Calendar}
                                         label="Tanggal Pengajuan"
                                     >
-                                        {new Date(
-                                            permohonan.created_at,
-                                        ).toLocaleDateString('id-ID', {
-                                            day: 'numeric',
-                                            month: 'long',
-                                            year: 'numeric',
-                                        })}
+                                        {formatDate(permohonan.created_at)}
                                     </DetailItem>
                                 </div>
                                 <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3">
@@ -286,7 +348,6 @@ export default function Show({ permohonan }) {
                                         file_path={permohonan.file_khs}
                                         label="Kartu Hasil Studi (KHS)"
                                     />
-                                    {/* ## TAMBAHKAN 3 KARTU DOKUMEN BARU DI SINI ## */}
                                     <DocumentCard
                                         file_path={
                                             permohonan.file_surat_fakir_miskin
@@ -308,7 +369,188 @@ export default function Show({ permohonan }) {
                                 </div>
                             </CardContent>
                         </Card>
-                        <form onSubmit={handleSubmit}>
+
+                        {/* Kartu Riwayat Penyaluran */}
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle>
+                                        Riwayat Penyaluran Dana
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Daftar bantuan yang telah diberikan
+                                        untuk permohonan ini.
+                                    </CardDescription>
+                                </div>
+                                {permohonan.status === 'Disetujui' && (
+                                    <Dialog
+                                        open={isPenyaluranOpen}
+                                        onOpenChange={setIsPenyaluranOpen}
+                                    >
+                                        <DialogTrigger asChild>
+                                            <Button>
+                                                <PlusCircle className="mr-2 h-4 w-4" />
+                                                Catat Penyaluran
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[425px]">
+                                            <form
+                                                onSubmit={
+                                                    handlePenyaluranSubmit
+                                                }
+                                            >
+                                                <DialogHeader>
+                                                    <DialogTitle>
+                                                        Form Catat Penyaluran
+                                                    </DialogTitle>
+                                                    <DialogDescription>
+                                                        Masukkan detail dana
+                                                        bantuan yang disalurkan.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="grid gap-4 py-4">
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="amount">
+                                                            Jumlah (Rp)
+                                                        </Label>
+                                                        <Input
+                                                            id="amount"
+                                                            type="number"
+                                                            value={
+                                                                penyaluranData.amount
+                                                            }
+                                                            onChange={(e) =>
+                                                                setPenyaluranData(
+                                                                    'amount',
+                                                                    e.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                        />
+                                                        {penyaluranErrors.amount && (
+                                                            <p className="text-sm text-red-500">
+                                                                {
+                                                                    penyaluranErrors.amount
+                                                                }
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="distribution_date">
+                                                            Tanggal Penyaluran
+                                                        </Label>
+                                                        <Input
+                                                            id="distribution_date"
+                                                            type="date"
+                                                            value={
+                                                                penyaluranData.distribution_date
+                                                            }
+                                                            onChange={(e) =>
+                                                                setPenyaluranData(
+                                                                    'distribution_date',
+                                                                    e.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                        />
+                                                        {penyaluranErrors.distribution_date && (
+                                                            <p className="text-sm text-red-500">
+                                                                {
+                                                                    penyaluranErrors.distribution_date
+                                                                }
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="notes">
+                                                            Catatan (Opsional)
+                                                        </Label>
+                                                        <Textarea
+                                                            id="notes"
+                                                            value={
+                                                                penyaluranData.notes
+                                                            }
+                                                            onChange={(e) =>
+                                                                setPenyaluranData(
+                                                                    'notes',
+                                                                    e.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button
+                                                        type="submit"
+                                                        disabled={
+                                                            penyaluranProcessing
+                                                        }
+                                                    >
+                                                        {penyaluranProcessing
+                                                            ? 'Menyimpan...'
+                                                            : 'Simpan Data'}
+                                                    </Button>
+                                                </DialogFooter>
+                                            </form>
+                                        </DialogContent>
+                                    </Dialog>
+                                )}
+                            </CardHeader>
+                            <CardContent>
+                                {permohonan.penyalurans.length > 0 ? (
+                                    <ul className="divide-y">
+                                        {permohonan.penyalurans.map((p) => (
+                                            <li key={p.id} className="py-3">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-lg font-bold">
+                                                            {formatCurrency(
+                                                                p.amount,
+                                                            )}
+                                                        </p>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Dicatat oleh:{' '}
+                                                            {p.admin.name}
+                                                        </p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-sm">
+                                                            {formatDate(
+                                                                p.distribution_date,
+                                                            )}
+                                                        </p>
+                                                        {p.notes && (
+                                                            <p className="text-xs text-muted-foreground italic">
+                                                                "{p.notes}"
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <div className="py-8 text-center">
+                                        <HandCoins className="mx-auto h-12 w-12 text-muted-foreground/30" />
+                                        <p className="mt-4 text-muted-foreground">
+                                            Belum ada data penyaluran yang
+                                            dicatat.
+                                        </p>
+                                    </div>
+                                )}
+                            </CardContent>
+                            {totalDisalurkan > 0 && (
+                                <CardFooter className="flex justify-between bg-muted/50 p-4 font-bold">
+                                    <span>Total Disalurkan</span>
+                                    <span>
+                                        {formatCurrency(totalDisalurkan)}
+                                    </span>
+                                </CardFooter>
+                            )}
+                        </Card>
+
+                        <form onSubmit={handleVerifikasiSubmit}>
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Verifikasi Permohonan</CardTitle>
@@ -346,9 +588,9 @@ export default function Show({ permohonan }) {
                                                 </SelectItem>
                                             </SelectContent>
                                         </Select>
-                                        {errors.status && (
+                                        {verifikasiErrors.status && (
                                             <p className="mt-1 text-sm text-red-500">
-                                                {errors.status}
+                                                {verifikasiErrors.status}
                                             </p>
                                         )}
                                     </div>
@@ -368,9 +610,9 @@ export default function Show({ permohonan }) {
                                             rows={5}
                                             placeholder="Tulis hasil verifikasi atau alasan perubahan status di sini..."
                                         />
-                                        {errors.notes_admin && (
+                                        {verifikasiErrors.notes_admin && (
                                             <p className="mt-1 text-sm text-red-500">
-                                                {errors.notes_admin}
+                                                {verifikasiErrors.notes_admin}
                                             </p>
                                         )}
                                     </div>
@@ -378,10 +620,10 @@ export default function Show({ permohonan }) {
                                 <CardFooter>
                                     <Button
                                         type="submit"
-                                        disabled={processing}
+                                        disabled={verifikasiProcessing}
                                         className="w-full"
                                     >
-                                        {processing
+                                        {verifikasiProcessing
                                             ? 'Menyimpan...'
                                             : 'Simpan Perubahan'}
                                     </Button>

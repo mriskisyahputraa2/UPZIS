@@ -23,8 +23,8 @@ class Permohonan extends Model
         return $this->belongsTo(Periode::class);
     }
 
-    public function penyaluran()
+    public function penyalurans()
     {
-        return $this->hasOne(Penyaluran::class);
+        return $this->hasMany(Penyaluran::class);
     }
 }

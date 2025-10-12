@@ -12,8 +12,8 @@ return new class extends Migration {
     {
         Schema::create('penyalurans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('permohonan_id')->constrained('permohonans');
-            $table->foreignId('admin_id')->constrained('users');
+            $table->foreignId('permohonan_id')->constrained('permohonans')->onDelete('cascade');
+            $table->foreignId('admin_id')->constrained('users')->onDelete('restrict');
             $table->decimal('amount', 15, 2);
             $table->date('distribution_date');
             $table->text('notes')->nullable();

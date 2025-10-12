@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Penyaluran;
 use App\Models\Periode;
 use App\Models\Permohonan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -70,7 +72,7 @@ class PermohonanController extends Controller
     public function show(Permohonan $permohonan)
     {
         // Load relasi mustahik dan periode agar bisa ditampilkan di view
-        $permohonan->load(['mustahik', 'periode']);
+        $permohonan->load(['mustahik', 'periode', "penyalurans.admin"]);
 
         return Inertia::render('admin/permohonan/show', [
             'permohonan' => $permohonan,
@@ -111,23 +113,53 @@ class PermohonanController extends Controller
         return back()->with('success', count($request->ids) . ' status permohonan berhasil diperbarui.');
     }
 
+
+    /**
+     * Menyimpan data penyaluran baru untuk sebuah permohonan.
+     */
+    public function storePenyaluran(Request $request, Permohonan $permohonan)
+    {
+        // 1. Validasi data dari form
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'distribution_date' => 'required|date',
+            'notes' => 'nullable|string',
+        ]);
+
+        // 2. Buat record baru di tabel penyalurans
+        Penyaluran::create([
+            'permohonan_id' => $permohonan->id,
+            'admin_id' => Auth::id(), // Mengambil ID admin yang sedang login
+            'amount' => $validated['amount'],
+            'distribution_date' => $validated['distribution_date'],
+            'notes' => $validated['notes'],
+        ]);
+
+        // 3. Kembalikan ke halaman detail permohonan dengan pesan sukses
+        return back()->with('success', 'Data penyaluran berhasil dicatat.');
+    }
+
+
     /**
      * Menghapus data permohonan dari database.
      */
     public function destroy(Permohonan $permohonan)
     {
-        // Hapus file-file terkait dari storage untuk membersihkan server
-        if ($permohonan->photo) {
-            Storage::disk('public')->delete($permohonan->photo);
-        }
-        if ($permohonan->file_ktp) {
-            Storage::disk('public')->delete($permohonan->file_ktp);
-        }
-        if ($permohonan->file_kk) {
-            Storage::disk('public')->delete($permohonan->file_kk);
-        }
-        if ($permohonan->file_khs) {
-            Storage::disk('public')->delete($permohonan->file_khs);
+        // PERBAIKAN: Tambahkan semua file yang mungkin ada untuk dihapus
+        $filesToDelete = [
+            $permohonan->photo,
+            $permohonan->file_ktp,
+            $permohonan->file_kk,
+            $permohonan->file_khs,
+            $permohonan->file_surat_fakir_miskin,
+            $permohonan->file_tidak_menerima_beasiswa,
+            $permohonan->file_surat_permohonan,
+        ];
+
+        foreach ($filesToDelete as $file) {
+            if ($file) {
+                Storage::disk('public')->delete($file);
+            }
         }
 
         $permohonan->delete();

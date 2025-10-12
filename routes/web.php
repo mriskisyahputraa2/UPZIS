@@ -4,7 +4,6 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MustahikController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\PermohonanController;
-use App\Http\Controllers\Admin\TransaksiAdminContoller;
 use App\Http\Controllers\Admin\TransaksiAdminController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\KalkulatorController;
@@ -68,13 +67,13 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
     ->name('admin.')
     ->group(function () {
         // Manajemen Dashboard
-        Route::get('dashboard', [DashboardController::class, 'index']);;
+        Route::get('dashboard', [DashboardController::class, 'index']);
         // Manajemen Mustahik
         Route::resource('mustahiks', MustahikController::class);
         // Manajemen Permohonan dan Status
         Route::resource('permohonan', PermohonanController::class)->only(['index', 'show', 'update', 'destroy']);
         Route::post('permohonan/bulk-update-status', [PermohonanController::class, 'bulkUpdateStatus'])->name('permohonan.bulkUpdateStatus');
-        Route::post('permohonan/{permohonan}/salurkan', [PermohonanController::class, 'storePenyaluran'])->name('permohonan.salurkan');
+         Route::post('permohonan/{permohonan}/salurkan', [PermohonanController::class, 'storePenyaluran'])->name('permohonan.salurkan');
         // Manajemen Periode
         Route::resource('/periode', PeriodeController::class);
         // Manajemen Transaksi
