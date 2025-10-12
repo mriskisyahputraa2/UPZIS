@@ -1,3 +1,13 @@
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -16,6 +26,12 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -27,24 +43,27 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
     Calendar,
     Copy,
     Download,
+    Ellipsis,
     FileText,
     HandCoins,
     Hash,
     Home,
     Info,
     Users as KkIcon,
+    Pencil,
     Phone,
     PlusCircle,
+    Trash2,
     User as UserIcon,
     ZoomIn,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 const breadcrumbs = [
@@ -136,9 +155,129 @@ const DocumentCard = ({ file_path, label }) => {
     );
 };
 
+// Komponen Form Penyaluran (bisa untuk Create dan Edit)
+const PenyaluranForm = ({
+    permohonan,
+    penyaluran = null,
+    onOpenChange,
+    onSuccess,
+}) => {
+    const isEditMode = !!penyaluran;
+    const { data, setData, post, patch, processing, errors, reset } = useForm({
+        amount: penyaluran?.amount || '',
+        distribution_date: penyaluran?.distribution_date || '',
+        notes: penyaluran?.notes || '',
+    });
+
+    const handleAmountChange = (e) => {
+        const value = e.target.value.replace(/\D/g, '');
+        setData('amount', value);
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const url = isEditMode
+            ? `/admin/penyaluran/${penyaluran.id}`
+            : `/admin/permohonan/${permohonan.id}/salurkan`;
+        const action = isEditMode ? patch : post;
+
+        action(url, {
+            preserveScroll: true,
+            onSuccess: () => {
+                reset();
+                onSuccess();
+                onOpenChange(false);
+            },
+        });
+    };
+
+    return (
+        <DialogContent className="sm:max-w-[425px]">
+            <form onSubmit={handleSubmit}>
+                <DialogHeader>
+                    <DialogTitle>
+                        {isEditMode
+                            ? 'Edit Catatan Penyaluran'
+                            : 'Form Catat Penyaluran'}
+                    </DialogTitle>
+                    <DialogDescription>
+                        {isEditMode
+                            ? 'Perbarui detail dana bantuan yang telah disalurkan.'
+                            : 'Masukkan detail dana bantuan yang akan disalurkan.'}
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="amount">Jumlah (Rp)</Label>
+                        <Input
+                            id="amount"
+                            type="text"
+                            value={
+                                data.amount
+                                    ? new Intl.NumberFormat('id-ID').format(
+                                          data.amount,
+                                      )
+                                    : ''
+                            }
+                            onChange={handleAmountChange}
+                            placeholder="Contoh: 500000"
+                        />
+                        {errors.amount && (
+                            <p className="text-sm text-red-500">
+                                {errors.amount}
+                            </p>
+                        )}
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="distribution_date">
+                            Tanggal Penyaluran
+                        </Label>
+                        <Input
+                            id="distribution_date"
+                            type="date"
+                            value={data.distribution_date}
+                            onChange={(e) =>
+                                setData('distribution_date', e.target.value)
+                            }
+                        />
+                        {errors.distribution_date && (
+                            <p className="text-sm text-red-500">
+                                {errors.distribution_date}
+                            </p>
+                        )}
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="notes">Catatan (Opsional)</Label>
+                        <Textarea
+                            id="notes"
+                            value={data.notes}
+                            onChange={(e) => setData('notes', e.target.value)}
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => onOpenChange(false)}
+                    >
+                        Batal
+                    </Button>
+                    <Button type="submit" disabled={processing}>
+                        {processing ? 'Menyimpan...' : 'Simpan Data'}
+                    </Button>
+                </DialogFooter>
+            </form>
+        </DialogContent>
+    );
+};
+
 export default function Show({ permohonan }) {
     const { flash } = usePage().props;
     const [isPenyaluranOpen, setIsPenyaluranOpen] = useState(false);
+    const [isCreatePenyaluranOpen, setIsCreatePenyaluranOpen] = useState(false);
+    const [penyaluranToEdit, setPenyaluranToEdit] = useState(null);
+    const [penyaluranToDelete, setPenyaluranToDelete] = useState(null);
 
     // Form untuk update status permohonan
     const {
@@ -166,12 +305,6 @@ export default function Show({ permohonan }) {
         notes: '',
     });
 
-    useEffect(() => {
-        if (flash?.success) {
-            toast.success(flash.success);
-        }
-    }, [flash]);
-
     const handleVerifikasiSubmit = (e) => {
         e.preventDefault();
         patch(`/admin/permohonan/${permohonan.id}`, {
@@ -197,6 +330,14 @@ export default function Show({ permohonan }) {
     const copyToClipboard = (text, label) => {
         navigator.clipboard.writeText(text);
         toast.success(`"${label}" berhasil disalin!`);
+    };
+
+    const handleDeletePenyaluran = () => {
+        if (!penyaluranToDelete) return;
+        router.delete(`/admin/penyaluran/${penyaluranToDelete.id}`, {
+            preserveScroll: true,
+            onSuccess: () => setPenyaluranToDelete(null),
+        });
     };
 
     const totalDisalurkan = permohonan.penyalurans.reduce(
@@ -384,8 +525,8 @@ export default function Show({ permohonan }) {
                                 </div>
                                 {permohonan.status === 'Disetujui' && (
                                     <Dialog
-                                        open={isPenyaluranOpen}
-                                        onOpenChange={setIsPenyaluranOpen}
+                                        open={isCreatePenyaluranOpen}
+                                        onOpenChange={setIsCreatePenyaluranOpen}
                                     >
                                         <DialogTrigger asChild>
                                             <Button>
@@ -393,107 +534,17 @@ export default function Show({ permohonan }) {
                                                 Catat Penyaluran
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="sm:max-w-[425px]">
-                                            <form
-                                                onSubmit={
-                                                    handlePenyaluranSubmit
-                                                }
-                                            >
-                                                <DialogHeader>
-                                                    <DialogTitle>
-                                                        Form Catat Penyaluran
-                                                    </DialogTitle>
-                                                    <DialogDescription>
-                                                        Masukkan detail dana
-                                                        bantuan yang disalurkan.
-                                                    </DialogDescription>
-                                                </DialogHeader>
-                                                <div className="grid gap-4 py-4">
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="amount">
-                                                            Jumlah (Rp)
-                                                        </Label>
-                                                        <Input
-                                                            id="amount"
-                                                            type="number"
-                                                            value={
-                                                                penyaluranData.amount
-                                                            }
-                                                            onChange={(e) =>
-                                                                setPenyaluranData(
-                                                                    'amount',
-                                                                    e.target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                        />
-                                                        {penyaluranErrors.amount && (
-                                                            <p className="text-sm text-red-500">
-                                                                {
-                                                                    penyaluranErrors.amount
-                                                                }
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="distribution_date">
-                                                            Tanggal Penyaluran
-                                                        </Label>
-                                                        <Input
-                                                            id="distribution_date"
-                                                            type="date"
-                                                            value={
-                                                                penyaluranData.distribution_date
-                                                            }
-                                                            onChange={(e) =>
-                                                                setPenyaluranData(
-                                                                    'distribution_date',
-                                                                    e.target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                        />
-                                                        {penyaluranErrors.distribution_date && (
-                                                            <p className="text-sm text-red-500">
-                                                                {
-                                                                    penyaluranErrors.distribution_date
-                                                                }
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="notes">
-                                                            Catatan (Opsional)
-                                                        </Label>
-                                                        <Textarea
-                                                            id="notes"
-                                                            value={
-                                                                penyaluranData.notes
-                                                            }
-                                                            onChange={(e) =>
-                                                                setPenyaluranData(
-                                                                    'notes',
-                                                                    e.target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <DialogFooter>
-                                                    <Button
-                                                        type="submit"
-                                                        disabled={
-                                                            penyaluranProcessing
-                                                        }
-                                                    >
-                                                        {penyaluranProcessing
-                                                            ? 'Menyimpan...'
-                                                            : 'Simpan Data'}
-                                                    </Button>
-                                                </DialogFooter>
-                                            </form>
-                                        </DialogContent>
+                                        <PenyaluranForm
+                                            permohonan={permohonan}
+                                            onOpenChange={
+                                                setIsCreatePenyaluranOpen
+                                            }
+                                            onSuccess={() =>
+                                                toast.success(
+                                                    'Data penyaluran berhasil dicatat.',
+                                                )
+                                            }
+                                        />
                                     </Dialog>
                                 )}
                             </CardHeader>
@@ -501,7 +552,10 @@ export default function Show({ permohonan }) {
                                 {permohonan.penyalurans.length > 0 ? (
                                     <ul className="divide-y">
                                         {permohonan.penyalurans.map((p) => (
-                                            <li key={p.id} className="py-3">
+                                            <li
+                                                key={p.id}
+                                                className="group py-3"
+                                            >
                                                 <div className="flex items-center justify-between">
                                                     <div>
                                                         <p className="text-lg font-bold">
@@ -514,17 +568,55 @@ export default function Show({ permohonan }) {
                                                             {p.admin.name}
                                                         </p>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <p className="text-sm">
-                                                            {formatDate(
-                                                                p.distribution_date,
-                                                            )}
-                                                        </p>
-                                                        {p.notes && (
-                                                            <p className="text-xs text-muted-foreground italic">
-                                                                "{p.notes}"
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="text-right">
+                                                            <p className="text-sm">
+                                                                {formatDate(
+                                                                    p.distribution_date,
+                                                                )}
                                                             </p>
-                                                        )}
+                                                            {p.notes && (
+                                                                <p className="text-xs text-muted-foreground italic">
+                                                                    "{p.notes}"
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger
+                                                                asChild
+                                                            >
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
+                                                                >
+                                                                    <Ellipsis className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuItem
+                                                                    onSelect={() =>
+                                                                        setPenyaluranToEdit(
+                                                                            p,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Pencil className="mr-2 h-4 w-4" />{' '}
+                                                                    Edit
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    onSelect={() =>
+                                                                        setPenyaluranToDelete(
+                                                                            p,
+                                                                        )
+                                                                    }
+                                                                    className="text-red-600"
+                                                                >
+                                                                    <Trash2 className="mr-2 h-4 w-4" />{' '}
+                                                                    Hapus
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
                                                     </div>
                                                 </div>
                                             </li>
@@ -633,6 +725,53 @@ export default function Show({ permohonan }) {
                     </div>
                 </div>
             </div>
+            {/* Dialog untuk Edit Penyaluran */}
+            <Dialog
+                open={!!penyaluranToEdit}
+                onOpenChange={() => setPenyaluranToEdit(null)}
+            >
+                {penyaluranToEdit && (
+                    <PenyaluranForm
+                        permohonan={permohonan}
+                        penyaluran={penyaluranToEdit}
+                        onOpenChange={() => setPenyaluranToEdit(null)}
+                        onSuccess={() =>
+                            toast.success(
+                                'Catatan penyaluran berhasil diperbarui.',
+                            )
+                        }
+                    />
+                )}
+            </Dialog>
+
+            {/* Dialog Konfirmasi Hapus */}
+            <AlertDialog
+                open={!!penyaluranToDelete}
+                onOpenChange={() => setPenyaluranToDelete(null)}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Apakah Anda yakin ingin menghapus catatan penyaluran
+                            sebesar{' '}
+                            <strong>
+                                {formatCurrency(penyaluranToDelete?.amount)}
+                            </strong>{' '}
+                            ini? Tindakan ini tidak dapat diurungkan.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeletePenyaluran}
+                            className="bg-destructive hover:bg-destructive/90"
+                        >
+                            Ya, Hapus
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </AppLayout>
     );
 }
