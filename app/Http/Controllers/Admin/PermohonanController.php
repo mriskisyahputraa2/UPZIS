@@ -113,33 +113,6 @@ class PermohonanController extends Controller
         return back()->with('success', count($request->ids) . ' status permohonan berhasil diperbarui.');
     }
 
-
-    /**
-     * Menyimpan data penyaluran baru untuk sebuah permohonan.
-     */
-    public function storePenyaluran(Request $request, Permohonan $permohonan)
-    {
-        // 1. Validasi data dari form
-        $validated = $request->validate([
-            'amount' => 'required|numeric|min:1',
-            'distribution_date' => 'required|date',
-            'notes' => 'nullable|string',
-        ]);
-
-        // 2. Buat record baru di tabel penyalurans
-        Penyaluran::create([
-            'permohonan_id' => $permohonan->id,
-            'admin_id' => Auth::id(), // Mengambil ID admin yang sedang login
-            'amount' => $validated['amount'],
-            'distribution_date' => $validated['distribution_date'],
-            'notes' => $validated['notes'],
-        ]);
-
-        // 3. Kembalikan ke halaman detail permohonan dengan pesan sukses
-        return back()->with('success', 'Data penyaluran berhasil dicatat.');
-    }
-
-
     /**
      * Menghapus data permohonan dari database.
      */

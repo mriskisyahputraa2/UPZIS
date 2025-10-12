@@ -178,7 +178,7 @@ const PenyaluranForm = ({
         e.preventDefault();
         const url = isEditMode
             ? `/admin/penyaluran/${penyaluran.id}`
-            : `/admin/permohonan/${permohonan.id}/salurkan`;
+            : `/admin/permohonan/${permohonan.id}/penyaluran`;
         const action = isEditMode ? patch : post;
 
         action(url, {

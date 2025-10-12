@@ -74,7 +74,9 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
         // Manajemen Permohonan dan Status
         Route::resource('permohonan', PermohonanController::class)->only(['index', 'show', 'update', 'destroy']);
         Route::post('permohonan/bulk-update-status', [PermohonanController::class, 'bulkUpdateStatus'])->name('permohonan.bulkUpdateStatus');
-        Route::post('permohonan/{permohonan}/salurkan', [PermohonanController::class, 'storePenyaluran'])->name('permohonan.salurkan');
+
+        Route::post('permohonan/{permohonan}/penyaluran', [PenyaluranController::class, 'store'])->name('permohonan.penyaluran.store');
+
         Route::patch('penyaluran/{penyaluran}', [PenyaluranController::class, 'update'])->name('penyaluran.update');
         Route::delete('penyaluran/{penyaluran}', [PenyaluranController::class, 'destroy'])->name('penyaluran.destroy');
         // Manajemen Periode
