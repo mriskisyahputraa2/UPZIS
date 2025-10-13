@@ -24,7 +24,7 @@ class StorePenyaluranRequest extends FormRequest
         return [
             'amount' => 'required|numeric|min:1',
             'distribution_date' => 'required|date',
-            'notes' => 'nullable|string',
+            'notes' => 'nullable|string|max:255',
         ];
     }
 }
