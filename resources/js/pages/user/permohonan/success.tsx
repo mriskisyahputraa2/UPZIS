@@ -28,7 +28,7 @@ export default function Success({ unique_code }) {
     return (
         <PublicLayout>
             <Head title="Pendaftaran Berhasil" />
-            <Toaster richColors position="top-center" />
+            <Toaster richColors position="bottom-right" />
             {showConfetti && <Confetti recycle={false} numberOfPieces={200} />}
 
             <section className="bg-green-700 pt-32 pb-16 text-white">

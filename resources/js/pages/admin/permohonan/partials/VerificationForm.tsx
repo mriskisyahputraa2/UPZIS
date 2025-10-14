@@ -29,8 +29,6 @@ export default function VerificationForm({ permohonan }) {
         e.preventDefault();
         patch(`/admin/permohonan/${permohonan.id}`, {
             preserveScroll: true,
-            onSuccess: () =>
-                toast.success('Status permohonan berhasil diperbarui.'),
             onError: () => toast.error('Gagal memperbarui status.'),
         });
     };

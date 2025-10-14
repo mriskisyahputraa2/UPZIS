@@ -21,12 +21,18 @@ const formatCurrency = (value) =>
         minimumFractionDigits: 0,
     }).format(value);
 
-export default function PenyaluranItem({ penyaluran, onEdit, onDelete }) {
+export default function PenyaluranItem({
+    penyaluran,
+    onEdit,
+    onDelete,
+    showActions = true,
+    className = '',
+}) {
     const [isExpanded, setIsExpanded] = useState(false);
     const hasLongNote = penyaluran.notes && penyaluran.notes.length > 100;
 
     return (
-        <li className="group relative py-4">
+        <li className={`group relative py-4 ${className}`}>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex-shrink-0">
                     <p className="text-lg font-bold">
@@ -69,30 +75,32 @@ export default function PenyaluranItem({ penyaluran, onEdit, onDelete }) {
                             </div>
                         )}
                     </div>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 flex-shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-                            >
-                                <Ellipsis className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                                onSelect={() => onEdit(penyaluran)}
-                            >
-                                <Pencil className="mr-2 h-4 w-4" /> Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onSelect={() => onDelete(penyaluran)}
-                                className="text-red-600"
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" /> Hapus
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    {showActions && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 flex-shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                                >
+                                    <Ellipsis className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    onSelect={() => onEdit(penyaluran)}
+                                >
+                                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onSelect={() => onDelete(penyaluran)}
+                                    className="text-red-600"
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" /> Hapus
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
                 </div>
             </div>
         </li>

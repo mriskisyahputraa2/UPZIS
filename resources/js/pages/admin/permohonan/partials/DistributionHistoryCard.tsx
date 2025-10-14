@@ -101,7 +101,9 @@ export default function DistributionHistoryCard({ permohonan }) {
                 {totalDisalurkan > 0 && (
                     <CardFooter className="flex justify-between bg-muted/50 p-4 font-bold">
                         <span>Total Disalurkan</span>
-                        <span>{formatCurrency(totalDisalurkan)}</span>
+                        <span className="text-green-600">
+                            {formatCurrency(totalDisalurkan)}
+                        </span>
                     </CardFooter>
                 )}
             </Card>

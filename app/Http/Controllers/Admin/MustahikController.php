@@ -192,7 +192,7 @@ class MustahikController extends Controller
     {
         $mustahik->load([
             'permohonans' => function ($query) {
-                $query->with('periode')->latest(); // Urutkan permohonan dari yang terbaru
+                $query->with(['periode', 'penyalurans.admin'])->latest(); // Urutkan permohonan dari yang terbaru
             },
         ]);
         return Inertia::render('admin/mustahiks/show', [

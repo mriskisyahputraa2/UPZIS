@@ -26,6 +26,7 @@ import {
     ZoomIn,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import PenyaluranItem from '../permohonan/partials/PenyaluranItem';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/admin/dashboard' },
@@ -382,6 +383,71 @@ export default function Show({ mustahik }) {
                                                                         label="Surat Permohonan"
                                                                     />
                                                                 </div>
+
+                                                                {permohonan.penyalurans &&
+                                                                    permohonan
+                                                                        .penyalurans
+                                                                        .length >
+                                                                        0 && (
+                                                                        <div className="mt-4 border-t pt-4">
+                                                                            <p className="mb-2 text-sm font-semibold">
+                                                                                Riwayat
+                                                                                Penyaluran
+                                                                                Dana:
+                                                                            </p>
+                                                                            <div className="overflow-hidden rounded-lg border">
+                                                                                <ul className="divide-y divide-border">
+                                                                                    {permohonan.penyalurans.map(
+                                                                                        (
+                                                                                            p,
+                                                                                        ) => (
+                                                                                            <PenyaluranItem
+                                                                                                key={
+                                                                                                    p.id
+                                                                                                }
+                                                                                                penyaluran={
+                                                                                                    p
+                                                                                                }
+                                                                                                showActions={
+                                                                                                    false
+                                                                                                }
+                                                                                                className="px-4"
+                                                                                            />
+                                                                                        ),
+                                                                                    )}
+                                                                                </ul>
+                                                                                <div className="flex justify-between rounded-b-lg bg-muted/50 px-4 py-3 text-lg font-bold">
+                                                                                    <span>
+                                                                                        Total
+                                                                                        Disalurkan
+                                                                                    </span>
+                                                                                    <span className="text-green-600">
+                                                                                        {new Intl.NumberFormat(
+                                                                                            'id-ID',
+                                                                                            {
+                                                                                                style: 'currency',
+                                                                                                currency:
+                                                                                                    'IDR',
+                                                                                                minimumFractionDigits: 0,
+                                                                                            },
+                                                                                        ).format(
+                                                                                            permohonan.penyalurans.reduce(
+                                                                                                (
+                                                                                                    sum,
+                                                                                                    p,
+                                                                                                ) =>
+                                                                                                    sum +
+                                                                                                    parseFloat(
+                                                                                                        p.amount,
+                                                                                                    ),
+                                                                                                0,
+                                                                                            ),
+                                                                                        )}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
 
                                                                 {permohonan.notes_admin && (
                                                                     <div className="mt-4">
