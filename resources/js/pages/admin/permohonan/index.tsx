@@ -118,7 +118,7 @@ export default function Index({
                                         className="h-auto p-0"
                                     >
                                         <Link href="/admin/periode">
-                                            Buka Manajemen Periode.
+                                            Aktifkan Periode.
                                         </Link>
                                     </Button>
                                 </AlertDescription>
