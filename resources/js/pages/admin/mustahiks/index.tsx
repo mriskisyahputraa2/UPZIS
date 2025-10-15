@@ -66,7 +66,7 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Dashboard', href: '/admin/dashboard' },
     { title: 'Manajemen Mustahik' },
 ];
 

@@ -12,11 +12,16 @@ import {
 // import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import {
+    BookType,
     Calendar,
     ClipboardList,
     FileText,
     LayoutGrid,
+    Settings,
+    SlidersHorizontal,
+    UserCog,
     Users,
+    Wallet,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -49,6 +54,33 @@ const mainNavItems: NavItem[] = [
         title: 'Manajemen Permohonan',
         href: '/admin/permohonan',
         icon: FileText,
+    },
+    {
+        title: 'Pengaturan',
+        icon: Settings,
+        // Item induk tidak memiliki href, tetapi memiliki subItems
+        subItems: [
+            {
+                title: 'Umum',
+                href: '/admin/settings/general',
+                icon: SlidersHorizontal,
+            },
+            {
+                title: 'Akun Pembayaran',
+                href: '/admin/settings/payment-accounts',
+                icon: Wallet,
+            },
+            {
+                title: 'Jenis Zakat',
+                href: '/admin/settings/zakat-types',
+                icon: BookType,
+            },
+            {
+                title: 'Manajemen Admin',
+                href: '/admin/settings/admins',
+                icon: UserCog,
+            },
+        ],
     },
 ];
 

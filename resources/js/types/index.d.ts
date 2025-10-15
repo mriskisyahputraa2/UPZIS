@@ -17,9 +17,14 @@ export interface NavGroup {
 
 export interface NavItem {
     title: string;
-    href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    href?: NonNullable<InertiaLinkProps['href']>;
+    // subItems?: {
+    //     title: string;
+    //     href: NonNullable<InertiaLinkProps['href']>;
+    // }[];
+    subItems?: NavItem[];
 }
 
 export interface SharedData {
