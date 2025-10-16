@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MustahikController;
 use App\Http\Controllers\Admin\PenyaluranController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\PermohonanController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TransaksiAdminController;
+use App\Http\Controllers\Admin\ZakatTypeController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\KalkulatorController;
 use App\Http\Controllers\Muzakki\TransaksiController;
@@ -83,6 +86,21 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
         Route::resource('/periode', PeriodeController::class);
         // Manajemen Transaksi
         Route::resource('/transaksi', TransaksiAdminController::class);
+
+        // Route::get('settings/general', [SettingController::class, 'edit'])->name('settings.general.edit');
+        // Route::patch('settings/general', [SettingController::class, 'update'])->name('settings.general.update');
+
+          Route::prefix('settings')->name('settings.')->group(function () {
+            // Rute untuk Pengaturan Umum
+            Route::get('/general', [SettingController::class, 'edit'])->name('general.edit');
+            Route::patch('/general', [SettingController::class, 'update'])->name('general.update');
+
+            // START: RUTE BARU UNTUK AKUN PEMBAYARAN
+            Route::get('/payment-accounts', [SettingController::class, 'paymentEdit'])->name('payment.edit');
+            Route::patch('/payment-accounts', [SettingController::class, 'paymentUpdate'])->name('payment.update');
+             Route::resource('zakat-types', ZakatTypeController::class)->except(['show']);
+            Route::resource('admins', AdminController::class)->except(['show']);
+        });
     });
 
 /*

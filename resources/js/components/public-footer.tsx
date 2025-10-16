@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import AppLogo from './app-logo'; // Asumsi Anda punya komponen Logo
 
-// Kita gunakan lagi data navigasi yang sama dengan header agar konsisten
+// Data navigasi, bisa dibiarkan statis atau dibuat dinamis juga jika perlu
 const publicNavItems = [
     { title: 'Beranda', href: '/' },
     { title: 'Galeri Program', href: '/galeri' },
@@ -19,7 +19,7 @@ const publicNavItems = [
     { title: 'Kontak', href: '/kontak' },
 ];
 
-// Data untuk link media sosial (silakan sesuaikan)
+// Data untuk link media sosial (bisa juga dibuat dinamis dari backend)
 const socialLinks = [
     { icon: Facebook, href: '#', name: 'Facebook' },
     { icon: Instagram, href: '#', name: 'Instagram' },
@@ -27,11 +27,12 @@ const socialLinks = [
     { icon: Youtube, href: '#', name: 'Youtube' },
 ];
 
-export function PublicFooter() {
+// 1. Menerima props 'settings' yang dikirim dari PublicLayout
+//    Diberi nilai default objek kosong ({}) untuk mencegah error
+export function PublicFooter({ settings = {} }) {
     return (
         <footer className="bg-green-700 text-white">
             <div className="container mx-auto max-w-7xl px-6 py-16">
-                {/* Bagian utama footer dengan 4 kolom */}
                 <div className="grid grid-cols-1 gap-12 md:grid-cols-12">
                     {/* Kolom 1: Logo & Deskripsi */}
                     <div className="md:col-span-12 lg:col-span-4">
@@ -67,20 +68,23 @@ export function PublicFooter() {
                             <li className="flex items-start">
                                 <MapPin className="mt-1 h-5 w-5 flex-shrink-0" />
                                 <span className="ml-3 text-sm text-green-100">
-                                    Jalan Tgk. Daud Beureueh, Banda Aceh, Aceh,
-                                    Indonesia
+                                    {/* 2. Menampilkan data dinamis dengan fallback text */}
+                                    {settings?.contact_address ||
+                                        'Alamat belum diatur.'}
                                 </span>
                             </li>
                             <li className="flex items-center">
                                 <Phone className="h-5 w-5 flex-shrink-0" />
                                 <span className="ml-3 text-sm text-green-100">
-                                    (0651) 123-456
+                                    {settings?.contact_phone ||
+                                        'Telepon belum diatur.'}
                                 </span>
                             </li>
                             <li className="flex items-center">
                                 <Mail className="h-5 w-5 flex-shrink-0" />
                                 <span className="ml-3 text-sm text-green-100">
-                                    info@upzis.com
+                                    {settings?.contact_email ||
+                                        'Email belum diatur.'}
                                 </span>
                             </li>
                         </ul>

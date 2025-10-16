@@ -5,6 +5,8 @@ namespace App\Http\Middleware;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Models\GeneralSetting;
+use App\Models\Setting;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -38,6 +40,8 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        $generalSettings = Setting::pluck('setting_value', 'setting_key')->all();
+        // dd($generalSettings);
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -50,6 +54,9 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn() => $request->session()->get('error'),
             ],
             'sidebarOpen' => !$request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+
+            // Tambahkan data settings ke dalam props yang dibagikan
+         'generalSettings' => $generalSettings,
         ];
     }
 }
