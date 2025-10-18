@@ -25,6 +25,7 @@ const socialLinks = [
     { icon: Instagram, href: '#', name: 'Instagram' },
     { icon: Twitter, href: '#', name: 'Twitter' },
     { icon: Youtube, href: '#', name: 'Youtube' },
+
 ];
 
 // 1. Menerima props 'settings' yang dikirim dari PublicLayout

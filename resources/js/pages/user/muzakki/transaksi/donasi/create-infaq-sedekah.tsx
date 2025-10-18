@@ -15,6 +15,7 @@ import PublicLayout from '@/layouts/publicLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { CheckCircle, CreditCard, Landmark, Wallet } from 'lucide-react';
 
+// Helper untuk format mata uang
 const formatCurrency = (value) => {
     if (!value && value !== 0) return '';
     return new Intl.NumberFormat('id-ID', {
@@ -24,11 +25,14 @@ const formatCurrency = (value) => {
     }).format(value);
 };
 
-export default function CreateTransaksi({ auth, initialAmount, hargaEmas }) {
-    const nisabAmount = hargaEmas * 85;
+export default function CreateInfaqSedekah({ donationType }) {
+    // Membuat judul yang rapi (misal: "Infaq", "Sedekah")
+    const pageTitle =
+        donationType.charAt(0).toUpperCase() + donationType.slice(1);
 
     const { data, setData, post, processing, errors } = useForm({
-        amount: initialAmount || '',
+        type: donationType, // 'infaq' atau 'sedekah' dari controller
+        amount: '',
         payment_method: '',
     });
 
@@ -39,23 +43,24 @@ export default function CreateTransaksi({ auth, initialAmount, hargaEmas }) {
 
     const submit = (e) => {
         e.preventDefault();
-        post('/bayar-zakat');
+        // Mengirim data ke rute donasi yang baru
+        post('/donasi');
     };
 
-    const quickAmounts = [100000, 250000, 500000, 1000000];
+    const quickAmounts = [25000, 50000, 100000, 200000];
 
     return (
         <PublicLayout>
-            <Head title="Bayar Zakat" />
+            <Head title={`Bayar ${pageTitle}`} />
 
             <section className="bg-green-700 pt-28 pb-24 text-white md:pt-32">
                 <div className="container mx-auto max-w-4xl px-6 text-center">
                     <h1 className="text-4xl font-bold md:text-5xl">
-                        Tunaikan Zakat, Sucikan Harta
+                        Tunaikan {pageTitle} Anda
                     </h1>
                     <p className="mt-4 text-lg text-green-100">
-                        Satu langkah mudah untuk menyalurkan kebaikan Anda
-                        kepada yang berhak menerima.
+                        Setiap donasi Anda memberikan harapan dan kebaikan bagi
+                        sesama.
                     </p>
                 </div>
             </section>
@@ -66,15 +71,11 @@ export default function CreateTransaksi({ auth, initialAmount, hargaEmas }) {
                         <Card className="shadow-lg">
                             <CardHeader>
                                 <CardTitle className="text-2xl">
-                                    Formulir Pembayaran Zakat
+                                    Formulir {pageTitle}
                                 </CardTitle>
                                 <CardDescription>
-                                    Nisab zakat maal (simpanan) saat ini adalah
-                                    sekitar{' '}
-                                    <span className="font-bold text-primary">
-                                        {formatCurrency(nisabAmount)}
-                                    </span>{' '}
-                                    per tahun.
+                                    Masukkan nominal yang ingin Anda donasikan.
+                                    Tidak ada batas minimum.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
@@ -83,7 +84,7 @@ export default function CreateTransaksi({ auth, initialAmount, hargaEmas }) {
                                         htmlFor="amount"
                                         className="text-base font-bold"
                                     >
-                                        1. Masukkan Nominal Zakat (IDR)
+                                        1. Masukkan Nominal (IDR)
                                     </Label>
                                     <div className="relative">
                                         <span className="absolute top-1/2 left-4 -translate-y-1/2 text-muted-foreground">
@@ -171,10 +172,10 @@ export default function CreateTransaksi({ auth, initialAmount, hargaEmas }) {
                                     >
                                         <CheckCircle className="h-4 w-4 text-green-600" />
                                         <AlertTitle className="text-green-800">
-                                            Ringkasan Pembayaran
+                                            Ringkasan Donasi
                                         </AlertTitle>
                                         <AlertDescription className="text-green-700">
-                                            Anda akan membayarkan zakat sebesar{' '}
+                                            Anda akan berdonasi sebesar{' '}
                                             <strong>
                                                 {formatCurrency(data.amount)}
                                             </strong>{' '}

@@ -141,7 +141,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
 
                             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row lg:justify-start">
                                 <Link
-                                    href="/bayar-zakat"
+                                    href="/donasi"
                                     className="inline-block rounded-lg bg-white px-8 py-3 text-center font-bold text-green-700 transition duration-300 hover:bg-gray-200 hover:shadow-lg"
                                 >
                                     Bayar Zakat Sekarang
@@ -292,7 +292,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                         {/* Kartu Untuk Muzakki */}
                         <motion.div variants={itemVariants}>
                             <Link
-                                href="/bayar-zakat"
+                                href="/donasi"
                                 className="group relative block h-full transform rounded-xl border-t-4 border-green-500 bg-white p-8 text-left shadow-lg transition-shadow duration-300 hover:-translate-y-2 hover:shadow-2xl"
                             >
                                 {/* ## PERUBAHAN: opacity-0 diubah menjadi opacity-50 ## */}
@@ -570,7 +570,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                         className="mt-8 flex flex-col justify-center gap-4 sm:flex-row"
                     >
                         <Link
-                            href="/bayar-zakat"
+                            href="/donasi"
                             className="inline-block transform rounded-lg bg-green-600 px-8 py-3 text-center font-bold text-white transition duration-300 hover:-translate-y-1 hover:bg-green-700 hover:shadow-lg"
                         >
                             Bayar Zakat Sekarang

@@ -13,6 +13,14 @@ use Illuminate\Support\Facades\Storage;
 class TransaksiController extends Controller
 {
     /**
+     * Menampilkan halaman pemilihan jenis donasi.
+     */
+    public function selectDonationType()
+    {
+        return Inertia::render('user/muzakki/transaksi/donasi/select-donation');
+    }
+
+    /**
      * Menampilkan halaman form untuk membayar zakat.
      */
     public function create(Request $request)
@@ -20,10 +28,19 @@ class TransaksiController extends Controller
         // Ambil harga emas dari settings
         $hargaEmas = Setting::where('setting_key', 'harga_emas_per_gram')->value('setting_value');
 
-        return Inertia::render('user/muzakki/transaksi/create', [
-            // Mengambil 'amount' dari query URL dan meneruskannya sebagai prop
+        return Inertia::render('user/muzakki/transaksi/zakat/create-zakat', [
             'initialAmount' => $request->query('amount', ''),
             'hargaEmas' => (float) $hargaEmas,
+        ]);
+    }
+
+    /**
+     * Menampilkan halaman form untuk INFAQ & SEDEKAH.
+     */
+    public function createInfaqSedekah(string $type)
+    {
+        return Inertia::render('user/muzakki/transaksi/donasi/create-infaq-sedekah', [
+            'donationType' => $type, // Kirim 'infaq' or 'sedekah' ke view
         ]);
     }
 
@@ -35,6 +52,7 @@ class TransaksiController extends Controller
         // 1. Validasi input dari form
         $request->validate(
             [
+                'type' => 'required|string|in:zakat,infaq,sedekah',
                 'amount' => 'required|numeric|min:10000|max:9999999999999.99',
                 'payment_method' => 'required|string|in:DANA,GoPay,Tunai',
             ],
@@ -48,6 +66,7 @@ class TransaksiController extends Controller
         $transaksi = Transaksi::create([
             'user_id' => Auth::id(),
             'order_id' => Str::upper('INV-' . now()->format('Ymd') . '-' . Str::random(6)),
+            'type' => $request->type,
             'amount' => $request->amount,
             'final_amount' => $request->amount,
             'payment_method' => $request->payment_method,
@@ -73,7 +92,7 @@ class TransaksiController extends Controller
         // Decode JSON menjadi array/object
         $paymentDetails = $paymentSetting ? json_decode($paymentSetting->setting_value, true) : null;
 
-        return Inertia::render('user/muzakki/transaksi/show', [
+        return Inertia::render('user/muzakki/transaksi/zakat/show-zakat', [
             'transaksi' => $transaksi,
             'paymentDetails' => $paymentDetails, // Kirim data instruksi sebagai prop
         ]);

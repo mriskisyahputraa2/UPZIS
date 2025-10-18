@@ -19,7 +19,6 @@ import {
     SelectContent,
     SelectGroup,
     SelectItem,
-    SelectLabel,
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
@@ -33,9 +32,7 @@ import {
     CheckCircle,
     HelpCircle,
     Info,
-    Landmark,
     Loader,
-    Wallet,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Toaster, toast } from 'sonner';
@@ -49,13 +46,6 @@ const formatCurrency = (value) => {
     }).format(value);
 };
 
-const zakatIcons = {
-    'Zakat Profesi / Penghasilan': Wallet,
-    'Zakat Maal (Simpanan & Emas)': Landmark,
-    'Zakat Perdagangan': Landmark,
-};
-
-// Data untuk FAQ
 const faqs = [
     {
         q: 'Mengapa nisab zakat diukur dengan emas?',
@@ -72,8 +62,15 @@ const faqs = [
 ];
 
 export default function Kalkulator({ jenisZakat, hargaEmas }) {
-    const defaultZakatId =
-        jenisZakat.length > 0 ? jenisZakat[0].id.toString() : '';
+    // Mengatur default value ke 'Zakat Profesi'
+    const defaultZakat = jenisZakat.find((zakat) =>
+        zakat.name.toLowerCase().includes('profesi'),
+    );
+    const defaultZakatId = defaultZakat
+        ? defaultZakat.id.toString()
+        : jenisZakat.length > 0
+          ? jenisZakat[0].id.toString()
+          : '';
 
     const [activeZakatId, setActiveZakatId] = useState(defaultZakatId);
     const [pendapatanPokok, setPendapatanPokok] = useState('');
@@ -131,17 +128,14 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
         setResult(null);
     };
 
-    const ActiveIcon = activeZakatDetails
-        ? zakatIcons[activeZakatDetails.name] || Wallet
-        : Wallet;
     const isProfesi = activeZakatDetails?.name
         .toLowerCase()
         .includes('profesi');
 
     const bayarZakatUrl =
         result && result.wajib_zakat && result.nominal_zakat > 0
-            ? `/bayar-zakat?amount=${result.nominal_zakat}`
-            : '/bayar-zakat';
+            ? `/donasi/zakat?amount=${Math.round(result.nominal_zakat)}`
+            : '/donasi/zakat';
 
     return (
         <PublicLayout>
@@ -188,35 +182,19 @@ export default function Kalkulator({ jenisZakat, hargaEmas }) {
                                         onValueChange={handleTypeChange}
                                     >
                                         <SelectTrigger className="h-14 text-base">
-                                            <div className="flex items-center gap-3">
-                                                <SelectValue placeholder="Pilih jenis zakat..." />
-                                            </div>
+                                            <SelectValue placeholder="Pilih jenis zakat..." />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectGroup>
-                                                <SelectLabel>
-                                                    Zakat Maal
-                                                </SelectLabel>
-                                                {jenisZakat.map((jenis) => {
-                                                    const Icon =
-                                                        zakatIcons[
-                                                            jenis.name
-                                                        ] || Wallet;
-                                                    return (
-                                                        <SelectItem
-                                                            key={jenis.id}
-                                                            value={jenis.id.toString()}
-                                                            className="text-base"
-                                                        >
-                                                            <div className="flex items-center gap-3">
-                                                                <Icon className="h-5 w-5 text-muted-foreground" />
-                                                                <span>
-                                                                    {jenis.name}
-                                                                </span>
-                                                            </div>
-                                                        </SelectItem>
-                                                    );
-                                                })}
+                                                {jenisZakat.map((jenis) => (
+                                                    <SelectItem
+                                                        key={jenis.id}
+                                                        value={jenis.id.toString()}
+                                                        className="text-base"
+                                                    >
+                                                        {jenis.name}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>

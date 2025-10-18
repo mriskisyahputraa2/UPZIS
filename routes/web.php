@@ -52,11 +52,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Halaman Transaksi Pengguna
+    | Halaman Transaksi Pengguna (Zakat, Infaq, Sedekah)
     |--------------------------------------------------------------------------
     */
-    Route::get('bayar-zakat', [TransaksiController::class, 'create'])->name('transaksi.create');
-    Route::post('bayar-zakat', [TransaksiController::class, 'store'])->name('transaksi.store');
+    Route::get('donasi', [TransaksiController::class, 'selectDonationType'])->name('donasi.select');
+    Route::get('donasi/zakat', [TransaksiController::class, 'create'])->name('donasi.create.zakat');
+    Route::get('donasi/{type}', [TransaksiController::class, 'createInfaqSedekah'])->name('donasi.create.other')->where('type', 'infaq|sedekah');
+    Route::post('donasi', [TransaksiController::class, 'store'])->name('donasi.store');
+    // Route::get('bayar-zakat', [TransaksiController::class, 'create'])->name('transaksi.create');
+    // Route::post('bayar-zakat', [TransaksiController::class, 'store'])->name('transaksi.store');
     Route::get('transaksi/{order_id}', [TransaksiController::class, 'show'])->name('transaksi.show');
     Route::post('transaksi/{order_id}/upload', [TransaksiController::class, 'uploadProof'])->name('transaksi.upload');
 });

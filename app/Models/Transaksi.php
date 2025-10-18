@@ -22,7 +22,7 @@ class Transaksi extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['user_id', 'order_id', 'amount', 'unique_code', 'final_amount', 'payment_method', 'payment_proof', 'status'];
+    protected $fillable = ['user_id', 'order_id', 'amount', 'unique_code', 'final_amount', 'payment_method', 'payment_proof', 'status', 'type'];
 
     /**
      * Mendefinisikan relasi bahwa satu transaksi dimiliki oleh satu user.
