@@ -16,6 +16,13 @@ class TransaksiAdminController extends Controller
      */
     public function index(Request $request)
     {
+        // Tambahkan validasi untuk filter 'type'
+        $request->validate([
+            'search' => 'nullable|string|max:100',
+            'status' => 'nullable|string',
+            'type' => 'nullable|string|in:zakat,infaq,sedekah', // Validasi jenis donasi
+            'per_page' => 'nullable|integer|in:5,10,20,50',
+        ]);
         $query = Transaksi::with('user')->latest();
 
         // Terapkan filter pencarian
@@ -32,6 +39,10 @@ class TransaksiAdminController extends Controller
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
+        //Terapkan filter jenis donasi
+        if ($request->filled('type')) {
+            $query->where('type', $request->input('type'));
+        }
 
         // Ambil data dengan paginasi dan transformasikan hasilnya
         $transaksis = $query->paginate($request->input('per_page', 5))->withQueryString()->through(
@@ -41,11 +52,12 @@ class TransaksiAdminController extends Controller
                 'final_amount' => $transaksi->final_amount,
                 'payment_method' => $transaksi->payment_method,
                 'status' => $transaksi->status,
+                'type' => $transaksi->type,
                 // Kirim tanggal dan waktu yang sudah diformat dari server
                 'formatted_date' => $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('d F Y'),
                 'formatted_time' => $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('H:i:s T'),
 
-                   'user' => $transaksi->user
+                'user' => $transaksi->user
                     ? [
                         'name' => $transaksi->user->name,
                     ]
@@ -55,7 +67,7 @@ class TransaksiAdminController extends Controller
 
         return Inertia::render('admin/transaksi-admin/index', [
             'transaksis' => $transaksis,
-            'filters' => $request->only(['search', 'status', 'per_page']),
+            'filters' => $request->only(['search', 'status', 'type', 'per_page']),
         ]);
     }
 

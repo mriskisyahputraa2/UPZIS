@@ -4,6 +4,7 @@ import {
     Banknote,
     Calendar,
     CircleUserRound,
+    FileText,
     Mail,
     Phone,
     Receipt,
@@ -16,6 +17,7 @@ const formatCurrency = (value) =>
         currency: 'IDR',
         minimumFractionDigits: 0,
     }).format(value);
+
 const getStatusBadgeVariant = (status) => {
     switch (status) {
         case 'Berhasil':
@@ -23,7 +25,7 @@ const getStatusBadgeVariant = (status) => {
         case 'Menunggu Verifikasi':
             return 'warning';
         case 'Menunggu Pembayaran':
-            return 'default';
+            return 'info'; // Mengubah ini agar lebih konsisten
         case 'Gagal':
         case 'Kadaluarsa':
             return 'destructive';
@@ -43,6 +45,22 @@ const DetailItem = ({ icon: Icon, label, children }) => (
         </dd>
     </div>
 );
+
+// ## PERUBAHAN 2: Tambahkan helper component untuk Badge Jenis Donasi ##
+const DonationTypeBadge = ({ type }) => {
+    if (!type) {
+        // Fallback untuk data lama yang mungkin belum punya 'type'
+        // atau jika transaksi adalah zakat (default)
+        return <Badge variant="success">Zakat</Badge>;
+    }
+    const typeName = type.charAt(0).toUpperCase() + type.slice(1);
+    let variant: 'success' | 'info' | 'secondary' = 'secondary';
+    if (type === 'zakat') variant = 'success';
+    if (type === 'infaq') variant = 'info';
+    // 'sedekah' akan menggunakan 'secondary' (abu-abu)
+
+    return <Badge variant={variant}>{typeName}</Badge>;
+};
 
 export default function TransactionInfoPanel({ transaksi }) {
     return (
@@ -72,6 +90,12 @@ export default function TransactionInfoPanel({ transaksi }) {
                     <DetailItem icon={Receipt} label="Order ID">
                         {transaksi.order_id}
                     </DetailItem>
+
+                    {/* ## PERUBAHAN 3: Tambahkan baris 'Jenis Donasi' di sini ## */}
+                    <DetailItem icon={FileText} label="Jenis Donasi">
+                        <DonationTypeBadge type={transaksi.type} />
+                    </DetailItem>
+
                     <DetailItem icon={Calendar} label="Tanggal">
                         <div className="flex flex-col">
                             <span>{transaksi.formatted_date}</span>

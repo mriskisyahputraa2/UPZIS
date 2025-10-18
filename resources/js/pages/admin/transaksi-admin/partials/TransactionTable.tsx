@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -30,6 +31,7 @@ const formatCurrency = (value) =>
         currency: 'IDR',
         minimumFractionDigits: 0,
     }).format(value);
+
 const getStatusTriggerClass = (status) => {
     switch (status) {
         case 'Menunggu Pembayaran':
@@ -40,11 +42,24 @@ const getStatusTriggerClass = (status) => {
             return 'border-green-500 bg-green-50 text-green-800';
         case 'Gagal':
             return 'border-red-500 bg-red-50 text-red-800';
-        // case 'Kadaluarsa':
-        //     return 'border-red-500 bg-red-50 text-red-800';
         default:
             return '';
     }
+};
+
+// Helper component untuk menampilkan Badge jenis donasi
+const DonationTypeBadge = ({ type }) => {
+    if (!type) {
+        // Fallback untuk data lama yang mungkin belum punya 'type'
+        return <Badge variant="secondary">Lainnya</Badge>;
+    }
+    const typeName = type.charAt(0).toUpperCase() + type.slice(1);
+    let variant: 'success' | 'info' | 'secondary' = 'secondary';
+    if (type === 'zakat') variant = 'success';
+    if (type === 'infaq') variant = 'info';
+    // 'sedekah' akan menggunakan 'secondary'
+
+    return <Badge variant={variant}>{typeName}</Badge>;
 };
 
 export default function TransactionTable({
@@ -60,6 +75,7 @@ export default function TransactionTable({
                         <TableHead className="w-[50px]">No.</TableHead>
                         <TableHead>Order ID</TableHead>
                         <TableHead>Nama Muzakki</TableHead>
+                        <TableHead>Jenis</TableHead> {/* Kolom Baru */}
                         <TableHead>Metode</TableHead>
                         <TableHead>Jumlah</TableHead>
                         <TableHead>Tanggal</TableHead>
@@ -70,7 +86,7 @@ export default function TransactionTable({
                 <TableBody>
                     {isLoading ? (
                         <TableRow>
-                            <TableCell colSpan={8} className="h-24 text-center">
+                            <TableCell colSpan={9} className="h-24 text-center">
                                 <Loader className="mx-auto h-8 w-8 animate-spin text-primary" />
                             </TableCell>
                         </TableRow>
@@ -84,6 +100,10 @@ export default function TransactionTable({
                                     {trx.order_id}
                                 </TableCell>
                                 <TableCell>{trx.user?.name || 'N/A'}</TableCell>
+                                <TableCell>
+                                    <DonationTypeBadge type={trx.type} />{' '}
+                                    {/* Tampilkan Badge */}
+                                </TableCell>
                                 <TableCell>{trx.payment_method}</TableCell>
                                 <TableCell>
                                     {formatCurrency(trx.final_amount)}
@@ -126,9 +146,6 @@ export default function TransactionTable({
                                             <SelectItem value="Gagal">
                                                 Gagal
                                             </SelectItem>
-                                            {/* <SelectItem value="Kadaluarsa">
-                                                Kadaluarsa
-                                            </SelectItem> */}
                                         </SelectContent>
                                     </Select>
                                 </TableCell>
@@ -156,7 +173,7 @@ export default function TransactionTable({
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={8} className="h-24 text-center">
+                            <TableCell colSpan={9} className="h-24 text-center">
                                 <div className="flex flex-col items-center justify-center gap-4">
                                     <FileText className="h-16 w-16 text-gray-300" />
                                     <h3 className="text-xl font-bold">

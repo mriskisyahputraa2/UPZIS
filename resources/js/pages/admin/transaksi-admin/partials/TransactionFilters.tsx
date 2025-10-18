@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from 'react';
 export default function TransactionFilters({ filters, setIsLoading }) {
     const [search, setSearch] = useState(filters.search || '');
     const [filterStatus, setFilterStatus] = useState(filters.status || 'all');
+    const [filterType, setFilterType] = useState(filters.type || 'all');
     const isInitialMount = useRef(true);
 
     useEffect(() => {
@@ -25,6 +26,7 @@ export default function TransactionFilters({ filters, setIsLoading }) {
             search,
             per_page: filters.per_page,
             status: filterStatus === 'all' ? '' : filterStatus,
+            type: filterType === 'all' ? '' : filterType, // ## PERUBAHAN 2: Tambahkan 'type' ke parameter request ##
         };
         const timeout = setTimeout(() => {
             router.get('/admin/transaksi', params, {
@@ -35,11 +37,12 @@ export default function TransactionFilters({ filters, setIsLoading }) {
             });
         }, 500);
         return () => clearTimeout(timeout);
-    }, [search, filterStatus]);
+    }, [search, filterStatus, filterType]); // ## PERUBAHAN 3: Tambahkan 'filterType' ke dependency array ##
 
     const resetFilters = () => {
         setSearch('');
         setFilterStatus('all');
+        setFilterType('all'); // ## PERUBAHAN 4: Reset filter 'type' juga ##
     };
 
     const handlePerPageChange = (perPage) => {
@@ -49,6 +52,7 @@ export default function TransactionFilters({ filters, setIsLoading }) {
                 ...filters,
                 search,
                 status: filterStatus === 'all' ? '' : filterStatus,
+                type: filterType === 'all' ? '' : filterType, // ## PERUBAHAN 5: Tambahkan 'type' saat ganti per_page ##
                 per_page: perPage,
             },
             {
@@ -73,6 +77,20 @@ export default function TransactionFilters({ filters, setIsLoading }) {
                     />
                     <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 </div>
+
+                {/* ## PERUBAHAN 6: Tambahkan Select/Dropdown untuk filter jenis donasi ## */}
+                <Select value={filterType} onValueChange={setFilterType}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Semua Jenis" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Semua Jenis</SelectItem>
+                        <SelectItem value="zakat">Zakat</SelectItem>
+                        <SelectItem value="infaq">Infaq</SelectItem>
+                        <SelectItem value="sedekah">Sedekah</SelectItem>
+                    </SelectContent>
+                </Select>
+
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                     <SelectTrigger className="w-full sm:w-[180px]">
                         <SelectValue placeholder="Semua Status" />
@@ -87,10 +105,10 @@ export default function TransactionFilters({ filters, setIsLoading }) {
                             Menunggu Pembayaran
                         </SelectItem>
                         <SelectItem value="Gagal">Gagal</SelectItem>
-                        {/* <SelectItem value="Kadaluarsa">Kadaluarsa</SelectItem> */}
                     </SelectContent>
                 </Select>
-                {(filters.search || filters.status) && (
+                {/* ## PERUBAHAN 7: Update kondisi untuk menampilkan tombol Reset ## */}
+                {(filters.search || filters.status || filters.type) && (
                     <Button
                         variant="destructive-outline"
                         onClick={resetFilters}
