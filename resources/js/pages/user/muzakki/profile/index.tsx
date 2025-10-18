@@ -1,27 +1,43 @@
 import { Card, CardContent } from '@/components/ui/card';
 import PublicLayout from '@/layouts/publicLayout';
-import { Head } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { Head, router } from '@inertiajs/react';
+import { useEffect } from 'react';
 import { Toaster, toast } from 'sonner';
 import ProfileSidebarNav from './partials/ProfileSidebarNav';
 import TransactionHistory from './partials/TransactionHistory';
 import UpdatePasswordForm from './partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './partials/UpdateProfileInformationForm';
 
-export default function Index({ transactions, status }) {
-    const [activeView, setActiveView] = useState('profile');
-
+export default function Index({
+    transactions,
+    status,
+    activeView,
+}: {
+    transactions: any;
+    status: string | null;
+    activeView: string;
+}) {
     useEffect(() => {
         if (status) {
             if (status === 'profile-updated' || status === 'photo-updated') {
                 toast.success('Profil berhasil diperbarui.');
-                setActiveView('profile');
             } else if (status === 'password-updated') {
                 toast.success('Password berhasil diubah.');
-                setActiveView('password');
             }
         }
     }, [status]);
+
+    const handleSetActiveView = (view: string) => {
+        router.get(
+            '/profile',
+            { view },
+            {
+                preserveState: true,
+                replace: true,
+                preserveScroll: true,
+            },
+        );
+    };
 
     return (
         <PublicLayout>
@@ -48,7 +64,7 @@ export default function Index({ transactions, status }) {
                                 <CardContent className="p-2">
                                     <ProfileSidebarNav
                                         active={activeView}
-                                        setActive={setActiveView}
+                                        setActive={handleSetActiveView}
                                     />
                                 </CardContent>
                             </Card>

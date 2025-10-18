@@ -16,15 +16,21 @@ class ProfileController extends Controller
      * Menampilkan halaman profil utama pengguna,
      * lengkap dengan riwayat transaksi yang dipaginasi.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
+        $validViews = ['profile', 'password', 'history'];
+        $activeView = in_array($request->query('view', 'profile'), $validViews)
+            ? $request->query('view', 'profile')
+            : 'profile';
 
         return Inertia::render('user/muzakki/profile/index', [
             'transactions' => Transaksi::where('user_id', $user->id)
                 ->latest()
-                ->paginate(3),
+                ->paginate(3)
+                ->withQueryString(),
             'status' => session('status'),
+            'activeView' => $activeView,
         ]);
     }
 
@@ -53,7 +59,7 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return redirect()->route('profile.edit')->with('status', 'profile-updated');
+        return redirect()->route('profile.edit', ['view' => 'profile'])->with('status', 'profile-updated');
     }
 
     /**
@@ -70,6 +76,6 @@ class ProfileController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return back()->with('status', 'password-updated');
+        return redirect()->route('profile.edit', ['view' => 'password'])->with('status', 'password-updated');
     }
 }

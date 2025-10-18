@@ -7,6 +7,14 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+// ## PERUBAHAN 1: Import komponen Pagination dari shadcn/ui ##
+import {
+    Pagination,
+    PaginationContent,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
 import { Link } from '@inertiajs/react';
 import {
     ArrowRight,
@@ -42,7 +50,7 @@ const getStatusInfo = (status) => {
         case 'Menunggu Verifikasi':
             return { variant: 'warning', icon: Clock, label: 'Verifikasi' };
         case 'Menunggu Pembayaran':
-            return { variant: 'default', icon: Wallet, label: 'Pembayaran' };
+            return { variant: 'info', icon: Wallet, label: 'Pembayaran' };
         case 'Gagal':
         case 'Kadaluarsa':
             return { variant: 'destructive', icon: XCircle, label: 'Gagal' };
@@ -51,28 +59,19 @@ const getStatusInfo = (status) => {
     }
 };
 
-const Pagination = ({ links }) => (
-    <div className="mt-6 flex justify-center space-x-1">
-        {links.map((link, key) =>
-            link.url === null ? (
-                <div
-                    key={key}
-                    className="rounded-md bg-muted/50 px-3 py-2 text-sm text-muted-foreground"
-                    dangerouslySetInnerHTML={{ __html: link.label }}
-                />
-            ) : (
-                <Link
-                    key={key}
-                    href={link.url}
-                    preserveScroll
-                    preserveState
-                    className={`rounded-md px-3 py-2 text-sm ${link.active ? 'bg-primary text-primary-foreground' : 'bg-muted/50 hover:bg-muted'}`}
-                    dangerouslySetInnerHTML={{ __html: link.label }}
-                />
-            ),
-        )}
-    </div>
-);
+const DonationTypeBadge = ({ type }) => {
+    if (!type) {
+        return <Badge variant="success">Zakat</Badge>;
+    }
+    const typeName = type.charAt(0).toUpperCase() + type.slice(1);
+    let variant: 'success' | 'info' | 'secondary' = 'secondary';
+    if (type === 'zakat') variant = 'success';
+    if (type === 'infaq') variant = 'info';
+
+    return <Badge variant={variant}>{typeName}</Badge>;
+};
+
+// ## PERUBAHAN 2: Hapus komponen Pagination lama yang sederhana ##
 
 const statusFilters = [
     'Semua',
@@ -86,7 +85,6 @@ export default function TransactionHistory({ transactions, className = '' }) {
     const [filter, setFilter] = useState('Semua');
 
     const filteredTransactions = useMemo(() => {
-        // Karena data sudah dipaginasi, filter hanya berlaku untuk data di halaman saat ini
         if (filter === 'Semua') return transactions.data;
         return transactions.data.filter((trx) => trx.status === filter);
     }, [filter, transactions.data]);
@@ -96,7 +94,8 @@ export default function TransactionHistory({ transactions, className = '' }) {
             <CardHeader>
                 <CardTitle className="text-2xl">Riwayat Transaksi</CardTitle>
                 <CardDescription>
-                    Berikut adalah seluruh riwayat pembayaran zakat Anda.
+                    Berikut adalah seluruh riwayat donasi Anda (Zakat, Infaq,
+                    dan Sedekah).
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -126,27 +125,33 @@ export default function TransactionHistory({ transactions, className = '' }) {
                                         className="transition-all hover:shadow-md"
                                     >
                                         <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
-                                            <div className="flex items-center gap-4">
+                                            {/* SISI KIRI (INFO UTAMA) */}
+                                            <div className="flex flex-1 items-center gap-4">
                                                 <div
-                                                    className={`rounded-full p-3 bg-${statusInfo.variant}/10`}
+                                                    className={`hidden rounded-full bg-${statusInfo.variant}/10 p-3 sm:block`}
                                                 >
                                                     <statusInfo.icon
                                                         className={`h-6 w-6 text-${statusInfo.variant}`}
                                                     />
                                                 </div>
-                                                <div className="overflow-hidden">
+                                                <div className="flex-1 space-y-1 overflow-hidden">
                                                     <p className="truncate font-bold">
                                                         {trx.order_id}
                                                     </p>
-                                                    <p className="text-sm text-muted-foreground">
+                                                    <p className="block text-sm text-muted-foreground">
                                                         {formatDateTime(
                                                             trx.created_at,
                                                         )}
                                                     </p>
+                                                    <DonationTypeBadge
+                                                        type={trx.type}
+                                                    />
                                                 </div>
                                             </div>
-                                            <div className="flex items-center justify-between gap-4 sm:justify-end">
-                                                <div className="text-left sm:text-right">
+
+                                            {/* SISI KANAN (AKSI & NOMINAL) */}
+                                            <div className="flex w-full items-center justify-between sm:w-auto sm:justify-end sm:gap-4">
+                                                <div className="flex flex-col items-start sm:items-end">
                                                     <p className="text-lg font-bold">
                                                         {formatCurrency(
                                                             trx.final_amount,
@@ -186,8 +191,45 @@ export default function TransactionHistory({ transactions, className = '' }) {
                             </div>
                         )}
                     </div>
-                    {filter === 'Semua' && (
-                        <Pagination links={transactions.links} />
+
+                    {/* ## PERUBAHAN 3: Terapkan komponen Pagination shadcn/ui yang baru dan responsif ## */}
+                    {filter === 'Semua' && transactions.data.length > 0 && (
+                        <div className="w-full overflow-x-auto">
+                            <Pagination>
+                                <PaginationContent>
+                                    {transactions.links.map((link, index) =>
+                                        // Menggunakan dangerouslySetInnerHTML karena label dari Laravel bisa berisi HTML
+                                        // Ini aman karena kita percaya pada output dari Laravel Paginator
+                                        link.label.includes('Previous') ? (
+                                            <PaginationPrevious
+                                                key={index}
+                                                href={link.url}
+                                                preserveScroll
+                                                preserveState
+                                            />
+                                        ) : link.label.includes('Next') ? (
+                                            <PaginationNext
+                                                key={index}
+                                                href={link.url}
+                                                preserveScroll
+                                                preserveState
+                                            />
+                                        ) : (
+                                            <PaginationLink
+                                                key={index}
+                                                href={link.url}
+                                                isActive={link.active}
+                                                preserveScroll
+                                                preserveState
+                                                dangerouslySetInnerHTML={{
+                                                    __html: link.label,
+                                                }}
+                                            />
+                                        ),
+                                    )}
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
                     )}
                 </div>
             </CardContent>
