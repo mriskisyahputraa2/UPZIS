@@ -26,7 +26,7 @@ use Inertia\Inertia;
 // Halaman Beranda
 Route::get('/', [HomePageController::class, 'index'])->name('home');
 // Halaman Ajukan Bantuan
-Route::get('ajukan-bantuan', [PermohonanBantuanController::class, 'create'])->name('permohonan.create');
+Route::get('ajukan-bantuan', [PermohonanBajntuanController::class, 'create'])->name('permohonan.create');
 Route::post('ajukan-bantuan', [PermohonanBantuanController::class, 'store'])->name('permohonan.store');
 Route::get('pendaftaran-berhasil', [PermohonanBantuanController::class, 'success'])->name('permohonan.success');
 Route::get('lacak-status', [PermohonanBantuanController::class, 'lacak'])->name('permohonan.lacak');
@@ -90,17 +90,19 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
         // Route::get('settings/general', [SettingController::class, 'edit'])->name('settings.general.edit');
         // Route::patch('settings/general', [SettingController::class, 'update'])->name('settings.general.update');
 
-          Route::prefix('settings')->name('settings.')->group(function () {
-            // Rute untuk Pengaturan Umum
-            Route::get('/general', [SettingController::class, 'edit'])->name('general.edit');
-            Route::patch('/general', [SettingController::class, 'update'])->name('general.update');
+        Route::prefix('settings')
+            ->name('settings.')
+            ->group(function () {
+                // Rute untuk Pengaturan Umum
+                Route::get('/general', [SettingController::class, 'edit'])->name('general.edit');
+                Route::patch('/general', [SettingController::class, 'update'])->name('general.update');
 
-            // START: RUTE BARU UNTUK AKUN PEMBAYARAN
-            Route::get('/payment-accounts', [SettingController::class, 'paymentEdit'])->name('payment.edit');
-            Route::patch('/payment-accounts', [SettingController::class, 'paymentUpdate'])->name('payment.update');
-             Route::resource('zakat-types', ZakatTypeController::class)->except(['show']);
-            Route::resource('admins', AdminController::class)->except(['show']);
-        });
+                // START: RUTE BARU UNTUK AKUN PEMBAYARAN
+                Route::get('/payment-accounts', [SettingController::class, 'paymentEdit'])->name('payment.edit');
+                Route::patch('/payment-accounts', [SettingController::class, 'paymentUpdate'])->name('payment.update');
+                Route::resource('zakat-types', ZakatTypeController::class)->except(['show']);
+                Route::resource('admins', AdminController::class)->except(['show']);
+            });
     });
 
 /*

@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'; // Import cn jika perlu class tambahan
 import { Link } from '@inertiajs/react';
 
 // Impor logo Anda dari folder assets
-import logoImage from '../../assets/images/logo-icon.png';
+import logoImage from '../../assets/images/logo-pnl.png';
 
 export default function AppLogo({ className }) {
     return (
