@@ -85,6 +85,10 @@ class TransaksiController extends Controller
     {
         $transaksi = Transaksi::where('order_id', $order_id)->where('user_id', Auth::id())->firstOrFail();
 
+        // ## PERUBAHAN DI SINI: Tambahkan atribut tanggal & waktu yang sudah diformat ##
+        $transaksi->formatted_date = $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('d F Y');
+        $transaksi->formatted_time = $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('H:i T');
+
         // Ambil data setting pembayaran dari database
         $paymentKey = 'payment_' . strtolower($transaksi->payment_method);
         $paymentSetting = Setting::where('setting_key', $paymentKey)->first();
@@ -92,9 +96,10 @@ class TransaksiController extends Controller
         // Decode JSON menjadi array/object
         $paymentDetails = $paymentSetting ? json_decode($paymentSetting->setting_value, true) : null;
 
+        // ## Ganti nama file view Anda jika berbeda ##
         return Inertia::render('user/muzakki/transaksi/zakat/show-zakat', [
             'transaksi' => $transaksi,
-            'paymentDetails' => $paymentDetails, // Kirim data instruksi sebagai prop
+            'paymentDetails' => $paymentDetails,
         ]);
     }
 

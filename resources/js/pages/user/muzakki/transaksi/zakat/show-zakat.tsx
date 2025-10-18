@@ -114,13 +114,25 @@ export default function Show({ transaksi, paymentDetails }) {
     }
 
     const instructions = paymentDetails;
-    const fileInputRef = useRef();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { data, setData, post, processing, errors } = useForm({
         payment_proof: null,
     });
 
-    const [previewUrl, setPreviewUrl] = useState(null);
+    const getDonationTypeName = (type) => {
+        if (!type || type === 'zakat') return 'Zakat';
+        return type.charAt(0).toUpperCase() + type.slice(1);
+    };
+    const donationTypeName = getDonationTypeName(transaksi.type);
+
+    const getDonationTypeBadgeVariant = (type) => {
+        if (type === 'zakat') return 'success';
+        if (type === 'infaq') return 'info';
+        return 'secondary';
+    };
+
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     useEffect(() => {
         if (data.payment_proof) {
@@ -133,14 +145,16 @@ export default function Show({ transaksi, paymentDetails }) {
     }, [data.payment_proof]);
 
     const handleFileSelect = () => {
-        fileInputRef.current.click();
+        fileInputRef.current?.click();
     };
 
-    const handleFileChange = (e) => {
-        setData('payment_proof', e.target.files[0]);
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setData('payment_proof', e.target.files[0]);
+        }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         post(`/transaksi/${transaksi.order_id}/upload`, {
             onSuccess: () => setData('payment_proof', null),
@@ -173,22 +187,51 @@ export default function Show({ transaksi, paymentDetails }) {
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <StatusStepper status={transaksi.status} />
-                            <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
-                                <div className="flex flex-col items-start justify-between gap-1 sm:flex-row sm:items-center">
+
+                            <div className="divide-y rounded-lg border bg-muted/30 p-4">
+                                <div className="flex items-center justify-between py-3">
                                     <span className="text-muted-foreground">
-                                        Total Pembayaran
+                                        Jenis Donasi
                                     </span>
-                                    <span className="text-2xl font-bold">
-                                        {formatCurrency(transaksi.final_amount)}
+                                    <Badge
+                                        variant={getDonationTypeBadgeVariant(
+                                            transaksi.type,
+                                        )}
+                                    >
+                                        {donationTypeName}
+                                    </Badge>
+                                </div>
+                                <div className="flex items-center justify-between py-3">
+                                    <span className="text-muted-foreground">
+                                        Tanggal
+                                    </span>
+                                    <span className="font-semibold">
+                                        {transaksi.formatted_date}
                                     </span>
                                 </div>
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between py-3">
+                                    <span className="text-muted-foreground">
+                                        Waktu
+                                    </span>
+                                    <span className="font-semibold">
+                                        {transaksi.formatted_time}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between py-3">
                                     <span className="text-muted-foreground">
                                         Metode
                                     </span>
                                     <Badge variant="secondary">
                                         {transaksi.payment_method}
                                     </Badge>
+                                </div>
+                                <div className="flex flex-col items-start justify-between gap-1 py-3 sm:flex-row sm:items-center">
+                                    <span className="text-muted-foreground">
+                                        Total Pembayaran
+                                    </span>
+                                    <span className="text-2xl font-bold">
+                                        {formatCurrency(transaksi.final_amount)}
+                                    </span>
                                 </div>
                             </div>
                         </CardContent>
@@ -356,8 +399,9 @@ export default function Show({ transaksi, paymentDetails }) {
                                 Pembayaran Berhasil
                             </AlertTitle>
                             <AlertDescription>
-                                Terima kasih, zakat Anda telah kami terima dan
-                                akan segera kami salurkan.
+                                Terima kasih, {donationTypeName.toLowerCase()}{' '}
+                                Anda telah kami terima dan akan segera kami
+                                salurkan.
                             </AlertDescription>
                         </Alert>
                     )}
