@@ -87,7 +87,7 @@ export default function TransactionFilters({ filters, setIsLoading }) {
                             Menunggu Pembayaran
                         </SelectItem>
                         <SelectItem value="Gagal">Gagal</SelectItem>
-                        <SelectItem value="Kadaluarsa">Kadaluarsa</SelectItem>
+                        {/* <SelectItem value="Kadaluarsa">Kadaluarsa</SelectItem> */}
                     </SelectContent>
                 </Select>
                 {(filters.search || filters.status) && (

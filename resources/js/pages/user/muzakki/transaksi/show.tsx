@@ -214,7 +214,8 @@ export default function Show({ transaksi, paymentDetails }) {
                                                     {instructions.account}
                                                 </p>
                                                 <p className="text-muted-foreground">
-                                                    a.n. {instructions.name}
+                                                    Atas Nama:{' '}
+                                                    {instructions.name}
                                                 </p>
                                             </div>
                                             <ol className="list-inside list-decimal space-y-1 pt-2">

@@ -39,8 +39,9 @@ const getStatusTriggerClass = (status) => {
         case 'Berhasil':
             return 'border-green-500 bg-green-50 text-green-800';
         case 'Gagal':
-        case 'Kadaluarsa':
             return 'border-red-500 bg-red-50 text-red-800';
+        // case 'Kadaluarsa':
+        //     return 'border-red-500 bg-red-50 text-red-800';
         default:
             return '';
     }
@@ -125,9 +126,9 @@ export default function TransactionTable({
                                             <SelectItem value="Gagal">
                                                 Gagal
                                             </SelectItem>
-                                            <SelectItem value="Kadaluarsa">
+                                            {/* <SelectItem value="Kadaluarsa">
                                                 Kadaluarsa
-                                            </SelectItem>
+                                            </SelectItem> */}
                                         </SelectContent>
                                     </Select>
                                 </TableCell>
