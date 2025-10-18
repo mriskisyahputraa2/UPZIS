@@ -1,3 +1,4 @@
+import { InputRupiah } from '@/components/InputRupiah';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -40,6 +41,7 @@ export default function GeneralSettings({
         contact_address: settings.contact_address || '',
         contact_phone: settings.contact_phone || '',
         contact_email: settings.contact_email || '',
+        harga_emas_per_gram: settings.harga_emas_per_gram || '',
     });
 
     useEffect(() => {
@@ -85,7 +87,7 @@ export default function GeneralSettings({
                                         <Label htmlFor="harga_emas_per_gram">
                                             Harga Emas per Gram (Rp)
                                         </Label>
-                                        <Input
+                                        {/* <Input
                                             id="harga_emas_per_gram"
                                             type="number"
                                             value={data.harga_emas_per_gram}
@@ -95,6 +97,17 @@ export default function GeneralSettings({
                                                     e.target.value,
                                                 )
                                             }
+                                        /> */}
+                                        <InputRupiah
+                                            id="harga_emas"
+                                            value={data.harga_emas_per_gram}
+                                            onValueChange={(value) =>
+                                                setData(
+                                                    'harga_emas_per_gram',
+                                                    value,
+                                                )
+                                            }
+                                            placeholder="Contoh: 1200000"
                                         />
                                         {errors.harga_emas_per_gram && (
                                             <p className="mt-1 text-sm text-red-600">
