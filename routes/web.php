@@ -26,7 +26,7 @@ use Inertia\Inertia;
 // Halaman Beranda
 Route::get('/', [HomePageController::class, 'index'])->name('home');
 // Halaman Ajukan Bantuan
-Route::get('ajukan-bantuan', [PermohonanBajntuanController::class, 'create'])->name('permohonan.create');
+Route::get('ajukan-bantuan', [PermohonanBantuanController::class, 'create'])->name('permohonan.create');
 Route::post('ajukan-bantuan', [PermohonanBantuanController::class, 'store'])->name('permohonan.store');
 Route::get('pendaftaran-berhasil', [PermohonanBantuanController::class, 'success'])->name('permohonan.success');
 Route::get('lacak-status', [PermohonanBantuanController::class, 'lacak'])->name('permohonan.lacak');
