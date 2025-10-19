@@ -39,6 +39,13 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
 
+
+        @auth
+            @if (Auth::user()->photo)
+                <link rel="preload" as="image" href="{{ asset('storage/' . Auth::user()->photo) }}">
+            @endif
+        @endauth
+
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         @inertiaHead

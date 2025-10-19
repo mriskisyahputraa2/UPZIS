@@ -21,9 +21,8 @@ import {
 
 import heroLogo from '../../../../assets/images/hero.png';
 
-// Terima props dari controller
 export default function Homepage({ muzakkiCount, mustahikCount }) {
-    // Konfigurasi untuk animasi stagger (elemen muncul satu per satu)
+    // Konfigurasi untuk animasi stagger
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
@@ -45,7 +44,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
         },
     };
 
-    // Data statis untuk Galeri Program (ganti dengan data asli nanti)
+    // Data statis untuk Galeri Program
     const programItems = [
         {
             image: heroLogo,
@@ -80,7 +79,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
         {
             name: 'Siti Fatimah',
             role: 'Muzakki',
-            quote: 'Saya merasa amanah dan percaya menyalurkan zakat saya di sini. Laporan penyalurannya jelas dan saya bisa melihat langsung program-program yang berjalan.',
+            quote: 'Saya merasa amanah dan percaya menyalurkan donasi saya di sini. Laporan penyalurannya jelas dan saya bisa melihat langsung program-program yang berjalan.',
         },
         {
             name: 'Budi Santoso',
@@ -92,8 +91,8 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
     // Data statis untuk FAQ
     const faqs = [
         {
-            q: 'Bagaimana cara membayar zakat di platform ini?',
-            a: 'Anda bisa mendaftar sebagai Muzakki, kemudian masuk ke dashboard Anda dan memilih menu Bayar Zakat. Kami menyediakan berbagai metode pembayaran online yang aman dan terverifikasi otomatis.',
+            q: 'Bagaimana cara berdonasi di platform ini?',
+            a: 'Anda bisa mendaftar atau login, kemudian pilih menu Donasi. Kami menyediakan berbagai metode pembayaran online yang aman dan terverifikasi otomatis untuk Zakat, Infaq, dan Sedekah.',
         },
         {
             q: 'Siapa saja yang berhak menerima bantuan?',
@@ -124,7 +123,6 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                             transition={{ duration: 0.8 }}
                             className="text-center lg:text-left"
                         >
-                            {/* ## PERUBAHAN DESAIN UTAMA DI SINI ## */}
                             <div
                                 style={{
                                     textShadow: '2px 2px 8px rgba(0,0,0,0.2)',
@@ -133,18 +131,16 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                                 <h1 className="text-5xl leading-tight font-extrabold tracking-tight md:text-6xl">
                                     Unit Pengumpul Zakat, Infaq dan Sedekah
                                 </h1>
-
                                 <p className="mt-4 max-w-2xl text-xl font-medium text-green-100 lg:text-2xl">
                                     Politeknik Negeri Lhokseumawe
                                 </p>
                             </div>
-
                             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row lg:justify-start">
                                 <Link
                                     href="/donasi"
                                     className="inline-block rounded-lg bg-white px-8 py-3 text-center font-bold text-green-700 transition duration-300 hover:bg-gray-200 hover:shadow-lg"
                                 >
-                                    Bayar Zakat Sekarang
+                                    Donasi Sekarang
                                 </Link>
                                 <Link
                                     href="/ajukan-bantuan"
@@ -259,7 +255,6 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
             </section>
 
             {/* 3. Layanan Section */}
-            {/* 3. Layanan Section */}
             <section className="bg-white py-24">
                 <div className="container mx-auto max-w-5xl px-6 text-center">
                     <motion.h2
@@ -289,42 +284,36 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                         viewport={{ once: true, amount: 0.3 }}
                         className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3"
                     >
-                        {/* Kartu Untuk Muzakki */}
                         <motion.div variants={itemVariants}>
                             <Link
                                 href="/donasi"
                                 className="group relative block h-full transform rounded-xl border-t-4 border-green-500 bg-white p-8 text-left shadow-lg transition-shadow duration-300 hover:-translate-y-2 hover:shadow-2xl"
                             >
-                                {/* ## PERUBAHAN: opacity-0 diubah menjadi opacity-50 ## */}
                                 <div className="absolute top-8 right-8 opacity-50 transition-opacity duration-300 group-hover:opacity-100">
                                     <ArrowRight className="h-6 w-6 text-green-500" />
                                 </div>
-
                                 <div className="inline-block rounded-full bg-green-100 p-4">
                                     <HandHeart className="h-8 w-8 text-green-600" />
                                 </div>
                                 <h3 className="mt-4 text-xl font-bold text-gray-800">
-                                    Untuk Muzakki
+                                    Salurkan Donasi
                                 </h3>
                                 <p className="mt-2 text-slate-600">
-                                    Hitung dan tunaikan zakat Anda dengan mudah
-                                    melalui pembayaran yang aman dan
-                                    terverifikasi otomatis.
+                                    Tunaikan Zakat, Infaq, dan Sedekah Anda
+                                    dengan mudah melalui pembayaran yang aman
+                                    dan terverifikasi.
                                 </p>
                             </Link>
                         </motion.div>
 
-                        {/* Kartu Ajukan Bantuan */}
                         <motion.div variants={itemVariants}>
                             <Link
                                 href="/ajukan-bantuan"
                                 className="group relative block h-full transform rounded-xl border-t-4 border-green-500 bg-white p-8 text-left shadow-lg transition-shadow duration-300 hover:-translate-y-2 hover:shadow-2xl"
                             >
-                                {/* ## PERUBAHAN: opacity-0 diubah menjadi opacity-50 ## */}
                                 <div className="absolute top-8 right-8 opacity-50 transition-opacity duration-300 group-hover:opacity-100">
                                     <ArrowRight className="h-6 w-6 text-green-500" />
                                 </div>
-
                                 <div className="inline-block rounded-full bg-green-100 p-4">
                                     <ListChecks className="h-8 w-8 text-green-600" />
                                 </div>
@@ -339,17 +328,14 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                             </Link>
                         </motion.div>
 
-                        {/* Kartu Lacak Status */}
                         <motion.div variants={itemVariants}>
                             <Link
                                 href="/lacak-status"
                                 className="group relative block h-full transform rounded-xl border-t-4 border-green-500 bg-white p-8 text-left shadow-lg transition-shadow duration-300 hover:-translate-y-2 hover:shadow-2xl"
                             >
-                                {/* ## PERUBAHAN: opacity-0 diubah menjadi opacity-50 ## */}
                                 <div className="absolute top-8 right-8 opacity-50 transition-opacity duration-300 group-hover:opacity-100">
                                     <ArrowRight className="h-6 w-6 text-green-500" />
                                 </div>
-
                                 <div className="inline-block rounded-full bg-green-100 p-4">
                                     <Search className="h-8 w-8 text-green-600" />
                                 </div>
@@ -559,7 +545,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                         transition={{ duration: 0.5, delay: 0.1 }}
                         className="mx-auto mt-4 max-w-2xl text-lg text-slate-600"
                     >
-                        Salurkan zakat Anda atau ajukan permohonan bantuan
+                        Salurkan donasi Anda atau ajukan permohonan bantuan
                         melalui platform kami sekarang juga.
                     </motion.p>
                     <motion.div
@@ -573,7 +559,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                             href="/donasi"
                             className="inline-block transform rounded-lg bg-green-600 px-8 py-3 text-center font-bold text-white transition duration-300 hover:-translate-y-1 hover:bg-green-700 hover:shadow-lg"
                         >
-                            Bayar Zakat Sekarang
+                            Donasi Sekarang
                         </Link>
                         <Link
                             href="/ajukan-bantuan"
