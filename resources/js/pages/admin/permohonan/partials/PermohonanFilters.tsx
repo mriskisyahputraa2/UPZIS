@@ -17,6 +17,9 @@ export default function PermohonanFilters({ filters, periodes }) {
     const [filterPeriode, setFilterPeriode] = useState(
         filters.periode_id || 'all',
     );
+    const [filterJenisKelamin, setFilterJenisKelamin] = useState(
+        filters.jenis_kelamin || 'all',
+    );
     const isInitialMount = useRef(true);
 
     useEffect(() => {
@@ -29,6 +32,8 @@ export default function PermohonanFilters({ filters, periodes }) {
             per_page: filters.per_page,
             status: filterStatus === 'all' ? '' : filterStatus,
             periode_id: filterPeriode === 'all' ? '' : filterPeriode,
+            jenis_kelamin:
+                filterJenisKelamin === 'all' ? '' : filterJenisKelamin,
         };
         const timeout = setTimeout(() => {
             router.get('/admin/permohonan', params, {
@@ -37,12 +42,13 @@ export default function PermohonanFilters({ filters, periodes }) {
             });
         }, 500);
         return () => clearTimeout(timeout);
-    }, [search, filterStatus, filterPeriode]);
+    }, [search, filterStatus, filterPeriode, filterJenisKelamin]);
 
     const resetFilters = () => {
         setSearch('');
         setFilterStatus('all');
         setFilterPeriode('all');
+        setFilterJenisKelamin('all');
     };
 
     const handlePerPageChange = (perPage) => {
@@ -99,6 +105,19 @@ export default function PermohonanFilters({ filters, periodes }) {
                         </SelectItem>
                         <SelectItem value="Disetujui">Disetujui</SelectItem>
                         <SelectItem value="Ditolak">Ditolak</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Select
+                    value={filterJenisKelamin}
+                    onValueChange={setFilterJenisKelamin}
+                >
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Semua Jenis Kelamin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Semua Jenis Kelamin</SelectItem>
+                        <SelectItem value="Laki-laki">Laki-laki</SelectItem>
+                        <SelectItem value="Perempuan">Perempuan</SelectItem>
                     </SelectContent>
                 </Select>
 

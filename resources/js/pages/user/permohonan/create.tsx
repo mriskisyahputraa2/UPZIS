@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import PublicLayout from '@/layouts/publicLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
@@ -96,6 +97,7 @@ const FileInput = ({ id, label, file, onFileChange, error }) => {
 export default function Create({ activePeriode }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
+        jenis_kelamin: '',
         nik: '',
         kk_number: '',
         phone_number: '',
@@ -255,6 +257,42 @@ export default function Create({ activePeriode }) {
                                             />
                                             <InputError
                                                 message={errors.phone_number}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Jenis Kelamin *</Label>
+                                            <RadioGroup
+                                                value={data.jenis_kelamin}
+                                                onValueChange={(value) =>
+                                                    setData(
+                                                        'jenis_kelamin',
+                                                        value,
+                                                    )
+                                                }
+                                                className="flex items-center space-x-4 pt-2"
+                                                required
+                                            >
+                                                <div className="flex items-center space-x-2">
+                                                    <RadioGroupItem
+                                                        value="Laki-laki"
+                                                        id="laki-laki"
+                                                    />
+                                                    <Label htmlFor="laki-laki">
+                                                        Laki-laki
+                                                    </Label>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <RadioGroupItem
+                                                        value="Perempuan"
+                                                        id="perempuan"
+                                                    />
+                                                    <Label htmlFor="perempuan">
+                                                        Perempuan
+                                                    </Label>
+                                                </div>
+                                            </RadioGroup>
+                                            <InputError
+                                                message={errors.jenis_kelamin}
                                             />
                                         </div>
                                     </div>

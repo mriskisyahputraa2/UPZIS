@@ -82,6 +82,7 @@ export default function PermohonanTable({
                         <TableHead className="min-w-[150px]">
                             Nama Pemohon
                         </TableHead>
+                        <TableHead>Jenis Kelamin</TableHead>
                         <TableHead className="min-w-[150px]">Periode</TableHead>
                         <TableHead className="min-w-[120px]">
                             Tgl. Pengajuan
@@ -117,6 +118,9 @@ export default function PermohonanTable({
                                 </TableCell>
                                 <TableCell className="font-medium">
                                     {permohonan.mustahik.name}
+                                </TableCell>
+                                <TableCell>
+                                    {permohonan.mustahik.jenis_kelamin || '-'}
                                 </TableCell>
                                 <TableCell>{permohonan.periode.name}</TableCell>
                                 <TableCell>
@@ -206,7 +210,7 @@ export default function PermohonanTable({
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={7} className="h-24 text-center">
+                            <TableCell colSpan={8} className="h-24 text-center">
                                 <div className="flex flex-col items-center justify-center gap-4">
                                     <FileText className="h-16 w-16 text-gray-300 dark:text-gray-700" />
                                     <h3 className="text-xl font-bold">

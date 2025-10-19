@@ -428,7 +428,7 @@ export default function Dashboard({
                     </Card>
 
                     {/* Kartu Dana Disalurkan */}
-                    <Card className="bg-orange-500 text-white shadow-lg">
+                    <Card className="bg-blue-500 text-white shadow-lg">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Handshake />
@@ -439,7 +439,7 @@ export default function Dashboard({
                             <p className="text-4xl font-extrabold break-all md:text-5xl">
                                 {formatCurrency(stats.totalDanaDisalurkan)}
                             </p>
-                            <p className="mt-4 text-sm text-orange-100">
+                            <p className="mt-4 text-sm text-blue-100">
                                 Jumlah total dana yang telah disalurkan kepada
                                 mustahik sesuai periode yang dipilih.
                             </p>
@@ -479,7 +479,7 @@ export default function Dashboard({
                                 : undefined
                         }
                         linkText="Lihat Daftar Permohonan"
-                        linkColorClass="text-orange-600 hover:text-orange-700"
+                        linkColorClass="text-blue-600 hover:text-blue-700"
                     />
 
                     <StatCard

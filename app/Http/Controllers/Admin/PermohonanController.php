@@ -13,10 +13,7 @@ use Inertia\Inertia;
 
 class PermohonanController extends Controller
 {
-    public function __construct(
-        protected PermohonanRepository $permohonanRepository,
-        protected PermohonanService $permohonanService
-    ) {}
+    public function __construct(protected PermohonanRepository $permohonanRepository, protected PermohonanService $permohonanService) {}
 
     public function index(Request $request)
     {
@@ -24,7 +21,7 @@ class PermohonanController extends Controller
         $periodes = Periode::latest()->get(['id', 'name']);
         $activePeriode = Periode::where('status', 'Aktif')->first();
 
-        $currentFilters = $request->only(['search', 'per_page', 'status', 'periode_id']);
+        $currentFilters = $request->only(['search', 'per_page', 'status', 'periode_id', 'jenis_kelamin']);
         if (!$request->has('periode_id') && $activePeriode) {
             $currentFilters['periode_id'] = $activePeriode->id;
         }
@@ -39,7 +36,8 @@ class PermohonanController extends Controller
 
     public function show(Permohonan $permohonan)
     {
-        $permohonan->load(['mustahik', 'periode', "penyalurans.admin"]);
+        $permohonan->load(['mustahik', 'periode', 'penyalurans.admin']);
+
         return Inertia::render('admin/permohonan/show', ['permohonan' => $permohonan]);
     }
 

@@ -11,7 +11,7 @@ import { CheckCircle } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-export default function t({ selectedRows, onClearSelection }) {
+export default function BulkActions({ selectedRows, onClearSelection }) {
     const [bulkStatus, setBulkStatus] = useState('');
 
     const handleBulkUpdate = () => {

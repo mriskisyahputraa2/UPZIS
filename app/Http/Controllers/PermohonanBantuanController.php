@@ -34,6 +34,7 @@ class PermohonanBantuanController extends Controller
         $validated = $request->validate(
             [
                 'name' => 'required|string|max:255',
+                'jenis_kelamin' => 'required|string|in:Laki-laki,Perempuan',
                 'nik' => 'required|string|size:16',
                 'kk_number' => 'required|string|size:16',
                 'phone_number' => 'required|string|max:20',
@@ -51,6 +52,7 @@ class PermohonanBantuanController extends Controller
                 'photo.required' => 'Foto profil wajib diunggah.',
                 'photo.image' => 'File yang diunggah harus berupa gambar.',
                 'photo.mimes' => 'Format foto harus jpg, jpeg, atau png.',
+                'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih.',
                 'name.required' => 'Kolom Nama Lengkap wajib diisi.',
                 'nik.required' => 'Kolom NIK wajib diisi.',
                 'kk_number.required' => 'Kolom No. KK wajib diisi.',
@@ -104,6 +106,7 @@ class PermohonanBantuanController extends Controller
                 ['nik' => $validated['nik']],
                 [
                     'name' => $validated['name'],
+                    'jenis_kelamin' => $validated['jenis_kelamin'],
                     'kk_number' => $validated['kk_number'],
                     'phone_number' => $validated['phone_number'],
                     'address' => $validated['address'],
