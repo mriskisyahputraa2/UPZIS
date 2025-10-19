@@ -83,6 +83,9 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
     const [filterPeriode, setFilterPeriode] = useState(
         filters.periode_id || 'all',
     );
+    const [filterJenisKelamin, setFilterJenisKelamin] = useState(
+        filters.jenis_kelamin || 'all',
+    );
     const [deleteId, setDeleteId] = useState(null);
     const isInitialMount = useRef(true);
 
@@ -100,6 +103,8 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
             search,
             per_page: filters.per_page,
             periode_id: filterPeriode === 'all' ? '' : filterPeriode,
+            jenis_kelamin:
+                filterJenisKelamin === 'all' ? '' : filterJenisKelamin,
         };
         const timeout = setTimeout(() => {
             router.get('/admin/mustahiks', params, {
@@ -108,13 +113,14 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
             });
         }, 500);
         return () => clearTimeout(timeout);
-    }, [search, filterPeriode]);
+    }, [search, filterPeriode, filterJenisKelamin]);
 
     const handlePerPageChange = (perPage) => {
         const params = {
             search: filters.search,
             per_page: perPage,
             periode_id: filters.periode_id,
+            jenis_kelamin: filters.jenis_kelamin,
         };
         router.get('/admin/mustahiks', params, {
             preserveState: true,
@@ -125,6 +131,7 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
     const resetFilters = () => {
         setSearch('');
         setFilterPeriode('all');
+        setFilterJenisKelamin('all');
     };
 
     const handleDelete = () => {
@@ -253,7 +260,29 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
                                 </SelectContent>
                             </Select>
 
-                            {(filters.search || filters.periode_id) && (
+                            <Select
+                                value={filterJenisKelamin}
+                                onValueChange={setFilterJenisKelamin}
+                            >
+                                <SelectTrigger className="w-full sm:w-[180px]">
+                                    <SelectValue placeholder="Semua Jenis Kelamin" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">
+                                        Semua Jenis Kelamin
+                                    </SelectItem>
+                                    <SelectItem value="Laki-laki">
+                                        Laki-laki
+                                    </SelectItem>
+                                    <SelectItem value="Perempuan">
+                                        Perempuan
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+
+                            {(filters.search ||
+                                filters.periode_id ||
+                                filters.jenis_kelamin) && (
                                 <Button
                                     variant="destructive-outline"
                                     onClick={resetFilters}
@@ -286,6 +315,7 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
                                         No.
                                     </TableHead>
                                     <TableHead>Nama Lengkap</TableHead>
+                                    <TableHead>Jenis Kelamin</TableHead>
                                     <TableHead>
                                         Nomor Induk Kependudukan
                                     </TableHead>
@@ -323,6 +353,9 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
                                                         {mustahik.name}
                                                     </span>
                                                 </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                {mustahik.jenis_kelamin || '-'}
                                             </TableCell>
                                             <TableCell>
                                                 {mustahik.nik}
@@ -382,7 +415,7 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
                                 ) : (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={5}
+                                            colSpan={6}
                                             className="h-24 p-8 text-center"
                                         >
                                             <div className="flex flex-col items-center justify-center gap-4">

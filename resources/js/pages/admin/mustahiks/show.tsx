@@ -20,6 +20,7 @@ import {
     Edit,
     FileText,
     Home,
+    PersonStanding,
     Phone,
     User,
     Users,
@@ -260,6 +261,11 @@ export default function Show({ mustahik }) {
                                             label="Nomor Kartu Keluarga (KK)"
                                             value={mustahik.kk_number}
                                             canCopy
+                                        />
+                                        <PersonalDetailItem
+                                            icon={PersonStanding}
+                                            label="Jenis Kelamin"
+                                            value={mustahik.jenis_kelamin}
                                         />
                                         <PersonalDetailItem
                                             icon={Phone}

@@ -20,6 +20,7 @@ class MustahikController extends Controller
     {
         $request->validate([
             'periode_id' => 'nullable|integer|exists:periodes,id',
+            'jenis_kelamin' => 'nullable|string|in:Laki-laki,Perempuan',
         ]);
 
         $activePeriode = Periode::where('status', 'Aktif')->first();
@@ -31,6 +32,9 @@ class MustahikController extends Controller
             })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")->orWhere('nik', 'like', "%{$search}%");
+            })
+            ->when($request->input('jenis_kelamin'), function ($query, $jenisKelamin) {
+                $query->where('jenis_kelamin', $jenisKelamin);
             })
             ->when($request->input('periode_id'), function ($query, $periode_id) {
                 $query->whereHas('permohonans', function ($q) use ($periode_id) {
@@ -51,7 +55,7 @@ class MustahikController extends Controller
 
         $periodes = Periode::latest()->get(['id', 'name']);
 
-        $currentFilters = $request->only(['search', 'per_page', 'periode_id']);
+        $currentFilters = $request->only(['search', 'per_page', 'periode_id', 'jenis_kelamin']);
         if (!$request->has('periode_id') && $activePeriode) {
             $currentFilters['periode_id'] = $activePeriode->id;
         }
