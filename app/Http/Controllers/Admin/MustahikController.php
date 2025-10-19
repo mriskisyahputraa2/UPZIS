@@ -20,7 +20,6 @@ class MustahikController extends Controller
     {
         $request->validate([
             'periode_id' => 'nullable|integer|exists:periodes,id',
-            'jenis_kelamin' => 'nullable|string|in:Laki-laki,Perempuan',
         ]);
 
         $activePeriode = Periode::where('status', 'Aktif')->first();
@@ -32,9 +31,6 @@ class MustahikController extends Controller
             })
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")->orWhere('nik', 'like', "%{$search}%");
-            })
-            ->when($request->input('jenis_kelamin'), function ($query, $jenisKelamin) {
-                $query->where('jenis_kelamin', $jenisKelamin);
             })
             ->when($request->input('periode_id'), function ($query, $periode_id) {
                 $query->whereHas('permohonans', function ($q) use ($periode_id) {
@@ -55,7 +51,7 @@ class MustahikController extends Controller
 
         $periodes = Periode::latest()->get(['id', 'name']);
 
-        $currentFilters = $request->only(['search', 'per_page', 'periode_id', 'jenis_kelamin']);
+        $currentFilters = $request->only(['search', 'per_page', 'periode_id']);
         if (!$request->has('periode_id') && $activePeriode) {
             $currentFilters['periode_id'] = $activePeriode->id;
         }
@@ -86,49 +82,123 @@ class MustahikController extends Controller
             return redirect()->route('admin.mustahiks.index')->with('error', 'Gagal menyimpan data karena tidak ada periode pendaftaran yang aktif.');
         }
 
-        $request->validate([
+        // ## PERUBAHAN 1: Perbarui aturan validasi ##
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'jenis_kelamin' => 'required|string|in:Laki-laki,Perempuan',
+            'kategori_pemohon' => 'required|string|in:mahasiswa,umum',
             'nik' => 'required|string|size:16|unique:mustahiks',
             'kk_number' => 'required|string|size:16|unique:mustahiks',
             'phone_number' => 'required|string|max:20',
             'address' => 'required|string',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048', // Diubah dari 'nullable' menjadi 'required'
+            'file_sktm' => [
+                'nullable',
+                'file',
+                'mimes:jpg,jpeg,png,pdf',
+                'max:2048',
+                Rule::requiredIf($request->input('kategori_pemohon') === 'umum'), // Wajib jika kategori 'umum'
+            ],
+        ], [
+            'photo.required' => 'Foto mustahik wajib diunggah.',
+            'file_sktm.required' => 'SKTM wajib diunggah untuk kategori Masyarakat Umum.',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $data = $request->all();
-            if ($request->hasFile('photo')) {
-                $photoPath = $request->file('photo')->store('mustahik-photos', 'public');
-                $data['photo'] = $photoPath;
+            // ## PERUBAHAN 2: Tentukan folder dinamis untuk foto ##
+            $folderPath = $validated['kategori_pemohon'] === 'mahasiswa'
+                ? 'mustahik-mahasiswa'
+                : 'mustahik-umum';
+
+            $photoPath = $request->file('photo')->store($folderPath, 'public');
+
+            // 2. Buat data Mustahik baru
+            $mustahik = Mustahik::create([
+                'name' => $validated['name'],
+                'jenis_kelamin' => $validated['jenis_kelamin'],
+                'nik' => $validated['nik'],
+                'kk_number' => $validated['kk_number'],
+                'phone_number' => $validated['phone_number'],
+                'address' => $validated['address'],
+                'photo' => $photoPath, // Gunakan path yang sudah dinamis
+            ]);
+
+            // 3. Simpan SKTM jika ada
+            $sktmPath = null;
+            if ($request->hasFile('file_sktm')) {
+                $sktmPath = $request->file('file_sktm')->store("permohonan_files/{$mustahik->id}", 'public');
             }
 
-            // Langkah 1: Buat data Mustahik baru
-            $mustahik = Mustahik::create($data);
-
-            // Langkah 2: Generate kode unik untuk permohonan
-            $uniqueCode = 'UPZ-' . time() . Str::upper(Str::random(4));
-
-            // Langkah 3: Buat data Permohonan baru dan hubungkan dengan Mustahik & Periode Aktif
+            // 4. Buat Permohonan secara otomatis
             Permohonan::create([
                 'mustahik_id' => $mustahik->id,
                 'periode_id' => $activePeriode->id,
-                'unique_code' => $uniqueCode,
-                'status' => 'Baru', // Status default
-                // File dokumen akan kosong karena ditambahkan oleh Admin
+                'unique_code' => 'UPZ-' . time() . Str::upper(Str::random(4)),
+                'kategori_pemohon' => $validated['kategori_pemohon'],
+                'status' => $validated['kategori_pemohon'] === 'umum' ? 'Disetujui' : 'Baru',
+                'file_surat_fakir_miskin' => $sktmPath,
             ]);
 
             DB::commit();
 
-            return redirect()->route('admin.mustahiks.index')->with('success', 'Data Mustahik berhasil ditambahkan dan permohonan telah dibuat.');
+            return redirect()->route('admin.mustahiks.index')->with('success', 'Data Mustahik berhasil ditambahkan.');
         } catch (\Exception $e) {
             DB::rollBack();
-            // Optional: Log error untuk debugging
-            // \Log::error('Gagal saat Admin menambah mustahik: ' . $e->getMessage());
             return back()->with('error', 'Terjadi kesalahan pada sistem. Silakan coba lagi.');
         }
     }
+    // public function store(Request $request)
+    // {
+    //     $activePeriode = Periode::where('status', 'Aktif')->first();
+    //     if (!$activePeriode) {
+    //         return redirect()->route('admin.mustahiks.index')->with('error', 'Gagal menyimpan data karena tidak ada periode pendaftaran yang aktif.');
+    //     }
+
+    //     $request->validate([
+    //         'name' => 'required|string|max:255',
+    //         'nik' => 'required|string|size:16|unique:mustahiks',
+    //         'kk_number' => 'required|string|size:16|unique:mustahiks',
+    //         'phone_number' => 'required|string|max:20',
+    //         'address' => 'required|string',
+    //         'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+    //     ]);
+
+    //     try {
+    //         DB::beginTransaction();
+
+    //         $data = $request->all();
+    //         if ($request->hasFile('photo')) {
+    //             $photoPath = $request->file('photo')->store('mustahik-photos', 'public');
+    //             $data['photo'] = $photoPath;
+    //         }
+
+    //         // Langkah 1: Buat data Mustahik baru
+    //         $mustahik = Mustahik::create($data);
+
+    //         // Langkah 2: Generate kode unik untuk permohonan
+    //         $uniqueCode = 'UPZ-' . time() . Str::upper(Str::random(4));
+
+    //         // Langkah 3: Buat data Permohonan baru dan hubungkan dengan Mustahik & Periode Aktif
+    //         Permohonan::create([
+    //             'mustahik_id' => $mustahik->id,
+    //             'periode_id' => $activePeriode->id,
+    //             'unique_code' => $uniqueCode,
+    //             'status' => 'Baru', // Status default
+    //             // File dokumen akan kosong karena ditambahkan oleh Admin
+    //         ]);
+
+    //         DB::commit();
+
+    //         return redirect()->route('admin.mustahiks.index')->with('success', 'Data Mustahik berhasil ditambahkan dan permohonan telah dibuat.');
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         // Optional: Log error untuk debugging
+    //         // \Log::error('Gagal saat Admin menambah mustahik: ' . $e->getMessage());
+    //         return back()->with('error', 'Terjadi kesalahan pada sistem. Silakan coba lagi.');
+    //     }
+    // }
     // Menampilkan form untuk mengedit data mustahik
     public function edit(Mustahik $mustahik)
     {

@@ -51,6 +51,12 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@radix-ui/react-tooltip';
+import {
     AlertTriangle,
     Ellipsis,
     Eye,
@@ -153,7 +159,7 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
                         <CardTitle>
                             Daftar Penerima Manfaat (Mustahik)
                         </CardTitle>
-                        {/* {activePeriode ? (
+                        {activePeriode ? (
                             // Jika ada periode aktif, tombol bisa diklik
                             <Link href="/admin/mustahiks/create">
                                 <Button>
@@ -161,27 +167,27 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
                                     Tambah Mustahik
                                 </Button>
                             </Link>
-                        ) : ( */}
-                        {/* // Jika tidak ada periode aktif, tombol nonaktif dengan tooltip */}
-                        {/* <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <span tabIndex="0">
-                                        <Button disabled>
-                                            <PlusCircle className="mr-2 h-4 w-4" />
-                                            Tambah Mustahik
-                                        </Button>
-                                    </span>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>
-                                        Aktifkan satu periode terlebih dahulu
-                                        untuk menambah data.
-                                    </p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider> */}
-                        {/* )} */}
+                        ) : (
+                            // {/* // Jika tidak ada periode aktif, tombol nonaktif dengan tooltip */}
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span tabIndex="0">
+                                            <Button disabled>
+                                                <PlusCircle className="mr-2 h-4 w-4" />
+                                                Tambah Mustahik
+                                            </Button>
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>
+                                            Aktifkan satu periode terlebih
+                                            dahulu untuk menambah data.
+                                        </p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
                     </div>
                     <CardDescription>
                         Kelola data induk semua calon penerima manfaat di sini.

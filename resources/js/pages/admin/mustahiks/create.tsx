@@ -1,10 +1,9 @@
-// resources/js/Pages/Admin/Mustahiks/Create.jsx (Final dengan Perbaikan Sidebar Tablet)
-
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
@@ -19,7 +18,7 @@ import {
 import { useState } from 'react';
 
 const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Dashboard', href: '/admin/dashboard' },
     { title: 'Manajemen Mustahik', href: '/admin/mustahiks' },
     { title: 'Tambah Mustahik' },
 ];
@@ -30,11 +29,14 @@ export default function Create() {
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
+        jenis_kelamin: '',
+        kategori_pemohon: 'mahasiswa', // Default ke mahasiswa
         nik: '',
         phone_number: '',
         address: '',
         kk_number: '',
         photo: null,
+        file_sktm: null, // State untuk file SKTM
     });
 
     const handleImageChange = (e) => {
@@ -42,12 +44,12 @@ export default function Create() {
         if (file) {
             setData('photo', file);
             const reader = new FileReader();
-            reader.onload = (e) => setPreviewImage(e.target?.result);
+            reader.onload = (e) => setPreviewImage(e.target?.result as string);
             reader.readAsDataURL(file);
         }
     };
 
-    const handleDrop = (e) => {
+    const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(false);
@@ -60,7 +62,10 @@ export default function Create() {
     const removeImage = () => {
         setData('photo', null);
         setPreviewImage(null);
-        document.getElementById('photo').value = '';
+        const photoInput = document.getElementById('photo') as HTMLInputElement;
+        if (photoInput) {
+            photoInput.value = '';
+        }
     };
 
     const handleNumericInput = (e, fieldName) => {
@@ -68,7 +73,12 @@ export default function Create() {
         setData(fieldName, value);
     };
 
-    const handleSubmit = (e) => {
+    const handleFileChange = (e, fieldName) => {
+        const file = e.target.files?.[0];
+        setData(fieldName, file);
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         post('/admin/mustahiks', {
             forceFormData: true,
@@ -85,6 +95,7 @@ export default function Create() {
                     <div className="flex items-center gap-3">
                         <Link href="/admin/mustahiks">
                             <Button
+                                type="button"
                                 variant="outline"
                                 size="icon"
                                 className="flex-shrink-0"
@@ -103,13 +114,12 @@ export default function Create() {
                         </div>
                     </div>
 
-                    {/* ## PERUBAHAN: Breakpoint diubah dari md: ke lg: untuk tablet ## */}
                     <div className="grid grid-cols-1 gap-8 pt-6 lg:grid-cols-3">
                         {/* Kolom Kiri: Upload Foto */}
                         <div className="lg:col-span-1">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Foto Mustahik</CardTitle>
+                                    <CardTitle>Foto Mustahik *</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {previewImage ? (
@@ -175,7 +185,43 @@ export default function Create() {
 
                         {/* Kolom Kanan: Form Isian */}
                         <div className="space-y-6 lg:col-span-2">
-                            {/* Card Informasi Pribadi */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Kategori Mustahik *</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <RadioGroup
+                                        value={data.kategori_pemohon}
+                                        onValueChange={(value) =>
+                                            setData('kategori_pemohon', value)
+                                        }
+                                        className="flex flex-col space-y-2 pt-2 sm:flex-row sm:space-y-0 sm:space-x-4"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem
+                                                value="mahasiswa"
+                                                id="mahasiswa"
+                                            />
+                                            <Label htmlFor="mahasiswa">
+                                                Mahasiswa
+                                            </Label>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem
+                                                value="umum"
+                                                id="umum"
+                                            />
+                                            <Label htmlFor="umum">
+                                                Masyarakat Umum (Fakir/Miskin)
+                                            </Label>
+                                        </div>
+                                    </RadioGroup>
+                                    <InputError
+                                        message={errors.kategori_pemohon}
+                                    />
+                                </CardContent>
+                            </Card>
+
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Informasi Pribadi</CardTitle>
@@ -193,13 +239,44 @@ export default function Create() {
                                                 setData('name', e.target.value)
                                             }
                                             placeholder="Contoh: Muhammad Al-Fatih"
-                                            error={errors.name}
                                         />
                                         <InputError message={errors.name} />
                                     </div>
                                     <div className="space-y-2">
+                                        <Label>Jenis Kelamin *</Label>
+                                        <RadioGroup
+                                            value={data.jenis_kelamin}
+                                            onValueChange={(value) =>
+                                                setData('jenis_kelamin', value)
+                                            }
+                                            className="flex items-center space-x-4 pt-2"
+                                        >
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem
+                                                    value="Laki-laki"
+                                                    id="laki-laki"
+                                                />
+                                                <Label htmlFor="laki-laki">
+                                                    Laki-laki
+                                                </Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem
+                                                    value="Perempuan"
+                                                    id="perempuan"
+                                                />
+                                                <Label htmlFor="perempuan">
+                                                    Perempuan
+                                                </Label>
+                                            </div>
+                                        </RadioGroup>
+                                        <InputError
+                                            message={errors.jenis_kelamin}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
                                         <Label htmlFor="phone_number">
-                                            Nomor Telepon
+                                            Nomor Telepon *
                                         </Label>
                                         <div className="relative">
                                             <Phone className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -215,7 +292,6 @@ export default function Create() {
                                                 }
                                                 placeholder="Contoh: 081234567890"
                                                 className="pl-10"
-                                                error={errors.phone_number}
                                             />
                                         </div>
                                         <InputError
@@ -225,7 +301,6 @@ export default function Create() {
                                 </CardContent>
                             </Card>
 
-                            {/* Card Data Kependudukan */}
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Data Kependudukan</CardTitle>
@@ -233,9 +308,7 @@ export default function Create() {
                                 <CardContent className="space-y-4">
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label htmlFor="nik">
-                                                Nomor Induk Kependudukan (NIK)
-                                            </Label>
+                                            <Label htmlFor="nik">NIK *</Label>
                                             <div className="relative">
                                                 <Users className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                                 <Input
@@ -251,18 +324,13 @@ export default function Create() {
                                                     placeholder="16 digit NIK"
                                                     maxLength={16}
                                                     className="pl-10"
-                                                    error={errors.nik}
                                                 />
                                             </div>
-                                            <p className="text-right text-xs text-muted-foreground">
-                                                Sisa {16 - data.nik.length}{' '}
-                                                karakter
-                                            </p>
                                             <InputError message={errors.nik} />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="kk_number">
-                                                No. Kartu Keluarga (KK)
+                                                No. KK *
                                             </Label>
                                             <div className="relative">
                                                 <Users className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -279,14 +347,8 @@ export default function Create() {
                                                     placeholder="16 digit No. KK"
                                                     maxLength={16}
                                                     className="pl-10"
-                                                    error={errors.kk_number}
                                                 />
                                             </div>
-                                            <p className="text-right text-xs text-muted-foreground">
-                                                Sisa{' '}
-                                                {16 - data.kk_number.length}{' '}
-                                                karakter
-                                            </p>
                                             <InputError
                                                 message={errors.kk_number}
                                             />
@@ -294,7 +356,7 @@ export default function Create() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="address">
-                                            Alamat Lengkap
+                                            Alamat Lengkap *
                                         </Label>
                                         <Textarea
                                             id="address"
@@ -307,10 +369,31 @@ export default function Create() {
                                             }
                                             placeholder="Masukkan alamat lengkap sesuai KTP"
                                             rows={3}
-                                            error={errors.address}
                                         />
                                         <InputError message={errors.address} />
                                     </div>
+
+                                    {data.kategori_pemohon === 'umum' && (
+                                        <div className="space-y-2 border-t pt-4">
+                                            <Label htmlFor="file_sktm">
+                                                Upload Surat Keterangan Tidak
+                                                Mampu (SKTM) *
+                                            </Label>
+                                            <Input
+                                                id="file_sktm"
+                                                type="file"
+                                                onChange={(e) =>
+                                                    handleFileChange(
+                                                        e,
+                                                        'file_sktm',
+                                                    )
+                                                }
+                                            />
+                                            <InputError
+                                                message={errors.file_sktm}
+                                            />
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         </div>
