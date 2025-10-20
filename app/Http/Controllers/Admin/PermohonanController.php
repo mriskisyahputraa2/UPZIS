@@ -36,7 +36,7 @@ class PermohonanController extends Controller
 
     public function show(Permohonan $permohonan)
     {
-        $permohonan->load(['mustahik', 'periode', 'penyalurans.admin']);
+        $permohonan->load(['mustahik', 'periode', 'penyalurans.admin', 'dokumen']);
 
         return Inertia::render('admin/permohonan/show', ['permohonan' => $permohonan]);
     }

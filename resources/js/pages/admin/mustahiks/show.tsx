@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import {
     ArrowLeft,
+    Bookmark,
     Calendar,
     Copy,
     Download,
@@ -263,16 +264,43 @@ export default function Show({ mustahik }) {
                                             canCopy
                                         />
                                         <PersonalDetailItem
-                                            icon={PersonStanding}
-                                            label="Jenis Kelamin"
-                                            value={mustahik.jenis_kelamin}
-                                        />
-                                        <PersonalDetailItem
                                             icon={Phone}
                                             label="Nomor Telepon"
                                             value={mustahik.phone_number}
                                             canCopy
                                         />
+                                        <PersonalDetailItem
+                                            icon={PersonStanding}
+                                            label="Jenis Kelamin"
+                                            value={mustahik.jenis_kelamin}
+                                        />
+                                        <PersonalDetailItem
+                                            icon={Bookmark}
+                                            label="Kategori Mustahik"
+                                            value={
+                                                <Badge
+                                                    variant={
+                                                        mustahik.permohonans[0]
+                                                            ?.kategori_pemohon ===
+                                                        'mahasiswa'
+                                                            ? 'default'
+                                                            : 'secondary'
+                                                    }
+                                                >
+                                                    {mustahik.permohonans[0]
+                                                        ?.kategori_pemohon ===
+                                                    'mahasiswa'
+                                                        ? 'Mahasiswa'
+                                                        : mustahik
+                                                                .permohonans[0]
+                                                                ?.kategori_pemohon ===
+                                                            'umum'
+                                                          ? 'Fakir/Miskin'
+                                                          : '-'}
+                                                </Badge>
+                                            }
+                                        />
+
                                         <PersonalDetailItem
                                             icon={Home}
                                             label="Alamat Lengkap"
@@ -350,45 +378,98 @@ export default function Show({ mustahik }) {
                                                                     Dokumen:
                                                                 </p>
 
-                                                                {/* ## PERUBAHAN UTAMA DI SINI ## */}
-                                                                <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-3">
-                                                                    <DocumentCard
-                                                                        file_path={
-                                                                            permohonan.file_ktp
-                                                                        }
-                                                                        label="KTP"
-                                                                    />
-                                                                    <DocumentCard
-                                                                        file_path={
-                                                                            permohonan.file_kk
-                                                                        }
-                                                                        label="Kartu Keluarga"
-                                                                    />
-                                                                    <DocumentCard
-                                                                        file_path={
-                                                                            permohonan.file_khs
-                                                                        }
-                                                                        label="KHS"
-                                                                    />
-                                                                    <DocumentCard
-                                                                        file_path={
-                                                                            permohonan.file_surat_fakir_miskin
-                                                                        }
-                                                                        label="Surat Fakir/Miskin"
-                                                                    />
-                                                                    <DocumentCard
-                                                                        file_path={
-                                                                            permohonan.file_tidak_menerima_beasiswa
-                                                                        }
-                                                                        label="Surat Ket. Tdk Menerima Beasiswa"
-                                                                    />
-                                                                    <DocumentCard
-                                                                        file_path={
-                                                                            permohonan.file_surat_permohonan
-                                                                        }
-                                                                        label="Surat Permohonan"
-                                                                    />
-                                                                </div>
+                                                                {permohonan.dokumen ? (
+                                                                    <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                                                                        <DocumentCard
+                                                                            file_path={
+                                                                                permohonan
+                                                                                    .dokumen
+                                                                                    ?.file_ktp
+                                                                            }
+                                                                            label="KTP"
+                                                                        />
+                                                                        <DocumentCard
+                                                                            file_path={
+                                                                                permohonan
+                                                                                    .dokumen
+                                                                                    ?.file_kk
+                                                                            }
+                                                                            label="Kartu Keluarga"
+                                                                        />
+                                                                        <DocumentCard
+                                                                            file_path={
+                                                                                permohonan
+                                                                                    .dokumen
+                                                                                    ?.file_khs
+                                                                            }
+                                                                            label="KHS"
+                                                                        />
+                                                                        <DocumentCard
+                                                                            file_path={
+                                                                                permohonan
+                                                                                    .dokumen
+                                                                                    ?.file_surat_fakir_miskin
+                                                                            }
+                                                                            label="Surat Fakir/Miskin"
+                                                                        />
+                                                                        <DocumentCard
+                                                                            file_path={
+                                                                                permohonan
+                                                                                    .dokumen
+                                                                                    ?.file_tidak_menerima_beasiswa
+                                                                            }
+                                                                            label="Surat Ket. Tdk Menerima Beasiswa"
+                                                                        />
+                                                                        <DocumentCard
+                                                                            file_path={
+                                                                                permohonan
+                                                                                    .dokumen
+                                                                                    ?.file_surat_permohonan
+                                                                            }
+                                                                            label="Surat Permohonan"
+                                                                        />
+                                                                        <DocumentCard
+                                                                            file_path={
+                                                                                permohonan
+                                                                                    .dokumen
+                                                                                    ?.file_rumah_depan
+                                                                            }
+                                                                            label="Rumah (Depan)"
+                                                                        />
+                                                                        <DocumentCard
+                                                                            file_path={
+                                                                                permohonan
+                                                                                    .dokumen
+                                                                                    ?.file_rumah_belakang
+                                                                            }
+                                                                            label="Rumah (Belakang)"
+                                                                        />
+                                                                        <DocumentCard
+                                                                            file_path={
+                                                                                permohonan
+                                                                                    .dokumen
+                                                                                    ?.file_rumah_kiri
+                                                                            }
+                                                                            label="Rumah (Kiri)"
+                                                                        />
+                                                                        <DocumentCard
+                                                                            file_path={
+                                                                                permohonan
+                                                                                    .dokumen
+                                                                                    ?.file_rumah_kanan
+                                                                            }
+                                                                            label="Rumah (Kanan)"
+                                                                        />
+                                                                    </div>
+                                                                ) : (
+                                                                    <p className="mt-2 text-sm text-muted-foreground">
+                                                                        Tidak
+                                                                        ada
+                                                                        dokumen
+                                                                        yang
+                                                                        dilampirkan.
+                                                                    </p>
+                                                                )}
 
                                                                 {permohonan.penyalurans &&
                                                                     permohonan

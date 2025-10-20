@@ -11,8 +11,14 @@ class Permohonan extends Model
 
     protected $table = 'permohonans'; // Nama tabel jamak
 
-    protected $fillable = ['mustahik_id', 'periode_id', 'kategori_pemohon','unique_code', 'status', 'file_ktp', 'file_kk', 'file_khs', 'notes_admin', 'photo', 'file_surat_fakir_miskin', 'file_tidak_menerima_beasiswa', 'file_surat_permohonan'];
+    protected $fillable = ['mustahik_id', 'periode_id', 'unique_code', 'status', 'kategori_pemohon', 'notes_admin', 'photo'];
 
+    // relasi ke tabel permohonan_dokumens
+    public function dokumen()
+    {
+        // Setiap permohonan memiliki satu set dokumen.
+        return $this->hasOne(PermohonanDokumen::class);
+    }
     public function mustahik()
     {
         return $this->belongsTo(Mustahik::class);

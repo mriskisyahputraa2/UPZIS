@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('permohonans', function (Blueprint $table) {
-            $table->string('kategori_pemohon')->default('mahasiswa')->after('periode_id');
+        Schema::table('mustahiks', function (Blueprint $table) {
+            $table->string('pekerjaan')->nullable()->after('jenis_kelamin');
+            $table->integer('jumlah_tanggungan')->default(0)->after('pekerjaan');
+            $table->string('status_rumah')->nullable()->after('jumlah_tanggungan');
         });
     }
 
@@ -21,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('permohonans', function (Blueprint $table) {
+        Schema::table('mustahiks', function (Blueprint $table) {
             //
         });
     }

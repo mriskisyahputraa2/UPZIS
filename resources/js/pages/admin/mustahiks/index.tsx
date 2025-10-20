@@ -10,6 +10,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -83,6 +84,18 @@ const getInitials = (name) => {
     return (names[0][0] + names[names.length - 1][0]).toUpperCase();
 };
 
+const KategoriBadge = ({ kategori }) => {
+    if (!kategori) {
+        return <Badge variant="secondary">N/A</Badge>;
+    }
+    const isMahasiswa = kategori === 'mahasiswa';
+    return (
+        <Badge variant={isMahasiswa ? 'default' : 'secondary'}>
+            {isMahasiswa ? 'Mahasiswa' : 'Fakir/Miskin'}
+        </Badge>
+    );
+};
+
 export default function Index({ mustahiks, filters, periodes, activePeriode }) {
     const { flash } = usePage().props;
     const [search, setSearch] = useState(filters.search || '');
@@ -91,6 +104,9 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
     );
     const [filterJenisKelamin, setFilterJenisKelamin] = useState(
         filters.jenis_kelamin || 'all',
+    );
+    const [filterKategori, setFilterKategori] = useState(
+        filters.kategori_pemohon || 'all',
     );
     const [deleteId, setDeleteId] = useState(null);
     const isInitialMount = useRef(true);
@@ -111,6 +127,7 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
             periode_id: filterPeriode === 'all' ? '' : filterPeriode,
             jenis_kelamin:
                 filterJenisKelamin === 'all' ? '' : filterJenisKelamin,
+            kategori_pemohon: filterKategori === 'all' ? '' : filterKategori,
         };
         const timeout = setTimeout(() => {
             router.get('/admin/mustahiks', params, {
@@ -119,15 +136,10 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
             });
         }, 500);
         return () => clearTimeout(timeout);
-    }, [search, filterPeriode, filterJenisKelamin]);
+    }, [search, filterPeriode, filterJenisKelamin, filterKategori]);
 
     const handlePerPageChange = (perPage) => {
-        const params = {
-            search: filters.search,
-            per_page: perPage,
-            periode_id: filters.periode_id,
-            jenis_kelamin: filters.jenis_kelamin,
-        };
+        const params = { ...filters, per_page: perPage };
         router.get('/admin/mustahiks', params, {
             preserveState: true,
             replace: true,
@@ -138,6 +150,7 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
         setSearch('');
         setFilterPeriode('all');
         setFilterJenisKelamin('all');
+        setFilterKategori('all');
     };
 
     const handleDelete = () => {
@@ -160,7 +173,6 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
                             Daftar Penerima Manfaat (Mustahik)
                         </CardTitle>
                         {activePeriode ? (
-                            // Jika ada periode aktif, tombol bisa diklik
                             <Link href="/admin/mustahiks/create">
                                 <Button>
                                     <PlusCircle className="mr-2 h-4 w-4" />
@@ -168,7 +180,6 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
                                 </Button>
                             </Link>
                         ) : (
-                            // {/* // Jika tidak ada periode aktif, tombol nonaktif dengan tooltip */}
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -267,6 +278,26 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
                             </Select>
 
                             <Select
+                                value={filterKategori}
+                                onValueChange={setFilterKategori}
+                            >
+                                <SelectTrigger className="w-full sm:w-[180px]">
+                                    <SelectValue placeholder="Semua Kategori" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">
+                                        Semua Kategori
+                                    </SelectItem>
+                                    <SelectItem value="mahasiswa">
+                                        Mahasiswa
+                                    </SelectItem>
+                                    <SelectItem value="umum">
+                                        Fakir/Miskin
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+
+                            <Select
                                 value={filterJenisKelamin}
                                 onValueChange={setFilterJenisKelamin}
                             >
@@ -288,7 +319,8 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
 
                             {(filters.search ||
                                 filters.periode_id ||
-                                filters.jenis_kelamin) && (
+                                filters.jenis_kelamin ||
+                                filters.kategori_pemohon) && (
                                 <Button
                                     variant="destructive-outline"
                                     onClick={resetFilters}
@@ -321,10 +353,8 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
                                         No.
                                     </TableHead>
                                     <TableHead>Nama Lengkap</TableHead>
+                                    <TableHead>Kategori</TableHead>
                                     <TableHead>Jenis Kelamin</TableHead>
-                                    <TableHead>
-                                        Nomor Induk Kependudukan
-                                    </TableHead>
                                     <TableHead>No. Telepon</TableHead>
                                     <TableHead className="w-[100px] text-right">
                                         Aksi
@@ -361,11 +391,18 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                {mustahik.jenis_kelamin || '-'}
+                                                <KategoriBadge
+                                                    kategori={
+                                                        mustahik
+                                                            .latest_permohonan
+                                                            ?.kategori_pemohon
+                                                    }
+                                                />
                                             </TableCell>
                                             <TableCell>
-                                                {mustahik.nik}
+                                                {mustahik.jenis_kelamin || '-'}
                                             </TableCell>
+
                                             <TableCell>
                                                 {mustahik.phone_number || '-'}
                                             </TableCell>

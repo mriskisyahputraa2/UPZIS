@@ -34,9 +34,6 @@ class PermohonanSeeder extends Seeder
                 'periode_id' => $randomPeriode->id,
                 'unique_code' => 'ZKM-' . now()->year . '-' . Str::random(8),
                 'status' => $statuses[array_rand($statuses)], // Status acak
-                'file_ktp' => 'dummy/ktp.pdf', // Path dummy
-                'file_kk' => 'dummy/kk.pdf',
-                'file_khs' => 'dummy/khs.pdf',
                 'notes_admin' => 'Ini adalah catatan dummy yang dibuat oleh seeder.',
             ]);
         }

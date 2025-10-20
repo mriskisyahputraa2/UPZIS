@@ -3,12 +3,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import {
     ArrowLeft,
     FileImage,
+    Link as LinkIcon,
     Phone,
     Trash2,
     Upload,
@@ -22,62 +31,152 @@ const breadcrumbs = [
     { title: 'Edit Mustahik' },
 ];
 
+// Komponen helper untuk menampilkan input file dengan preview
+const FileInputWithPreview = ({
+    id,
+    label,
+    error,
+    onFileChange,
+    existingFileUrl,
+    newFile,
+}) => {
+    const [preview, setPreview] = useState<string | null>(null);
+
+    const isImage = (fileName: string) =>
+        fileName && /\.(jpe?g|png|gif|webp)$/i.test(fileName);
+
+    useEffect(() => {
+        let objectUrl: string | null = null;
+        if (newFile && newFile.type.startsWith('image/')) {
+            objectUrl = URL.createObjectURL(newFile);
+            setPreview(objectUrl);
+        } else if (newFile) {
+            setPreview(null);
+        } else if (existingFileUrl && isImage(existingFileUrl)) {
+            setPreview(`/storage/${existingFileUrl}`);
+        } else {
+            setPreview(null);
+        }
+
+        return () => {
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+            }
+        };
+    }, [newFile, existingFileUrl]);
+
+    return (
+        <div className="space-y-2">
+            <Label htmlFor={id}>{label}</Label>
+            {preview && (
+                <div className="relative mt-2 h-32 w-full">
+                    <img
+                        src={preview}
+                        alt="Preview"
+                        className="h-full w-full rounded-lg object-cover"
+                    />
+                </div>
+            )}
+            {existingFileUrl && !isImage(existingFileUrl) && !newFile && (
+                <a
+                    href={`/storage/${existingFileUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 flex items-center gap-2 text-sm text-blue-600 hover:underline"
+                >
+                    <LinkIcon className="h-4 w-4" /> Lihat file PDF saat ini
+                </a>
+            )}
+            <Input
+                id={id}
+                type="file"
+                onChange={onFileChange}
+                className="mt-2"
+            />
+            {newFile && !newFile.type.startsWith('image/') && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                    File dipilih: {newFile.name}
+                </p>
+            )}
+            <InputError message={error} />
+        </div>
+    );
+};
+
 export default function Edit({ mustahik }) {
-    const [previewImage, setPreviewImage] = useState(null);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [isDragging, setIsDragging] = useState(false);
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    // Ambil permohonan terbaru untuk mendapatkan kategori dan dokumen
+    const latestPermohonan = mustahik.permohonans?.[0] || {};
+    const dokumen = latestPermohonan.dokumen || {};
+
+    const { data, setData, post, processing, errors } = useForm({
+        _method: 'PUT',
         name: mustahik.name || '',
+        jenis_kelamin: mustahik.jenis_kelamin || '',
+        kategori_pemohon: latestPermohonan.kategori_pemohon || 'mahasiswa',
         nik: mustahik.nik || '',
         phone_number: mustahik.phone_number || '',
         address: mustahik.address || '',
         kk_number: mustahik.kk_number || '',
         photo: null,
-        remove_photo: false, // Flag untuk memberitahu backend jika foto dihapus
-        _method: 'PUT', // Metode untuk update
+        pekerjaan: mustahik.pekerjaan || '',
+        jumlah_tanggungan: mustahik.jumlah_tanggungan?.toString() || '',
+        status_rumah: mustahik.status_rumah || '',
+        file_sktm: null,
+        file_rumah_depan: null,
+        file_rumah_belakang: null,
+        file_rumah_kiri: null,
+        file_rumah_kanan: null,
     });
 
-    // Logika khusus untuk Edit: Menampilkan foto yang sudah ada saat halaman dimuat
     useEffect(() => {
         if (mustahik.photo) {
             setPreviewImage(`/storage/${mustahik.photo}`);
         }
     }, [mustahik.photo]);
 
-    const handleImageChange = (e) => {
+    const handleImageChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        fieldName: string = 'photo',
+    ) => {
         const file = e.target.files?.[0];
         if (file) {
-            setData((prev) => ({ ...prev, photo: file, remove_photo: false }));
-            setPreviewImage(URL.createObjectURL(file));
+            setData(fieldName as any, file);
+            if (fieldName === 'photo') {
+                setPreviewImage(URL.createObjectURL(file));
+            }
         }
     };
 
-    const handleDrop = (e) => {
+    const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(false);
         const file = e.dataTransfer.files?.[0];
         if (file && file.type.startsWith('image/')) {
-            handleImageChange({ target: { files: [file] } });
+            setData('photo', file);
+            setPreviewImage(URL.createObjectURL(file));
         }
     };
 
-    // Logika khusus untuk Edit: Menghapus foto yang ada
     const removeImage = () => {
-        setData((prev) => ({ ...prev, photo: null, remove_photo: true }));
+        setData('photo', null);
         setPreviewImage(null);
-        const photoInput = document.getElementById('photo');
-        if (photoInput) {
-            photoInput.value = '';
-        }
+        const photoInput = document.getElementById('photo') as HTMLInputElement;
+        if (photoInput) photoInput.value = '';
     };
 
-    const handleNumericInput = (e, fieldName) => {
+    const handleNumericInput = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        fieldName: string,
+    ) => {
         const value = e.target.value.replace(/\D/g, '');
-        setData(fieldName, value);
+        setData(fieldName as any, value);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         post(`/admin/mustahiks/${mustahik.id}`, {
             forceFormData: true,
@@ -93,6 +192,7 @@ export default function Edit({ mustahik }) {
                     <div className="flex items-center gap-3">
                         <Link href="/admin/mustahiks">
                             <Button
+                                type="button"
                                 variant="outline"
                                 size="icon"
                                 className="flex-shrink-0"
@@ -113,7 +213,7 @@ export default function Edit({ mustahik }) {
                         <div className="lg:col-span-1">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Foto Mustahik</CardTitle>
+                                    <CardTitle>Foto Mustahik *</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {previewImage ? (
@@ -162,7 +262,9 @@ export default function Edit({ mustahik }) {
                                         id="photo"
                                         type="file"
                                         accept="image/png, image/jpeg, image/jpg"
-                                        onChange={handleImageChange}
+                                        onChange={(e) =>
+                                            handleImageChange(e, 'photo')
+                                        }
                                         className="hidden"
                                     />
                                     <div className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -179,7 +281,43 @@ export default function Edit({ mustahik }) {
 
                         {/* Kolom Kanan: Form Isian */}
                         <div className="space-y-6 lg:col-span-2">
-                            {/* Card Informasi Pribadi */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Kategori Mustahik *</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <RadioGroup
+                                        value={data.kategori_pemohon}
+                                        onValueChange={(value) =>
+                                            setData('kategori_pemohon', value)
+                                        }
+                                        className="flex flex-col space-y-2 pt-2 sm:flex-row sm:space-y-0 sm:space-x-4"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem
+                                                value="mahasiswa"
+                                                id="mahasiswa"
+                                            />
+                                            <Label htmlFor="mahasiswa">
+                                                Mahasiswa
+                                            </Label>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem
+                                                value="umum"
+                                                id="umum"
+                                            />
+                                            <Label htmlFor="umum">
+                                                Masyarakat Umum (Fakir/Miskin)
+                                            </Label>
+                                        </div>
+                                    </RadioGroup>
+                                    <InputError
+                                        message={errors.kategori_pemohon}
+                                    />
+                                </CardContent>
+                            </Card>
+
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Informasi Pribadi</CardTitle>
@@ -191,19 +329,48 @@ export default function Edit({ mustahik }) {
                                         </Label>
                                         <Input
                                             id="name"
-                                            type="text"
                                             value={data.name}
                                             onChange={(e) =>
                                                 setData('name', e.target.value)
                                             }
-                                            placeholder="Contoh: Muhammad Al-Fatih"
-                                            error={errors.name}
                                         />
                                         <InputError message={errors.name} />
                                     </div>
                                     <div className="space-y-2">
+                                        <Label>Jenis Kelamin *</Label>
+                                        <RadioGroup
+                                            value={data.jenis_kelamin}
+                                            onValueChange={(value) =>
+                                                setData('jenis_kelamin', value)
+                                            }
+                                            className="flex items-center space-x-4 pt-2"
+                                        >
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem
+                                                    value="Laki-laki"
+                                                    id="laki-laki"
+                                                />
+                                                <Label htmlFor="laki-laki">
+                                                    Laki-laki
+                                                </Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem
+                                                    value="Perempuan"
+                                                    id="perempuan"
+                                                />
+                                                <Label htmlFor="perempuan">
+                                                    Perempuan
+                                                </Label>
+                                            </div>
+                                        </RadioGroup>
+                                        <InputError
+                                            message={errors.jenis_kelamin}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
                                         <Label htmlFor="phone_number">
-                                            Nomor Telepon
+                                            Nomor Telepon *
                                         </Label>
                                         <div className="relative">
                                             <Phone className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -217,9 +384,7 @@ export default function Edit({ mustahik }) {
                                                         'phone_number',
                                                     )
                                                 }
-                                                placeholder="Contoh: 081234567890"
                                                 className="pl-10"
-                                                error={errors.phone_number}
                                             />
                                         </div>
                                         <InputError
@@ -229,7 +394,6 @@ export default function Edit({ mustahik }) {
                                 </CardContent>
                             </Card>
 
-                            {/* Card Data Kependudukan */}
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Data Kependudukan</CardTitle>
@@ -237,9 +401,7 @@ export default function Edit({ mustahik }) {
                                 <CardContent className="space-y-4">
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label htmlFor="nik">
-                                                Nomor Induk Kependudukan (NIK)
-                                            </Label>
+                                            <Label htmlFor="nik">NIK *</Label>
                                             <div className="relative">
                                                 <Users className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                                 <Input
@@ -252,21 +414,15 @@ export default function Edit({ mustahik }) {
                                                             'nik',
                                                         )
                                                     }
-                                                    placeholder="16 digit NIK"
                                                     maxLength={16}
                                                     className="pl-10"
-                                                    error={errors.nik}
                                                 />
                                             </div>
-                                            <p className="text-right text-xs text-muted-foreground">
-                                                Sisa {16 - data.nik.length}{' '}
-                                                karakter
-                                            </p>
                                             <InputError message={errors.nik} />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="kk_number">
-                                                No. Kartu Keluarga (KK)
+                                                No. KK *
                                             </Label>
                                             <div className="relative">
                                                 <Users className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -280,17 +436,10 @@ export default function Edit({ mustahik }) {
                                                             'kk_number',
                                                         )
                                                     }
-                                                    placeholder="16 digit No. KK"
                                                     maxLength={16}
                                                     className="pl-10"
-                                                    error={errors.kk_number}
                                                 />
                                             </div>
-                                            <p className="text-right text-xs text-muted-foreground">
-                                                Sisa{' '}
-                                                {16 - data.kk_number.length}{' '}
-                                                karakter
-                                            </p>
                                             <InputError
                                                 message={errors.kk_number}
                                             />
@@ -298,7 +447,7 @@ export default function Edit({ mustahik }) {
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="address">
-                                            Alamat Lengkap
+                                            Alamat Lengkap *
                                         </Label>
                                         <Textarea
                                             id="address"
@@ -309,14 +458,190 @@ export default function Edit({ mustahik }) {
                                                     e.target.value,
                                                 )
                                             }
-                                            placeholder="Masukkan alamat lengkap sesuai KTP"
                                             rows={3}
-                                            error={errors.address}
                                         />
                                         <InputError message={errors.address} />
                                     </div>
                                 </CardContent>
                             </Card>
+
+                            {data.kategori_pemohon === 'umum' && (
+                                <>
+                                    <Card className="duration-300 animate-in fade-in">
+                                        <CardHeader>
+                                            <CardTitle>
+                                                Data Ekonomi & Kondisi (Umum)
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="pekerjaan">
+                                                    Pekerjaan *
+                                                </Label>
+                                                <Input
+                                                    id="pekerjaan"
+                                                    value={data.pekerjaan}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'pekerjaan',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={errors.pekerjaan}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="jumlah_tanggungan">
+                                                    Jumlah Tanggungan *
+                                                </Label>
+                                                <Input
+                                                    id="jumlah_tanggungan"
+                                                    type="number"
+                                                    value={
+                                                        data.jumlah_tanggungan
+                                                    }
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'jumlah_tanggungan',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        errors.jumlah_tanggungan
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="space-y-2 sm:col-span-2">
+                                                <Label htmlFor="status_rumah">
+                                                    Status Kepemilikan Rumah *
+                                                </Label>
+                                                <Select
+                                                    value={data.status_rumah}
+                                                    onValueChange={(value) =>
+                                                        setData(
+                                                            'status_rumah',
+                                                            value,
+                                                        )
+                                                    }
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Pilih status..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Milik Sendiri">
+                                                            Milik Sendiri
+                                                        </SelectItem>
+                                                        <SelectItem value="Sewa/Kontrak">
+                                                            Sewa/Kontrak
+                                                        </SelectItem>
+                                                        <SelectItem value="Menumpang">
+                                                            Menumpang
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <InputError
+                                                    message={
+                                                        errors.status_rumah
+                                                    }
+                                                />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="duration-300 animate-in fade-in">
+                                        <CardHeader>
+                                            <CardTitle>
+                                                Dokumen Tambahan (Umum)
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+                                            <FileInputWithPreview
+                                                id="file_sktm"
+                                                label="Ganti SKTM"
+                                                error={errors.file_sktm}
+                                                onFileChange={(e) =>
+                                                    handleImageChange(
+                                                        e,
+                                                        'file_sktm',
+                                                    )
+                                                }
+                                                existingFileUrl={
+                                                    dokumen.file_surat_fakir_miskin
+                                                }
+                                                newFile={data.file_sktm}
+                                            />
+                                            <FileInputWithPreview
+                                                id="file_rumah_depan"
+                                                label="Ganti Foto Rumah (Depan)"
+                                                error={errors.file_rumah_depan}
+                                                onFileChange={(e) =>
+                                                    handleImageChange(
+                                                        e,
+                                                        'file_rumah_depan',
+                                                    )
+                                                }
+                                                existingFileUrl={
+                                                    dokumen.file_rumah_depan
+                                                }
+                                                newFile={data.file_rumah_depan}
+                                            />
+                                            <FileInputWithPreview
+                                                id="file_rumah_belakang"
+                                                label="Ganti Foto Rumah (Belakang)"
+                                                error={
+                                                    errors.file_rumah_belakang
+                                                }
+                                                onFileChange={(e) =>
+                                                    handleImageChange(
+                                                        e,
+                                                        'file_rumah_belakang',
+                                                    )
+                                                }
+                                                existingFileUrl={
+                                                    dokumen.file_rumah_belakang
+                                                }
+                                                newFile={
+                                                    data.file_rumah_belakang
+                                                }
+                                            />
+                                            <FileInputWithPreview
+                                                id="file_rumah_kiri"
+                                                label="Ganti Foto Rumah (Kiri)"
+                                                error={errors.file_rumah_kiri}
+                                                onFileChange={(e) =>
+                                                    handleImageChange(
+                                                        e,
+                                                        'file_rumah_kiri',
+                                                    )
+                                                }
+                                                existingFileUrl={
+                                                    dokumen.file_rumah_kiri
+                                                }
+                                                newFile={data.file_rumah_kiri}
+                                            />
+                                            <FileInputWithPreview
+                                                id="file_rumah_kanan"
+                                                label="Ganti Foto Rumah (Kanan)"
+                                                error={errors.file_rumah_kanan}
+                                                onFileChange={(e) =>
+                                                    handleImageChange(
+                                                        e,
+                                                        'file_rumah_kanan',
+                                                    )
+                                                }
+                                                existingFileUrl={
+                                                    dokumen.file_rumah_kanan
+                                                }
+                                                newFile={data.file_rumah_kanan}
+                                            />
+                                        </CardContent>
+                                    </Card>
+                                </>
+                            )}
                         </div>
                     </div>
 

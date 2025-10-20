@@ -4,6 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
@@ -24,7 +31,7 @@ const breadcrumbs = [
 ];
 
 export default function Create() {
-    const [previewImage, setPreviewImage] = useState(null);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [isDragging, setIsDragging] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -36,16 +43,27 @@ export default function Create() {
         address: '',
         kk_number: '',
         photo: null,
-        file_sktm: null, // State untuk file SKTM
+        // Data ekonomi & dokumen baru
+        pekerjaan: '',
+        jumlah_tanggungan: '',
+        status_rumah: '',
+        file_sktm: null,
+        file_rumah_depan: null,
+        file_rumah_belakang: null,
+        file_rumah_kiri: null,
+        file_rumah_kanan: null,
     });
 
-    const handleImageChange = (e) => {
+    const handleImageChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        fieldName: string = 'photo',
+    ) => {
         const file = e.target.files?.[0];
         if (file) {
-            setData('photo', file);
-            const reader = new FileReader();
-            reader.onload = (e) => setPreviewImage(e.target?.result as string);
-            reader.readAsDataURL(file);
+            setData(fieldName as any, file);
+            if (fieldName === 'photo') {
+                setPreviewImage(URL.createObjectURL(file));
+            }
         }
     };
 
@@ -55,7 +73,8 @@ export default function Create() {
         setIsDragging(false);
         const file = e.dataTransfer.files?.[0];
         if (file && file.type.startsWith('image/')) {
-            handleImageChange({ target: { files: [file] } });
+            setData('photo', file);
+            setPreviewImage(URL.createObjectURL(file));
         }
     };
 
@@ -63,19 +82,15 @@ export default function Create() {
         setData('photo', null);
         setPreviewImage(null);
         const photoInput = document.getElementById('photo') as HTMLInputElement;
-        if (photoInput) {
-            photoInput.value = '';
-        }
+        if (photoInput) photoInput.value = '';
     };
 
-    const handleNumericInput = (e, fieldName) => {
+    const handleNumericInput = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        fieldName: string,
+    ) => {
         const value = e.target.value.replace(/\D/g, '');
-        setData(fieldName, value);
-    };
-
-    const handleFileChange = (e, fieldName) => {
-        const file = e.target.files?.[0];
-        setData(fieldName, file);
+        setData(fieldName as any, value);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -89,7 +104,6 @@ export default function Create() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tambah Mustahik" />
-
             <div className="space-y-4 p-4 sm:p-6 lg:p-8">
                 <form onSubmit={handleSubmit}>
                     <div className="flex items-center gap-3">
@@ -115,7 +129,6 @@ export default function Create() {
                     </div>
 
                     <div className="grid grid-cols-1 gap-8 pt-6 lg:grid-cols-3">
-                        {/* Kolom Kiri: Upload Foto */}
                         <div className="lg:col-span-1">
                             <Card>
                                 <CardHeader>
@@ -168,7 +181,9 @@ export default function Create() {
                                         id="photo"
                                         type="file"
                                         accept="image/png, image/jpeg, image/jpg"
-                                        onChange={handleImageChange}
+                                        onChange={(e) =>
+                                            handleImageChange(e, 'photo')
+                                        }
                                         className="hidden"
                                     />
                                     <div className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -183,7 +198,6 @@ export default function Create() {
                             </Card>
                         </div>
 
-                        {/* Kolom Kanan: Form Isian */}
                         <div className="space-y-6 lg:col-span-2">
                             <Card>
                                 <CardHeader>
@@ -372,30 +386,205 @@ export default function Create() {
                                         />
                                         <InputError message={errors.address} />
                                     </div>
-
-                                    {data.kategori_pemohon === 'umum' && (
-                                        <div className="space-y-2 border-t pt-4">
-                                            <Label htmlFor="file_sktm">
-                                                Upload Surat Keterangan Tidak
-                                                Mampu (SKTM) *
-                                            </Label>
-                                            <Input
-                                                id="file_sktm"
-                                                type="file"
-                                                onChange={(e) =>
-                                                    handleFileChange(
-                                                        e,
-                                                        'file_sktm',
-                                                    )
-                                                }
-                                            />
-                                            <InputError
-                                                message={errors.file_sktm}
-                                            />
-                                        </div>
-                                    )}
                                 </CardContent>
                             </Card>
+
+                            {data.kategori_pemohon === 'umum' && (
+                                <>
+                                    <Card className="duration-300 animate-in fade-in">
+                                        <CardHeader>
+                                            <CardTitle>
+                                                Data Ekonomi & Kondisi (Umum)
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="pekerjaan">
+                                                    Pekerjaan *
+                                                </Label>
+                                                <Input
+                                                    id="pekerjaan"
+                                                    value={data.pekerjaan}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'pekerjaan',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={errors.pekerjaan}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="jumlah_tanggungan">
+                                                    Jumlah Tanggungan *
+                                                </Label>
+                                                <Input
+                                                    id="jumlah_tanggungan"
+                                                    type="number"
+                                                    value={
+                                                        data.jumlah_tanggungan
+                                                    }
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'jumlah_tanggungan',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        errors.jumlah_tanggungan
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="space-y-2 sm:col-span-2">
+                                                <Label htmlFor="status_rumah">
+                                                    Status Kepemilikan Rumah *
+                                                </Label>
+                                                <Select
+                                                    value={data.status_rumah}
+                                                    onValueChange={(value) =>
+                                                        setData(
+                                                            'status_rumah',
+                                                            value,
+                                                        )
+                                                    }
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Pilih status..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Milik Sendiri">
+                                                            Milik Sendiri
+                                                        </SelectItem>
+                                                        <SelectItem value="Sewa/Kontrak">
+                                                            Sewa/Kontrak
+                                                        </SelectItem>
+                                                        <SelectItem value="Menumpang">
+                                                            Menumpang
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <InputError
+                                                    message={
+                                                        errors.status_rumah
+                                                    }
+                                                />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="duration-300 animate-in fade-in">
+                                        <CardHeader>
+                                            <CardTitle>
+                                                Dokumen Tambahan (Umum)
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="file_sktm">
+                                                    SKTM *
+                                                </Label>
+                                                <Input
+                                                    id="file_sktm"
+                                                    type="file"
+                                                    onChange={(e) =>
+                                                        handleImageChange(
+                                                            e,
+                                                            'file_sktm',
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={errors.file_sktm}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="file_rumah_depan">
+                                                    Foto Rumah (Depan) *
+                                                </Label>
+                                                <Input
+                                                    id="file_rumah_depan"
+                                                    type="file"
+                                                    onChange={(e) =>
+                                                        handleImageChange(
+                                                            e,
+                                                            'file_rumah_depan',
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        errors.file_rumah_depan
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="file_rumah_belakang">
+                                                    Foto Rumah (Belakang) *
+                                                </Label>
+                                                <Input
+                                                    id="file_rumah_belakang"
+                                                    type="file"
+                                                    onChange={(e) =>
+                                                        handleImageChange(
+                                                            e,
+                                                            'file_rumah_belakang',
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        errors.file_rumah_belakang
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="file_rumah_kiri">
+                                                    Foto Rumah (Kiri) *
+                                                </Label>
+                                                <Input
+                                                    id="file_rumah_kiri"
+                                                    type="file"
+                                                    onChange={(e) =>
+                                                        handleImageChange(
+                                                            e,
+                                                            'file_rumah_kiri',
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        errors.file_rumah_kiri
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="file_rumah_kanan">
+                                                    Foto Rumah (Kanan) *
+                                                </Label>
+                                                <Input
+                                                    id="file_rumah_kanan"
+                                                    type="file"
+                                                    onChange={(e) =>
+                                                        handleImageChange(
+                                                            e,
+                                                            'file_rumah_kanan',
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        errors.file_rumah_kanan
+                                                    }
+                                                />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </>
+                            )}
                         </div>
                     </div>
 
