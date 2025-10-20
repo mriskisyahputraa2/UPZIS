@@ -25,7 +25,8 @@ class StorePenyaluranRequest extends FormRequest
             'amount' => 'required|numeric|min:1',
             'distribution_date' => 'required|date',
             'notes' => 'nullable|string|max:255',
-            'kategori_alokasi' => 'required|string|in:kampus,fakir_miskin',
+            // 'kategori_alokasi' => 'required|string|in:kampus,fakir_miskin',
+            'kategori_alokasi' => 'required|string|in:kampus,fakir_miskin,infaq,sedekah',
         ];
     }
 }
