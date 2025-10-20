@@ -15,12 +15,13 @@ import { Info } from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-// Tipe data untuk props settings
+// Interface tetap sama
 interface SettingsProps {
     harga_emas_per_gram: string;
     contact_address: string;
     contact_phone: string;
     contact_email: string;
+    alokasi_fakir_miskin_persen: string;
 }
 
 export default function GeneralSettings({
@@ -41,7 +42,8 @@ export default function GeneralSettings({
         contact_address: settings.contact_address || '',
         contact_phone: settings.contact_phone || '',
         contact_email: settings.contact_email || '',
-        harga_emas_per_gram: settings.harga_emas_per_gram || '',
+        alokasi_fakir_miskin_persen:
+            settings.alokasi_fakir_miskin_persen || '10',
     });
 
     useEffect(() => {
@@ -58,10 +60,8 @@ export default function GeneralSettings({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Pengaturan Umum" />
-
             <div className="space-y-4 p-4 sm:p-6 lg:p-8">
                 <form onSubmit={handleSubmit}>
-                    {/* Bagian Header Halaman */}
                     <div>
                         <h1 className="text-xl font-bold">Pengaturan Umum</h1>
                         <p className="text-sm text-muted-foreground">
@@ -70,34 +70,24 @@ export default function GeneralSettings({
                         </p>
                     </div>
 
-                    {/* Grid Utama 2 Kolom */}
+                    {/* ## PERUBAHAN UTAMA: Mengembalikan struktur grid 2 kolom ## */}
                     <div className="grid grid-cols-1 gap-8 pt-6 lg:grid-cols-3">
-                        {/* Kolom Kiri: Form Utama */}
-                        <div className="lg:col-span-2">
+                        {/* Kolom Kiri: Semua Kartu Form */}
+                        <div className="space-y-8 lg:col-span-2">
+                            {/* KARTU 1: PENGATURAN FINANSIAL */}
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Formulir Pengaturan</CardTitle>
+                                    <CardTitle>Pengaturan Finansial</CardTitle>
                                     <CardDescription>
-                                        Perubahan yang Anda simpan akan
-                                        diterapkan di seluruh website.
+                                        Konfigurasi ini memengaruhi perhitungan
+                                        nisab dan alokasi dana.
                                     </CardDescription>
                                 </CardHeader>
-                                <CardContent className="space-y-6">
+                                <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label htmlFor="harga_emas_per_gram">
                                             Harga Emas per Gram (Rp)
                                         </Label>
-                                        {/* <Input
-                                            id="harga_emas_per_gram"
-                                            type="number"
-                                            value={data.harga_emas_per_gram}
-                                            onChange={(e) =>
-                                                setData(
-                                                    'harga_emas_per_gram',
-                                                    e.target.value,
-                                                )
-                                            }
-                                        /> */}
                                         <InputRupiah
                                             id="harga_emas"
                                             value={data.harga_emas_per_gram}
@@ -107,7 +97,6 @@ export default function GeneralSettings({
                                                     value,
                                                 )
                                             }
-                                            placeholder="Contoh: 1200000"
                                         />
                                         {errors.harga_emas_per_gram && (
                                             <p className="mt-1 text-sm text-red-600">
@@ -115,6 +104,48 @@ export default function GeneralSettings({
                                             </p>
                                         )}
                                     </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="alokasi_fakir_miskin_persen">
+                                            Alokasi Dana Fakir Miskin (%)
+                                        </Label>
+                                        <Input
+                                            id="alokasi_fakir_miskin_persen"
+                                            type="number"
+                                            value={
+                                                data.alokasi_fakir_miskin_persen
+                                            }
+                                            onChange={(e) =>
+                                                setData(
+                                                    'alokasi_fakir_miskin_persen',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            min="0"
+                                            max="100"
+                                        />
+                                        {errors.alokasi_fakir_miskin_persen && (
+                                            <p className="mt-1 text-sm text-red-600">
+                                                {
+                                                    errors.alokasi_fakir_miskin_persen
+                                                }
+                                            </p>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* KARTU 2: INFORMASI KONTAK PUBLIK */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>
+                                        Informasi Kontak Publik
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Informasi ini akan ditampilkan di
+                                        halaman depan dan footer website.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
                                     <div className="space-y-2">
                                         <Label htmlFor="contact_address">
                                             Alamat
@@ -136,47 +167,49 @@ export default function GeneralSettings({
                                             </p>
                                         )}
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="contact_phone">
-                                            Nomor Telepon
-                                        </Label>
-                                        <Input
-                                            id="contact_phone"
-                                            type="text"
-                                            value={data.contact_phone}
-                                            onChange={(e) =>
-                                                setData(
-                                                    'contact_phone',
-                                                    e.target.value,
-                                                )
-                                            }
-                                        />
-                                        {errors.contact_phone && (
-                                            <p className="mt-1 text-sm text-red-600">
-                                                {errors.contact_phone}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="contact_email">
-                                            Alamat Email
-                                        </Label>
-                                        <Input
-                                            id="contact_email"
-                                            type="email"
-                                            value={data.contact_email}
-                                            onChange={(e) =>
-                                                setData(
-                                                    'contact_email',
-                                                    e.target.value,
-                                                )
-                                            }
-                                        />
-                                        {errors.contact_email && (
-                                            <p className="mt-1 text-sm text-red-600">
-                                                {errors.contact_email}
-                                            </p>
-                                        )}
+                                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="contact_phone">
+                                                Nomor Telepon
+                                            </Label>
+                                            <Input
+                                                id="contact_phone"
+                                                type="text"
+                                                value={data.contact_phone}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'contact_phone',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                            {errors.contact_phone && (
+                                                <p className="mt-1 text-sm text-red-600">
+                                                    {errors.contact_phone}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="contact_email">
+                                                Alamat Email
+                                            </Label>
+                                            <Input
+                                                id="contact_email"
+                                                type="email"
+                                                value={data.contact_email}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'contact_email',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                            {errors.contact_email && (
+                                                <p className="mt-1 text-sm text-red-600">
+                                                    {errors.contact_email}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -184,7 +217,7 @@ export default function GeneralSettings({
 
                         {/* Kolom Kanan: Kartu Informasi */}
                         <div className="lg:col-span-1">
-                            <Card>
+                            <Card className="sticky top-24">
                                 <CardHeader className="flex-row items-center gap-2 space-y-0 text-red-600">
                                     <Info className="h-5 w-5" />
                                     <CardTitle>Informasi Pengaturan</CardTitle>
@@ -192,17 +225,22 @@ export default function GeneralSettings({
                                 <CardContent>
                                     <div className="mt-2 space-y-4 text-sm text-muted-foreground">
                                         <p>
+                                            <strong>Alokasi Dana</strong> adalah
+                                            persentase dari total dana donasi
+                                            yang akan dialokasikan khusus untuk
+                                            kategori Masyarakat Umum (Fakir
+                                            Miskin).
+                                        </p>
+                                        <p>
                                             <strong>Harga Emas</strong> adalah
                                             patokan utama untuk menghitung nisab
                                             di <strong>Kalkulator Zakat</strong>
-                                            . Perbarui secara berkala agar
-                                            perhitungan akurat.
+                                            . Perbarui secara berkala.
                                         </p>
                                         <p>
                                             <strong>Informasi Kontak</strong>{' '}
-                                            akan ditampilkan di halaman publik
-                                            seperti "Hubungi Kami", footer, dan
-                                            sebagai instruksi pembayaran tunai.
+                                            akan ditampilkan secara otomatis di
+                                            footer dan halaman publik lainnya.
                                         </p>
                                     </div>
                                 </CardContent>
@@ -210,7 +248,6 @@ export default function GeneralSettings({
                         </div>
                     </div>
 
-                    {/* Bagian Tombol Aksi di Bawah */}
                     <div className="flex justify-end gap-4 pt-6">
                         <Button type="submit" disabled={processing}>
                             {processing ? 'Menyimpan...' : 'Simpan Perubahan'}

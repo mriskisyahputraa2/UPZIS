@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
@@ -34,6 +35,7 @@ class SettingController extends Controller
             'contact_address' => 'required|string|max:255',
             'contact_phone' => 'required|string|max:20',
             'contact_email' => 'required|email|max:255',
+            'alokasi_fakir_miskin_persen' => 'required|numeric|min:0|max:100',
         ]);
 
         // Loop melalui setiap data yang tervalidasi dan simpan ke database
@@ -42,6 +44,11 @@ class SettingController extends Controller
                 ['setting_key' => $key],
                 ['setting_value' => $value]
             );
+        }
+
+        // Jika harga emas diperbarui, hapus cache-nya
+        if (array_key_exists('harga_emas_per_gram', $validatedData)) {
+            Cache::forget('harga_emas_per_gram');
         }
 
         // Kembali ke halaman sebelumnya dengan pesan sukses

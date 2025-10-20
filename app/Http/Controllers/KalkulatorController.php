@@ -42,7 +42,9 @@ class KalkulatorController extends Controller
         ]);
 
         $jenisZakat = JenisZakat::find($request->jenis_zakat_id);
-        $hargaEmas = (float) Setting::where('setting_key', 'harga_emas_per_gram')->value('setting_value');
+        $hargaEmas = (float) Cache::remember('harga_emas_per_gram', 60, function () {
+            return Setting::where('setting_key', 'harga_emas_per_gram')->value('setting_value');
+        });
 
         $nominalZakat = 0;
         $wajibZakat = false;
