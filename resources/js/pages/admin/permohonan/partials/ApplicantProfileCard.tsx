@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Copy, PersonStanding, User as UserIcon } from 'lucide-react';
+import { Bookmark, Copy, PersonStanding, User as UserIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Helper untuk inisial nama
@@ -80,6 +80,19 @@ export default function ApplicantProfileCard({ permohonan }) {
                             <PersonStanding className="h-4 w-4 text-muted-foreground" />
                             <p className="font-medium">
                                 {mustahik.jenis_kelamin || '-'}
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        <Label className="text-xs text-muted-foreground">
+                            Kategori Pemohon
+                        </Label>
+                        <div className="mt-1 flex items-center gap-2 rounded-md border p-3">
+                            <Bookmark className="h-4 w-4 text-muted-foreground" />
+                            <p className="font-medium capitalize">
+                                {permohonan.kategori_pemohon === 'umum'
+                                    ? 'Fakir/Miskin'
+                                    : permohonan.kategori_pemohon}
                             </p>
                         </div>
                     </div>

@@ -22,6 +22,9 @@ class PermohonanRepository
             ->when($request->input('status'), function ($query, $status) {
                 $query->where('status', $status);
             })
+            ->when($request->input('kategori_pemohon'), function ($query, $kategori) {
+                $query->where('kategori_pemohon', $kategori);
+            })
             ->when($request->input('jenis_kelamin'), function ($query, $jenisKelamin) {
                 $query->whereHas('mustahik', function ($q) use ($jenisKelamin) {
                     $q->where('jenis_kelamin', $jenisKelamin);

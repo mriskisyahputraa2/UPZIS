@@ -20,6 +20,9 @@ export default function PermohonanFilters({ filters, periodes }) {
     const [filterJenisKelamin, setFilterJenisKelamin] = useState(
         filters.jenis_kelamin || 'all',
     );
+    const [filterKategori, setFilterKategori] = useState(
+        filters.kategori_pemohon || 'all',
+    );
     const isInitialMount = useRef(true);
 
     useEffect(() => {
@@ -34,6 +37,7 @@ export default function PermohonanFilters({ filters, periodes }) {
             periode_id: filterPeriode === 'all' ? '' : filterPeriode,
             jenis_kelamin:
                 filterJenisKelamin === 'all' ? '' : filterJenisKelamin,
+            kategori_pemohon: filterKategori === 'all' ? '' : filterKategori,
         };
         const timeout = setTimeout(() => {
             router.get('/admin/permohonan', params, {
@@ -42,13 +46,20 @@ export default function PermohonanFilters({ filters, periodes }) {
             });
         }, 500);
         return () => clearTimeout(timeout);
-    }, [search, filterStatus, filterPeriode, filterJenisKelamin]);
+    }, [
+        search,
+        filterStatus,
+        filterPeriode,
+        filterJenisKelamin,
+        filterKategori,
+    ]);
 
     const resetFilters = () => {
         setSearch('');
         setFilterStatus('all');
         setFilterPeriode('all');
         setFilterJenisKelamin('all');
+        setFilterKategori('all');
     };
 
     const handlePerPageChange = (perPage) => {
@@ -121,7 +132,24 @@ export default function PermohonanFilters({ filters, periodes }) {
                     </SelectContent>
                 </Select>
 
-                {(filters.search || filters.status || filters.periode_id) && (
+                <Select
+                    value={filterKategori}
+                    onValueChange={setFilterKategori}
+                >
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Semua Kategori" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Semua Kategori</SelectItem>
+                        <SelectItem value="mahasiswa">Mahasiswa</SelectItem>
+                        <SelectItem value="umum">Fakir/Miskin</SelectItem>
+                    </SelectContent>
+                </Select>
+
+                {(filters.search ||
+                    filters.status ||
+                    filters.periode_id ||
+                    filters.kategori_pemohon) && (
                     <Button
                         variant="destructive-outline"
                         onClick={resetFilters}

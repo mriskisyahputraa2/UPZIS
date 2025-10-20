@@ -17,11 +17,20 @@ class PermohonanController extends Controller
 
     public function index(Request $request)
     {
+        $request->validate([
+            'search' => 'nullable|string|max:100',
+            'per_page' => 'nullable|integer',
+            'status' => 'nullable|string|in:Baru,Diverifikasi,Disetujui,Ditolak',
+            'periode_id' => 'nullable|integer|exists:periodes,id',
+            'jenis_kelamin' => 'nullable|string|in:Laki-laki,Perempuan',
+            'kategori_pemohon' => 'nullable|string|in:mahasiswa,umum',
+        ]);
+
         $permohonans = $this->permohonanRepository->getFilteredPermohonans($request);
         $periodes = Periode::latest()->get(['id', 'name']);
         $activePeriode = Periode::where('status', 'Aktif')->first();
 
-        $currentFilters = $request->only(['search', 'per_page', 'status', 'periode_id', 'jenis_kelamin']);
+        $currentFilters = $request->only(['search', 'per_page', 'status', 'periode_id', 'jenis_kelamin', 'kategori_pemohon']);
         if (!$request->has('periode_id') && $activePeriode) {
             $currentFilters['periode_id'] = $activePeriode->id;
         }
