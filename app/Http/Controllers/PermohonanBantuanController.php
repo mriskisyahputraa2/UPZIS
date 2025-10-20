@@ -115,33 +115,13 @@ class PermohonanBantuanController extends Controller
                 ],
             );
 
-            $paths = [];
-            $fileKeys = ['file_ktp', 'file_kk', 'file_khs', 'file_surat_fakir_miskin', 'file_tidak_menerima_beasiswa', 'file_surat_permohonan'];
-            foreach ($fileKeys as $fileKey) {
-                if ($request->hasFile($fileKey)) {
-                    $paths[$fileKey] = $request->file($fileKey)->store("permohonan_files/{$mustahik->id}", 'public');
-                }
-            }
-
             $uniqueCode = 'UPZIS-' . time() . Str::upper(Str::random(4));
 
-            // Permohonan::create([
-            //     'mustahik_id' => $mustahik->id,
-            //     'periode_id' => $activePeriode->id,
-            //     'unique_code' => $uniqueCode,
-            //     'status' => 'Baru',
-            //     'file_ktp' => $paths['file_ktp'] ?? null,
-            //     'file_kk' => $paths['file_kk'] ?? null,
-            //     'file_khs' => $paths['file_khs'] ?? null,
-            //     'file_surat_fakir_miskin' => $paths['file_surat_fakir_miskin'] ?? null,
-            //     'file_tidak_menerima_beasiswa' => $paths['file_tidak_menerima_beasiswa'] ?? null,
-            //     'file_surat_permohonan' => $paths['file_surat_permohonan'] ?? null,
-            // ]);
             $permohonan = Permohonan::create([
                 'mustahik_id' => $mustahik->id,
                 'periode_id' => $activePeriode->id,
                 'kategori_pemohon' => 'mahasiswa', // Selalu 'mahasiswa' dari form publik
-                'unique_code' => 'UPZIS-' . time() . Str::upper(Str::random(4)),
+                'unique_code' => $uniqueCode,
                 'status' => 'Baru',
             ]);
 
