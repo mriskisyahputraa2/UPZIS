@@ -11,7 +11,7 @@ class Penyaluran extends Model
 
     protected $table = 'penyalurans'; // Nama tabel di database
 
-    protected $fillable = ['permohonan_id', 'admin_id', 'amount', 'distribution_date', 'notes'];
+    protected $fillable = ['permohonan_id', 'admin_id', 'amount', 'distribution_date', 'notes', 'kategori_alokasi'];
 
     /**
      * Setiap penyaluran dimiliki oleh satu permohonan.

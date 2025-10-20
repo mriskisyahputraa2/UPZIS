@@ -8,6 +8,13 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from '@inertiajs/react';
 
@@ -18,18 +25,26 @@ export default function PenyaluranForm({
     onSuccess,
 }) {
     const isEditMode = !!penyaluran;
+
+    // Secara cerdas menentukan kategori alokasi default berdasarkan data permohonan.
+    const defaultKategori =
+        permohonan.kategori_pemohon === 'mahasiswa' ? 'kampus' : 'fakir_miskin';
+
     const { data, setData, post, patch, processing, errors, reset } = useForm({
         amount: penyaluran?.amount || '',
-        distribution_date: penyaluran?.distribution_date || '',
+        distribution_date:
+            penyaluran?.distribution_date ||
+            new Date().toISOString().slice(0, 10), // Default ke tanggal hari ini
         notes: penyaluran?.notes || '',
+        kategori_alokasi: penyaluran?.kategori_alokasi || defaultKategori, // Menggunakan default yang cerdas
     });
 
-    const handleAmountChange = (e) => {
+    const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/\D/g, '');
         setData('amount', value);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const url = isEditMode
             ? `/admin/penyaluran/${penyaluran.id}`
@@ -98,6 +113,34 @@ export default function PenyaluranForm({
                         {errors.distribution_date && (
                             <p className="text-sm text-red-500">
                                 {errors.distribution_date}
+                            </p>
+                        )}
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="kategori_alokasi">
+                            Sumber Alokasi Dana
+                        </Label>
+                        <Select
+                            value={data.kategori_alokasi}
+                            onValueChange={(value) =>
+                                setData('kategori_alokasi', value)
+                            }
+                        >
+                            <SelectTrigger id="kategori_alokasi">
+                                <SelectValue placeholder="Pilih sumber dana..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="kampus">
+                                    Lingkungan Kampus (Mahasiswa)
+                                </SelectItem>
+                                <SelectItem value="fakir_miskin">
+                                    Fakir Miskin (Masyarakat Umum)
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                        {errors.kategori_alokasi && (
+                            <p className="text-sm text-red-500">
+                                {errors.kategori_alokasi}
                             </p>
                         )}
                     </div>
