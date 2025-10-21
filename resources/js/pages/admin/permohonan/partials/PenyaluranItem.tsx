@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -14,12 +15,40 @@ const formatDate = (dateString) =>
         month: 'long',
         year: 'numeric',
     });
+
 const formatCurrency = (value) =>
     new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
         minimumFractionDigits: 0,
     }).format(value);
+
+// Helper component untuk menampilkan Badge Alokasi
+const AlokasiBadge = ({ kategori }) => {
+    let variant: 'info' | 'success' | 'default' | 'secondary' = 'secondary';
+    let label = 'Tidak Diketahui';
+
+    switch (kategori) {
+        case 'kampus':
+            variant = 'info';
+            label = 'Zakat (Mahasiswa)';
+            break;
+        case 'fakir_miskin':
+            variant = 'success';
+            label = 'Zakat (Fakir Miskin)';
+            break;
+        case 'infaq':
+            variant = 'default';
+            label = 'Infaq';
+            break;
+        case 'sedekah':
+            variant = 'secondary'; // Abu-abu
+            label = 'Sedekah';
+            break;
+    }
+
+    return <Badge variant={variant}>{label}</Badge>;
+};
 
 export default function PenyaluranItem({
     penyaluran,
@@ -38,9 +67,12 @@ export default function PenyaluranItem({
                     <p className="text-lg font-bold">
                         {formatCurrency(penyaluran.amount)}
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                        Dicatat oleh: {penyaluran.admin.name}
-                    </p>
+                    <div className="mt-1 flex items-center gap-2">
+                        <AlokasiBadge kategori={penyaluran.kategori_alokasi} />
+                        <span className="text-xs text-muted-foreground">
+                            • Dicatat oleh: {penyaluran.admin.name}
+                        </span>
+                    </div>
                 </div>
                 <div className="flex min-w-0 items-start gap-2">
                     <div className="min-w-0 flex-1 text-left sm:text-right">

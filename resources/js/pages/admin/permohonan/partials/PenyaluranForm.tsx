@@ -11,7 +11,9 @@ import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
+    SelectGroup, // <-- Import
     SelectItem,
+    SelectLabel, // <-- Import
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
@@ -26,7 +28,7 @@ export default function PenyaluranForm({
 }) {
     const isEditMode = !!penyaluran;
 
-    // Secara cerdas menentukan kategori alokasi default berdasarkan data permohonan.
+    // Logika default cerdas tetap sama
     const defaultKategori =
         permohonan.kategori_pemohon === 'mahasiswa' ? 'kampus' : 'fakir_miskin';
 
@@ -34,9 +36,9 @@ export default function PenyaluranForm({
         amount: penyaluran?.amount || '',
         distribution_date:
             penyaluran?.distribution_date ||
-            new Date().toISOString().slice(0, 10), // Default ke tanggal hari ini
+            new Date().toISOString().slice(0, 10),
         notes: penyaluran?.notes || '',
-        kategori_alokasi: penyaluran?.kategori_alokasi || defaultKategori, // Menggunakan default yang cerdas
+        kategori_alokasi: penyaluran?.kategori_alokasi || defaultKategori,
     });
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,6 +79,7 @@ export default function PenyaluranForm({
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
+                    {/* ... Input Jumlah dan Tanggal tidak berubah ... */}
                     <div className="space-y-2">
                         <Label htmlFor="amount">Jumlah (Rp)</Label>
                         <Input
@@ -90,7 +93,6 @@ export default function PenyaluranForm({
                                     : ''
                             }
                             onChange={handleAmountChange}
-                            placeholder="Contoh: 500000"
                         />
                         {errors.amount && (
                             <p className="text-sm text-red-500">
@@ -116,6 +118,8 @@ export default function PenyaluranForm({
                             </p>
                         )}
                     </div>
+
+                    {/* ## PERUBAHAN UTAMA: Dropdown dikelompokkan ## */}
                     <div className="space-y-2">
                         <Label htmlFor="kategori_alokasi">
                             Sumber Alokasi Dana
@@ -130,12 +134,24 @@ export default function PenyaluranForm({
                                 <SelectValue placeholder="Pilih sumber dana..." />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="kampus">
-                                    Lingkungan Kampus (Mahasiswa)
-                                </SelectItem>
-                                <SelectItem value="fakir_miskin">
-                                    Fakir Miskin (Masyarakat Umum)
-                                </SelectItem>
+                                <SelectGroup>
+                                    <SelectLabel>Sumber Dana Zakat</SelectLabel>
+                                    <SelectItem value="kampus">
+                                        Lingkungan Kampus (Mahasiswa)
+                                    </SelectItem>
+                                    <SelectItem value="fakir_miskin">
+                                        Fakir Miskin (Masyarakat Umum)
+                                    </SelectItem>
+                                </SelectGroup>
+                                <SelectGroup>
+                                    <SelectLabel>Sumber Dana Umum</SelectLabel>
+                                    <SelectItem value="infaq">
+                                        Gunakan Dana Infaq
+                                    </SelectItem>
+                                    <SelectItem value="sedekah">
+                                        Gunakan Dana Sedekah
+                                    </SelectItem>
+                                </SelectGroup>
                             </SelectContent>
                         </Select>
                         {errors.kategori_alokasi && (
@@ -144,6 +160,7 @@ export default function PenyaluranForm({
                             </p>
                         )}
                     </div>
+
                     <div className="space-y-2">
                         <Label htmlFor="notes">Catatan (Opsional)</Label>
                         <Textarea

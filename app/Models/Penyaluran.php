@@ -11,7 +11,7 @@ class Penyaluran extends Model
 
     protected $table = 'penyalurans'; // Nama tabel di database
 
-    protected $fillable = ['permohonan_id', 'admin_id', 'amount', 'distribution_date', 'notes', 'kategori_alokasi'];
+    protected $fillable = ['permohonan_id', 'program_id', 'admin_id', 'amount', 'distribution_date', 'notes', 'kategori_alokasi'];
 
     /**
      * Setiap penyaluran dimiliki oleh satu permohonan.
@@ -27,5 +27,14 @@ class Penyaluran extends Model
     public function admin()
     {
         return $this->belongsTo(User::class, 'admin_id');
+    }
+
+    /**
+     * Setiap penyaluran terkait dengan satu program.
+     */
+
+    public function program()
+    {
+        return $this->belongsTo(Program::class);
     }
 }

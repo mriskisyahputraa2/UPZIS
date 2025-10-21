@@ -16,6 +16,7 @@ import {
     Calendar,
     ClipboardList,
     FileText,
+    GalleryHorizontal,
     LayoutGrid,
     Settings,
     SlidersHorizontal,
@@ -54,6 +55,11 @@ const mainNavItems: NavItem[] = [
         title: 'Manajemen Permohonan',
         href: '/admin/permohonan',
         icon: FileText,
+    },
+    {
+        title: 'Manajemen Program',
+        href: '/admin/programs',
+        icon: GalleryHorizontal,
     },
     {
         title: 'Pengaturan',

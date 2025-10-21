@@ -11,12 +11,11 @@ class ProgramPhoto extends Model
 
     protected $table = 'program_photos'; // Nama tabel jamak
 
-    protected $fillable = [
-        'program_id',
-        'photo_path',
-        'caption',
-    ];
+    protected $fillable = ['program_id', 'photo_path', 'caption'];
 
+    /**
+     * Setiap foto dimiliki oleh SATU program.
+     */
     public function program()
     {
         return $this->belongsTo(Program::class);

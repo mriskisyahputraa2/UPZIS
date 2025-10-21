@@ -12,10 +12,9 @@ return new class extends Migration {
     {
         Schema::create('programs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('periode_id')->nullable()->constrained('periodes');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->decimal('total_funds_distributed', 15, 2)->nullable();
+            $table->string('status')->default('Draft'); // Values: Draft, Published
             $table->date('program_date')->nullable();
             $table->timestamps();
         });

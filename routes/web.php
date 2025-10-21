@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\MustahikController;
 use App\Http\Controllers\Admin\PenyaluranController;
 use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\PermohonanController;
+use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TransaksiAdminController;
 use App\Http\Controllers\Admin\ZakatTypeController;
@@ -91,8 +92,9 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
         // Manajemen Transaksi
         Route::resource('/transaksi', TransaksiAdminController::class);
 
-        // Route::get('settings/general', [SettingController::class, 'edit'])->name('settings.general.edit');
-        // Route::patch('settings/general', [SettingController::class, 'update'])->name('settings.general.update');
+        Route::resource('/programs', ProgramController::class)->except(['show']);
+
+
 
         Route::prefix('settings')
             ->name('settings.')
