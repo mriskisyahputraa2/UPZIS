@@ -17,6 +17,7 @@ import {
     ClipboardList,
     FileText,
     GalleryHorizontal,
+    Inbox,
     LayoutGrid,
     Settings,
     SlidersHorizontal,
@@ -61,6 +62,7 @@ const mainNavItems: NavItem[] = [
         href: '/admin/programs',
         icon: GalleryHorizontal,
     },
+
     {
         title: 'Pengaturan',
         icon: Settings,
@@ -85,6 +87,11 @@ const mainNavItems: NavItem[] = [
                 title: 'Manajemen Admin',
                 href: '/admin/settings/admins',
                 icon: UserCog,
+            },
+            {
+                title: 'Pesan Masuk',
+                href: '/admin/kontak',
+                icon: Inbox,
             },
         ],
     },

@@ -25,7 +25,6 @@ const socialLinks = [
     { icon: Instagram, href: '#', name: 'Instagram' },
     { icon: Twitter, href: '#', name: 'Twitter' },
     { icon: Youtube, href: '#', name: 'Youtube' },
-
 ];
 
 // 1. Menerima props 'settings' yang dikirim dari PublicLayout
@@ -121,8 +120,8 @@ export function PublicFooter({ settings = {} }) {
             {/* Bagian bawah footer untuk copyright */}
             <div className="bg-green-800">
                 <div className="container mx-auto max-w-7xl px-6 py-4 text-center text-sm text-green-200">
-                    &copy; {new Date().getFullYear()} UPZIS. All Rights
-                    Reserved.
+                    &copy; {new Date().getFullYear()} Politeknik Negeri
+                    Lhokseumawe - All Rights Reserved.
                 </div>
             </div>
         </footer>
