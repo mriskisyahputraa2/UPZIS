@@ -1,19 +1,15 @@
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from '@/components/ui/accordion';
 import PublicLayout from '@/layouts/publicLayout';
 import { Head, Link } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import {
     ArrowRight,
-    BarChart3,
     Calculator,
+    CalendarDays,
+    GalleryHorizontal,
     HandHeart,
     ListChecks,
-    MessageSquareQuote,
     Search,
     UserCheck,
     Users,
@@ -21,55 +17,80 @@ import {
 
 import heroLogo from '../../../../assets/images/hero.png';
 
-export default function Homepage({ muzakkiCount, mustahikCount }) {
-    // Konfigurasi untuk animasi stagger
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-            },
-        },
-    };
+// Helper
+const formatCurrency = (value) =>
+    new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+    }).format(value || 0);
 
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: {
-                duration: 0.5,
-            },
-        },
-    };
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: { staggerChildren: 0.1 },
+    },
+};
 
-    // Data statis untuk Galeri Program
-    const programItems = [
-        {
-            image: heroLogo,
-            title: 'Bantuan UKT Mahasiswa 2024',
-            description:
-                'Penyaluran dana zakat untuk membantu biaya Uang Kuliah Tunggal bagi mahasiswa semester akhir yang membutuhkan.',
-            amount: 'Rp 25.000.000',
-        },
-        {
-            image: heroLogo,
-            title: 'Santunan Anak Yatim Piatu',
-            description:
-                'Program santunan dan pemberian paket sembako untuk anak-anak yatim piatu di lingkungan sekitar kampus.',
-            amount: 'Rp 15.000.000',
-        },
-        {
-            image: heroLogo,
-            title: 'Modal Usaha Mikro (UMKM)',
-            description:
-                'Pemberian modal usaha produktif bagi para pedagang kecil untuk membantu meningkatkan perekonomian keluarga.',
-            amount: 'Rp 20.000.000',
-        },
-    ];
+const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+        y: 0,
+        opacity: 1,
+        transition: { duration: 0.5 },
+    },
+};
 
-    // Data statis untuk Testimoni
+// Komponen Kartu Program (desain level maksimal)
+const ProgramCard = ({ program }) => (
+    <motion.div variants={itemVariants} className="h-full">
+        <Link
+            href={`/galeri/${program.id}`}
+            className="group block flex h-full flex-col overflow-hidden rounded-xl bg-white text-left shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-xl"
+        >
+            <div className="relative aspect-video overflow-hidden">
+                <img
+                    src={
+                        program.photos.length > 0
+                            ? `/storage/${program.photos[0].photo_path}`
+                            : 'https://via.placeholder.com/600x338?text=Dokumentasi+Program'
+                    }
+                    alt={program.name}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                <div className="absolute right-4 bottom-4 left-4 text-white">
+                    <p className="flex items-center gap-2 text-sm font-medium">
+                        <CalendarDays className="h-4 w-4" />
+                        {format(
+                            new Date(program.program_date),
+                            'dd MMMM yyyy',
+                            { locale: id },
+                        )}
+                    </p>
+                </div>
+            </div>
+            <div className="flex flex-1 flex-col p-6">
+                <h3 className="line-clamp-2 h-14 text-xl font-bold text-gray-800 transition-colors group-hover:text-green-700">
+                    {program.name}
+                </h3>
+                <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-gray-600">
+                    {program.description}
+                </p>
+                <div className="mt-4 border-t pt-4">
+                    <p className="text-sm text-slate-500">Dana Tersalurkan</p>
+                    <p className="text-2xl font-bold text-green-700">
+                        {formatCurrency(program.penyalurans_sum_amount)}
+                    </p>
+                </div>
+            </div>
+        </Link>
+    </motion.div>
+);
+
+export default function Homepage({ muzakkiCount, mustahikCount, programs }) {
+    // Data statis untuk Testimoni dan FAQ
     const testimonials = [
         {
             name: 'Ahmad Maulana',
@@ -88,7 +109,6 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
         },
     ];
 
-    // Data statis untuk FAQ
     const faqs = [
         {
             q: 'Bagaimana cara berdonasi di platform ini?',
@@ -186,7 +206,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                                 </div>
                                 <div className="ml-4">
                                     <p className="font-medium text-gray-500">
-                                        Muzakki Terdaftar
+                                        Muzakki Berdonasi
                                     </p>
                                     <p className="text-2xl font-bold text-gray-800">
                                         {muzakkiCount}
@@ -238,7 +258,7 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                         >
                             <div className="flex items-center">
                                 <div className="rounded-full bg-green-100 p-3">
-                                    <BarChart3 className="h-6 w-6 text-green-600" />
+                                    <GalleryHorizontal className="h-6 w-6 text-green-600" />
                                 </div>
                                 <div className="ml-4">
                                     <p className="font-medium text-gray-500">
@@ -305,7 +325,6 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                                 </p>
                             </Link>
                         </motion.div>
-
                         <motion.div variants={itemVariants}>
                             <Link
                                 href="/ajukan-bantuan"
@@ -327,7 +346,6 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                                 </p>
                             </Link>
                         </motion.div>
-
                         <motion.div variants={itemVariants}>
                             <Link
                                 href="/lacak-status"
@@ -353,61 +371,8 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                 </div>
             </section>
 
-            {/* 4. Seksi Testimoni */}
-            <section className="bg-green-50 py-24">
-                <div className="container mx-auto max-w-7xl px-6 text-center">
-                    <motion.h2
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.5 }}
-                        transition={{ duration: 0.5 }}
-                        className="text-3xl font-bold text-gray-800"
-                    >
-                        Apa Kata Mereka?
-                    </motion.h2>
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.5 }}
-                        transition={{ duration: 0.5, delay: 0.1 }}
-                        className="mx-auto mt-4 max-w-2xl text-slate-600"
-                    >
-                        Kisah nyata dari para donatur yang percaya dan para
-                        penerima manfaat yang telah merasakan kebaikan Anda.
-                    </motion.p>
-                    <motion.div
-                        variants={containerVariants}
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.3 }}
-                        className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3"
-                    >
-                        {testimonials.map((testimonial, index) => (
-                            <motion.div
-                                key={index}
-                                variants={itemVariants}
-                                className="rounded-xl bg-white p-8 text-left shadow-lg"
-                            >
-                                <MessageSquareQuote className="h-8 w-8 text-green-500" />
-                                <p className="mt-4 text-slate-600 italic">
-                                    "{testimonial.quote}"
-                                </p>
-                                <div className="mt-6">
-                                    <p className="font-bold text-gray-800">
-                                        {testimonial.name}
-                                    </p>
-                                    <p className="text-sm text-slate-500">
-                                        {testimonial.role}
-                                    </p>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </motion.div>
-                </div>
-            </section>
-
             {/* 5. Seksi Galeri Program (PREVIEW) */}
-            <section className="bg-white py-24">
+            <section className="bg-gray-50 py-24">
                 <div className="container mx-auto max-w-7xl px-6 text-center">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -415,54 +380,39 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                         viewport={{ once: true, amount: 0.5 }}
                         transition={{ duration: 0.5 }}
                     >
-                        <h2 className="text-3xl font-bold text-gray-800">
+                        <h2 className="text-3xl font-bold text-gray-800 sm:text-4xl">
                             Transparansi Program Kami
                         </h2>
-                        <p className="mx-auto mt-4 max-w-2xl text-slate-600">
+                        <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-600">
                             Lihat bagaimana setiap donasi Anda diubah menjadi
                             program nyata yang memberikan manfaat luas bagi
                             sesama.
                         </p>
                     </motion.div>
-                    <motion.div
-                        variants={containerVariants}
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.3 }}
-                        className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3"
-                    >
-                        {programItems.map((program, index) => (
-                            <motion.div
-                                key={index}
-                                variants={itemVariants}
-                                className="group overflow-hidden rounded-xl bg-white text-left shadow-lg transition-shadow duration-300 hover:shadow-2xl"
-                            >
-                                <div className="overflow-hidden">
-                                    <img
-                                        src={program.image}
-                                        alt={program.title}
-                                        className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                    />
-                                </div>
-                                <div className="p-6">
-                                    <h3 className="text-xl font-bold text-gray-800">
-                                        {program.title}
-                                    </h3>
-                                    <p className="mt-2 h-24 text-slate-600">
-                                        {program.description}
-                                    </p>
-                                    <div className="mt-4 border-t pt-4">
-                                        <p className="text-sm text-slate-500">
-                                            Dana Tersalurkan
-                                        </p>
-                                        <p className="text-lg font-bold text-green-600">
-                                            {program.amount}
-                                        </p>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </motion.div>
+
+                    {programs.length > 0 ? (
+                        <motion.div
+                            variants={containerVariants}
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, amount: 0.3 }}
+                            className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3"
+                        >
+                            {programs.map((program) => (
+                                <ProgramCard
+                                    key={program.id}
+                                    program={program}
+                                />
+                            ))}
+                        </motion.div>
+                    ) : (
+                        <div className="mt-12 rounded-lg border bg-white py-16 text-center">
+                            <p className="text-muted-foreground">
+                                Belum ada program yang dipublikasikan saat ini.
+                            </p>
+                        </div>
+                    )}
+
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -474,54 +424,9 @@ export default function Homepage({ muzakkiCount, mustahikCount }) {
                             href="/galeri"
                             className="inline-flex transform items-center rounded-lg bg-green-600 px-8 py-3 text-center font-bold text-white transition duration-300 hover:-translate-y-1 hover:bg-green-700 hover:shadow-lg"
                         >
-                            Lihat Semua Program
+                            Lihat Semua Program{' '}
                             <ArrowRight className="ml-2 h-5 w-5" />
                         </Link>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* 6. Seksi FAQ */}
-            <section className="bg-green-50 py-24">
-                <div className="container mx-auto max-w-4xl px-6">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.5 }}
-                        transition={{ duration: 0.5 }}
-                        className="text-center"
-                    >
-                        <h2 className="text-3xl font-bold text-gray-800">
-                            Pertanyaan Umum
-                        </h2>
-                        <p className="mx-auto mt-4 max-w-2xl text-slate-600">
-                            Menemukan jawaban cepat untuk pertanyaan paling umum
-                            tentang proses di platform kami.
-                        </p>
-                    </motion.div>
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.5 }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                        className="mt-12"
-                    >
-                        <Accordion type="single" collapsible className="w-full">
-                            {faqs.map((faq, index) => (
-                                <AccordionItem
-                                    key={index}
-                                    value={`item-${index + 1}`}
-                                    className="border-green-200"
-                                >
-                                    <AccordionTrigger className="text-left text-lg font-semibold text-green-800 hover:no-underline">
-                                        {faq.q}
-                                    </AccordionTrigger>
-                                    <AccordionContent className="text-base text-slate-600">
-                                        {faq.a}
-                                    </AccordionContent>
-                                </AccordionItem>
-                            ))}
-                        </Accordion>
                     </motion.div>
                 </div>
             </section>

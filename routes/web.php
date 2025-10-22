@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TransaksiAdminController;
 use App\Http\Controllers\Admin\ZakatTypeController;
+use App\Http\Controllers\GaleriController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\KalkulatorController;
 use App\Http\Controllers\Muzakki\TransaksiController;
@@ -26,6 +27,8 @@ use Inertia\Inertia;
 
 // Halaman Beranda
 Route::get('/', [HomePageController::class, 'index'])->name('home');
+
+
 // Halaman Ajukan Bantuan
 Route::get('ajukan-bantuan', [PermohonanBantuanController::class, 'create'])->name('permohonan.create');
 Route::post('ajukan-bantuan', [PermohonanBantuanController::class, 'store'])->name('permohonan.store');
@@ -58,12 +61,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     */
     Route::get('donasi', [TransaksiController::class, 'selectDonationType'])->name('donasi.select');
     Route::get('donasi/zakat', [TransaksiController::class, 'create'])->name('donasi.create.zakat');
-    Route::get('donasi/{type}', [TransaksiController::class, 'createInfaqSedekah'])->name('donasi.create.other')->where('type', 'infaq|sedekah');
+    Route::get('donasi/{type}', [TransaksiController::class, 'createInfaqSedekah'])
+        ->name('donasi.create.other')
+        ->where('type', 'infaq|sedekah');
     Route::post('donasi', [TransaksiController::class, 'store'])->name('donasi.store');
-    // Route::get('bayar-zakat', [TransaksiController::class, 'create'])->name('transaksi.create');
-    // Route::post('bayar-zakat', [TransaksiController::class, 'store'])->name('transaksi.store');
     Route::get('transaksi/{order_id}', [TransaksiController::class, 'show'])->name('transaksi.show');
     Route::post('transaksi/{order_id}/upload', [TransaksiController::class, 'uploadProof'])->name('transaksi.upload');
+
+    // Route untuk Galeri Program Publik
+    Route::get('galeri', [GaleriController::class, 'index'])->name('galeri.index');
+    Route::get('galeri/{program}', [GaleriController::class, 'show'])->name('galeri.show');
 });
 
 /*
@@ -93,8 +100,6 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
         Route::resource('/transaksi', TransaksiAdminController::class);
 
         Route::resource('/programs', ProgramController::class)->except(['show']);
-
-
 
         Route::prefix('settings')
             ->name('settings.')
