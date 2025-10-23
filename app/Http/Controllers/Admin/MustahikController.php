@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use App\Models\Penyaluran;
+use App\Models\Setting;
+use App\Models\Transaksi;
 
 class MustahikController extends Controller
 {
@@ -399,13 +402,40 @@ class MustahikController extends Controller
 
     public function show(Mustahik $mustahik)
     {
+        // Ambil persentase alokasi
+        $alokasiPersen = (float) Setting::where('setting_key', 'alokasi_fakir_miskin_persen')->value('setting_value') ?: 10;
+        $persenFakirMiskin = $alokasiPersen / 100;
+        $persenKampus = 1 - $persenFakirMiskin;
+
+        // Hitung total dana masuk
+        $totalDanaZakat = Transaksi::where('status', 'Berhasil')->where('type', 'zakat')->sum('final_amount');
+        $totalInfaqTerkumpul = Transaksi::where('status', 'Berhasil')->where('type', 'infaq')->sum('final_amount');
+        $totalSedekahTerkumpul = Transaksi::where('status', 'Berhasil')->where('type', 'sedekah')->sum('final_amount');
+
+        // Hitung total dana keluar
+        $penyaluranFakirMiskin = Penyaluran::where('kategori_alokasi', 'fakir_miskin')->sum('amount');
+        $penyaluranKampus = Penyaluran::where('kategori_alokasi', 'kampus')->sum('amount');
+        $penyaluranInfaq = Penyaluran::where('kategori_alokasi', 'infaq')->sum('amount');
+        $penyaluranSedekah = Penyaluran::where('kategori_alokasi', 'sedekah')->sum('amount');
+
+        // Hitung sisa saldo
+        $availableFunds = [
+            'sisaDanaKampus' => ($totalDanaZakat * $persenKampus) - $penyaluranKampus,
+            'sisaDanaFakirMiskin' => ($totalDanaZakat * $persenFakirMiskin) - $penyaluranFakirMiskin,
+            'sisaDanaInfaq' => $totalInfaqTerkumpul - $penyaluranInfaq,
+            'sisaDanaSedekah' => $totalSedekahTerkumpul - $penyaluranSedekah,
+        ];
+
+        // Muat relasi mustahik
         $mustahik->load([
             'permohonans' => function ($query) {
                 $query->with(['periode', 'penyalurans.admin', 'dokumen'])->latest();
             },
         ]);
+
         return Inertia::render('admin/mustahiks/show', [
             'mustahik' => $mustahik,
+            'availableFunds' => $availableFunds,
         ]);
     }
 }

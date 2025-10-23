@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdatePermohonanRequest;
 use App\Models\Periode;
 use App\Models\Permohonan;
+use App\Models\Setting;
+use App\Models\Transaksi;
+use App\Models\Penyaluran;
 use App\Repositories\Admin\PermohonanRepository as AdminPermohonanRepository;
 use App\Services\Admin\PermohonanService as AdminPermohonanService;
 use Illuminate\Http\Request;
@@ -45,9 +48,38 @@ class PermohonanController extends Controller
 
     public function show(Permohonan $permohonan)
     {
+        // 1. Ambil persentase alokasi
+        $alokasiPersen = (float) Setting::where('setting_key', 'alokasi_fakir_miskin_persen')->value('setting_value') ?: 10;
+        $persenFakirMiskin = $alokasiPersen / 100;
+        $persenKampus = 1 - $persenFakirMiskin;
+
+        // 2. Hitung total dana masuk (Zakat, Infaq, Sedekah)
+        $totalDanaZakat = Transaksi::where('status', 'Berhasil')->where('type', 'zakat')->sum('final_amount');
+        $totalInfaqTerkumpul = Transaksi::where('status', 'Berhasil')->where('type', 'infaq')->sum('final_amount');
+        $totalSedekahTerkumpul = Transaksi::where('status', 'Berhasil')->where('type', 'sedekah')->sum('final_amount');
+
+        // 3. Hitung total dana keluar (per kategori)
+        $penyaluranFakirMiskin = Penyaluran::where('kategori_alokasi', 'fakir_miskin')->sum('amount');
+        $penyaluranKampus = Penyaluran::where('kategori_alokasi', 'kampus')->sum('amount');
+        $penyaluranInfaq = Penyaluran::where('kategori_alokasi', 'infaq')->sum('amount');
+        $penyaluranSedekah = Penyaluran::where('kategori_alokasi', 'sedekah')->sum('amount');
+
+        // 4. Hitung sisa saldo untuk setiap "dompet"
+        $availableFunds = [
+            'sisaDanaKampus' => ($totalDanaZakat * $persenKampus) - $penyaluranKampus,
+            'sisaDanaFakirMiskin' => ($totalDanaZakat * $persenFakirMiskin) - $penyaluranFakirMiskin,
+            'sisaDanaInfaq' => $totalInfaqTerkumpul - $penyaluranInfaq,
+            'sisaDanaSedekah' => $totalSedekahTerkumpul - $penyaluranSedekah,
+        ];
+
+        // 5. Muat relasi permohonan
         $permohonan->load(['mustahik', 'periode', 'penyalurans.admin', 'dokumen']);
 
-        return Inertia::render('admin/permohonan/show', ['permohonan' => $permohonan]);
+        // 6. Kirim data permohonan DAN sisa saldo ke frontend
+        return Inertia::render('admin/permohonan/show', [
+            'permohonan' => $permohonan,
+            'availableFunds' => $availableFunds,
+        ]);
     }
 
     public function update(UpdatePermohonanRequest $request, Permohonan $permohonan)

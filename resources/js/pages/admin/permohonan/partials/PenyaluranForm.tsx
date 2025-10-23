@@ -1,3 +1,5 @@
+// PenyaluranForm.tsx (Sudah diperbaiki)
+
 import { Button } from '@/components/ui/button';
 import {
     DialogContent,
@@ -11,24 +13,31 @@ import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
-    SelectGroup, // <-- Import
+    SelectGroup,
     SelectItem,
-    SelectLabel, // <-- Import
+    SelectLabel,
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from '@inertiajs/react';
 
+// Helper format mata uang
+const formatCurrency = (value) =>
+    new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+    }).format(value || 0);
+
 export default function PenyaluranForm({
     permohonan,
     penyaluran = null,
+    availableFunds,
     onOpenChange,
     onSuccess,
 }) {
     const isEditMode = !!penyaluran;
-
-    // Logika default cerdas tetap sama
     const defaultKategori =
         permohonan.kategori_pemohon === 'mahasiswa' ? 'kampus' : 'fakir_miskin';
 
@@ -64,7 +73,7 @@ export default function PenyaluranForm({
     };
 
     return (
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-lg md:max-w-xl">
             <form onSubmit={handleSubmit}>
                 <DialogHeader>
                     <DialogTitle>
@@ -78,10 +87,61 @@ export default function PenyaluranForm({
                             : 'Masukkan detail dana bantuan yang akan disalurkan.'}
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    {/* ... Input Jumlah dan Tanggal tidak berubah ... */}
+
+                <div className="mt-4 space-y-2 rounded-lg border bg-muted/50 p-4">
+                    <h4 className="text-sm font-semibold">
+                        Dana Tersedia (Real-time)
+                    </h4>
+                    <div className="grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                                Mahasiswa:
+                            </span>
+                            <span
+                                className={`font-medium ${availableFunds.sisaDanaKampus < 0 ? 'text-red-600' : 'text-primary'}`}
+                            >
+                                {formatCurrency(availableFunds.sisaDanaKampus)}
+                            </span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                                Fakir Miskin:
+                            </span>
+                            <span
+                                className={`font-medium ${availableFunds.sisaDanaFakirMiskin < 0 ? 'text-red-600' : 'text-primary'}`}
+                            >
+                                {formatCurrency(
+                                    availableFunds.sisaDanaFakirMiskin,
+                                )}
+                            </span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                                Infaq:
+                            </span>
+                            <span
+                                className={`font-medium ${availableFunds.sisaDanaInfaq < 0 ? 'text-red-600' : 'text-primary'}`}
+                            >
+                                {formatCurrency(availableFunds.sisaDanaInfaq)}
+                            </span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                                Sedekah:
+                            </span>
+                            <span
+                                className={`font-medium ${availableFunds.sisaDanaSedekah < 0 ? 'text-red-600' : 'text-primary'}`}
+                            >
+                                {formatCurrency(availableFunds.sisaDanaSedekah)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ## PERUBAHAN UTAMA DI SINI: Menggunakan satu grid ## */}
+                <div className="grid grid-cols-1 gap-4 py-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                        <Label htmlFor="amount">Jumlah (Rp)</Label>
+                        <Label htmlFor="amount">Jumlah (Rp) *</Label>
                         <Input
                             id="amount"
                             type="text"
@@ -93,6 +153,7 @@ export default function PenyaluranForm({
                                     : ''
                             }
                             onChange={handleAmountChange}
+                            placeholder="Contoh: 500000"
                         />
                         {errors.amount && (
                             <p className="text-sm text-red-500">
@@ -100,9 +161,10 @@ export default function PenyaluranForm({
                             </p>
                         )}
                     </div>
+
                     <div className="space-y-2">
                         <Label htmlFor="distribution_date">
-                            Tanggal Penyaluran
+                            Tanggal Penyaluran *
                         </Label>
                         <Input
                             id="distribution_date"
@@ -119,10 +181,10 @@ export default function PenyaluranForm({
                         )}
                     </div>
 
-                    {/* ## PERUBAHAN UTAMA: Dropdown dikelompokkan ## */}
-                    <div className="space-y-2">
+                    {/* Tambahkan sm:col-span-2 agar elemen ini mengambil lebar penuh */}
+                    <div className="space-y-2 sm:col-span-2">
                         <Label htmlFor="kategori_alokasi">
-                            Sumber Alokasi Dana
+                            Sumber Alokasi Dana *
                         </Label>
                         <Select
                             value={data.kategori_alokasi}
@@ -137,19 +199,35 @@ export default function PenyaluranForm({
                                 <SelectGroup>
                                     <SelectLabel>Sumber Dana Zakat</SelectLabel>
                                     <SelectItem value="kampus">
-                                        Lingkungan Kampus (Mahasiswa)
+                                        Mahasiswa (Sisa:{' '}
+                                        {formatCurrency(
+                                            availableFunds.sisaDanaKampus,
+                                        )}
+                                        )
                                     </SelectItem>
                                     <SelectItem value="fakir_miskin">
-                                        Fakir Miskin (Masyarakat Umum)
+                                        Fakir Miskin (Sisa:{' '}
+                                        {formatCurrency(
+                                            availableFunds.sisaDanaFakirMiskin,
+                                        )}
+                                        )
                                     </SelectItem>
                                 </SelectGroup>
                                 <SelectGroup>
                                     <SelectLabel>Sumber Dana Umum</SelectLabel>
                                     <SelectItem value="infaq">
-                                        Gunakan Dana Infaq
+                                        Gunakan Dana Infaq (Sisa:{' '}
+                                        {formatCurrency(
+                                            availableFunds.sisaDanaInfaq,
+                                        )}
+                                        )
                                     </SelectItem>
                                     <SelectItem value="sedekah">
-                                        Gunakan Dana Sedekah
+                                        Gunakan Dana Sedekah (Sisa:{' '}
+                                        {formatCurrency(
+                                            availableFunds.sisaDanaSedekah,
+                                        )}
+                                        )
                                     </SelectItem>
                                 </SelectGroup>
                             </SelectContent>
@@ -161,17 +239,24 @@ export default function PenyaluranForm({
                         )}
                     </div>
 
-                    <div className="space-y-2">
+                    {/* Tambahkan sm:col-span-2 agar elemen ini mengambil lebar penuh */}
+                    <div className="space-y-2 sm:col-span-2">
                         <Label htmlFor="notes">Catatan (Opsional)</Label>
                         <Textarea
                             id="notes"
                             value={data.notes}
                             onChange={(e) => setData('notes', e.target.value)}
-                            className="break-words"
                             maxLength={255}
+                            rows={3}
                         />
+                        {errors.notes && (
+                            <p className="text-sm text-red-500">
+                                {errors.notes}
+                            </p>
+                        )}
                     </div>
                 </div>
+
                 <DialogFooter>
                     <Button
                         type="button"

@@ -31,7 +31,10 @@ const formatCurrency = (value) =>
         minimumFractionDigits: 0,
     }).format(value);
 
-export default function DistributionHistoryCard({ permohonan }) {
+export default function DistributionHistoryCard({
+    permohonan,
+    availableFunds,
+}) {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [toEdit, setToEdit] = useState(null);
     const [toDelete, setToDelete] = useState(null);
@@ -71,6 +74,7 @@ export default function DistributionHistoryCard({ permohonan }) {
                                 </Button>
                             </DialogTrigger>
                             <PenyaluranForm
+                                availableFunds={availableFunds}
                                 permohonan={permohonan}
                                 onOpenChange={setIsCreateOpen}
                             />
@@ -111,6 +115,7 @@ export default function DistributionHistoryCard({ permohonan }) {
             <Dialog open={!!toEdit} onOpenChange={() => setToEdit(null)}>
                 {toEdit && (
                     <PenyaluranForm
+                        availableFunds={availableFunds}
                         permohonan={permohonan}
                         penyaluran={toEdit}
                         onOpenChange={() => setToEdit(null)}

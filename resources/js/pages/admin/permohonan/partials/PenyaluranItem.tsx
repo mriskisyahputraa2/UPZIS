@@ -80,7 +80,9 @@ export default function PenyaluranItem({
                             {formatDate(penyaluran.distribution_date)}
                         </p>
                         {penyaluran.notes && (
-                            <div className="max-w-xs text-xs break-words text-muted-foreground italic sm:max-w-lg">
+                            // <div className="max-w-xs text-xs break-words text-muted-foreground italic sm:max-w-lg">
+                            // <div className="text-xs break-words text-muted-foreground italic">
+                            <div className="text-xs break-words text-muted-foreground italic">
                                 <p
                                     className={
                                         !isExpanded && hasLongNote

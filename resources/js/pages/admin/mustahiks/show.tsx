@@ -10,6 +10,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
+import { Dialog } from '@radix-ui/react-dialog';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import {
@@ -27,7 +28,9 @@ import {
     Users,
     ZoomIn,
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+import PenyaluranForm from '../permohonan/partials/PenyaluranForm';
 import PenyaluranItem from '../permohonan/partials/PenyaluranItem';
 
 const breadcrumbs = [
@@ -157,7 +160,10 @@ const StatusBadge = ({ status }) => {
     );
 };
 
-export default function Show({ mustahik }) {
+export default function Show({ mustahik, availableFunds }) {
+    // State untuk form edit penyaluran
+    const [toEdit, setToEdit] = useState(null);
+    const [toDelete, setToDelete] = useState(null);
     const getInitials = (name) => {
         if (!name) return '??';
         const names = name.split(' ');
@@ -489,6 +495,9 @@ export default function Show({ mustahik }) {
                                                                                             p,
                                                                                         ) => (
                                                                                             <PenyaluranItem
+                                                                                                onEdit={
+                                                                                                    setToEdit
+                                                                                                }
                                                                                                 key={
                                                                                                     p.id
                                                                                                 }
@@ -568,6 +577,22 @@ export default function Show({ mustahik }) {
                         </Tabs>
                     </div>
                 </div>
+
+                {/* ## PERUBAHAN 3: Tambahkan Dialog untuk Form Edit ## */}
+                <Dialog open={!!toEdit} onOpenChange={() => setToEdit(null)}>
+                    {toEdit && (
+                        <PenyaluranForm
+                            // Temukan permohonan yang sesuai dengan penyaluran yang akan diedit
+                            permohonan={mustahik.permohonans.find(
+                                (p) => p.id === toEdit.permohonan_id,
+                            )}
+                            penyaluran={toEdit}
+                            availableFunds={availableFunds}
+                            onOpenChange={() => setToEdit(null)}
+                            onSuccess={() => setToEdit(null)}
+                        />
+                    )}
+                </Dialog>
 
                 <div className="mt-6 flex w-full justify-end gap-2 md:hidden">
                     <Link href="/admin/mustahiks">

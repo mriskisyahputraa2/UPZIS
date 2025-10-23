@@ -15,7 +15,7 @@ const breadcrumbs = [
     { title: 'Detail Permohonan' },
 ];
 
-export default function Show({ permohonan }) {
+export default function Show({ permohonan, availableFunds }) {
     const { flash } = usePage().props;
 
     useEffect(() => {
@@ -54,7 +54,10 @@ export default function Show({ permohonan }) {
 
                     <div className="space-y-6 lg:col-span-2">
                         <SubmissionDetailsCard permohonan={permohonan} />
-                        <DistributionHistoryCard permohonan={permohonan} />
+                        <DistributionHistoryCard
+                            permohonan={permohonan}
+                            availableFunds={availableFunds}
+                        />
                         <VerificationForm permohonan={permohonan} />
                     </div>
                 </div>
