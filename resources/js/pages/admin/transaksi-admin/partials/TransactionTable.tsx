@@ -68,7 +68,7 @@ export default function TransactionTable({
     isLoading,
 }) {
     return (
-        <div className="flex-1 overflow-auto rounded-md border">
+        <div className="flex-1 overflow-auto rounded-md border uppercase">
             <Table>
                 <TableHeader>
                     <TableRow>
