@@ -10,13 +10,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card'; // Import CardFooter
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Import CardFooter
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft, Trash2 } from 'lucide-react';
@@ -74,7 +68,7 @@ export default function Show({ contact }) {
                                 variant={
                                     contact.status === 'Baru'
                                         ? 'info'
-                                        : 'secondary'
+                                        : 'success'
                                 }
                             >
                                 {contact.status}
@@ -105,28 +99,6 @@ export default function Show({ contact }) {
                     </Button>
                 </div>
             </div>
-
-            {/* ## PERUBAHAN 4: Hapus floating button sebelumnya ## */}
-            {/* <div className="block md:hidden fixed bottom-6 right-6 z-50 flex flex-col gap-3">
-                <Button
-                    variant="destructive"
-                    size="lg"
-                    className="rounded-full shadow-lg"
-                    onClick={() => setIsDeleting(true)}
-                >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Hapus
-                </Button>
-                <Link href="/admin/kontak" preserveState={false}>
-                    <Button
-                        variant="secondary"
-                        size="lg"
-                        className="w-full rounded-full shadow-lg"
-                    >
-                        Batal
-                    </Button>
-                </Link>
-            </div> */}
 
             <AlertDialog open={isDeleting} onOpenChange={setIsDeleting}>
                 <AlertDialogContent>

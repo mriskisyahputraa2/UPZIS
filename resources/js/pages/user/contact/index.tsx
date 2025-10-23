@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import PublicLayout from '@/layouts/publicLayout';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Loader, Mail, MapPin, Phone, Send } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 // Komponen kecil untuk menampilkan item info kontak
@@ -33,15 +33,44 @@ export default function ContactIndex() {
             message: '',
         });
 
+    // State untuk cooldown visual setelah pengiriman berhasil
+    const COOLDOWN_SECONDS = 60;
+    const [isCooldown, setIsCooldown] = useState(false);
+    const [cooldownTime, setCooldownTime] = useState(COOLDOWN_SECONDS);
+
+    // useEffect untuk menangani pesan flash dari backend
     useEffect(() => {
+        // Jika ada pesan sukses, tampilkan toast dan mulai cooldown
         if (flash?.success) {
             toast.success(flash.success as string);
             reset();
+            setIsCooldown(true);
+            setCooldownTime(COOLDOWN_SECONDS);
         }
-    }, [flash, wasSuccessful, reset]);
+        // Jika ada pesan error (termasuk dari throttle), tampilkan toast error
+        if (flash?.error) {
+            toast.error(flash.error as string);
+        }
+    }, [flash]); // Hanya perlu memantau perubahan pada objek flash
+
+    // useEffect untuk menangani timer countdown
+    useEffect(() => {
+        if (!isCooldown) return;
+        if (cooldownTime <= 0) {
+            setIsCooldown(false);
+            return;
+        }
+        const timer = setInterval(() => {
+            setCooldownTime((prevTime) => prevTime - 1);
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [isCooldown, cooldownTime]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        // Mencegah submit ganda saat sedang proses atau cooldown
+        if (processing || isCooldown) return;
+
         post('/kontak', {
             preserveScroll: true,
         });
@@ -62,14 +91,11 @@ export default function ContactIndex() {
                 </div>
             </section>
 
-            {/* Bagian Form & Info Kontak */}
             <section className="-mt-10 pb-12 md:pb-16">
                 <div className="container mx-auto max-w-7xl px-4">
                     <Card className="overflow-hidden shadow-xl">
-                        {/* ## PERBAIKAN: <CardContent> sekarang membungkus <div> grid ## */}
                         <CardContent className="p-0">
                             <div className="grid grid-cols-1 lg:grid-cols-5">
-                                {/* Kolom Kiri: Informasi Kontak */}
                                 <div className="space-y-8 p-6 sm:p-10 lg:col-span-2">
                                     <h2 className="text-3xl font-bold">
                                         Informasi Kontak
@@ -98,8 +124,6 @@ export default function ContactIndex() {
                                         </ContactInfoItem>
                                     </div>
                                 </div>
-
-                                {/* Kolom Kanan: Form Kontak */}
                                 <div className="flex flex-col rounded-b-lg border-t bg-gray-50 p-6 sm:p-10 lg:col-span-3 lg:rounded-r-lg lg:rounded-bl-none lg:border-t-0 lg:border-l dark:bg-slate-900/50">
                                     <h2 className="text-3xl font-bold">
                                         Kirim Pesan
@@ -179,14 +203,18 @@ export default function ContactIndex() {
                                             type="submit"
                                             className="mt-auto w-full"
                                             size="lg"
-                                            disabled={processing}
+                                            disabled={processing || isCooldown}
                                         >
                                             {processing ? (
                                                 <Loader className="mr-2 h-4 w-4 animate-spin" />
+                                            ) : isCooldown ? (
+                                                `Kirim lagi dalam ${cooldownTime} detik`
                                             ) : (
-                                                <Send className="mr-2 h-4 w-4" />
+                                                <>
+                                                    <Send className="mr-2 h-4 w-4" />
+                                                    Kirim Pesan
+                                                </>
                                             )}
-                                            Kirim Pesan
                                         </Button>
                                     </form>
                                 </div>
@@ -196,7 +224,6 @@ export default function ContactIndex() {
                 </div>
             </section>
 
-            {/* Seksi Peta Dibuat Terpisah dan Lebar Penuh */}
             <section>
                 <div className="container mx-auto max-w-7xl px-4 text-center">
                     <h2 className="mb-6 text-3xl font-bold">Lokasi Kami</h2>

@@ -217,7 +217,7 @@ export default function Index({ contacts, filters }) {
                                                         contact.status ===
                                                         'Baru'
                                                             ? 'info'
-                                                            : 'secondary'
+                                                            : 'success'
                                                     }
                                                 >
                                                     {contact.status}
