@@ -10,10 +10,15 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card'; // Import CardFooter
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
-// ## PERUBAHAN 1: Hapus import 'Mail' ##
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -36,11 +41,11 @@ export default function Show({ contact }) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Pesan dari ${contact.name}`} />
 
-            {/* ## PERUBAHAN 2: Tambahkan 'pb-24' untuk memberi ruang bagi tombol mobile ## */}
-            <div className="space-y-6 p-4 pb-24 sm:p-6 md:pb-8 lg:p-8">
+            {/* ## PERUBAHAN 1: Hapus pb-24 dan md:pb-8 karena tidak perlu lagi padding bawah ekstra ## */}
+            <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Link href="/admin/kontak">
+                        <Link href="/admin/kontak" preserveState={false}>
                             <Button variant="outline" size="icon">
                                 <ArrowLeft className="h-4 w-4" />
                             </Button>
@@ -53,20 +58,6 @@ export default function Show({ contact }) {
                                 Pesan diterima pada {contact.formatted_date} WIB
                             </p>
                         </div>
-                    </div>
-
-                    {/* ## PERUBAHAN 3: Tombol Aksi untuk Desktop ## */}
-                    {/* Grup ini akan disembunyikan di layar kecil (mobile/tablet) */}
-                    <div className="hidden gap-2 md:flex">
-                        <Link href="/admin/kontak">
-                            <Button variant="outline">Batal</Button>
-                        </Link>
-                        <Button
-                            variant="destructive"
-                            onClick={() => setIsDeleting(true)}
-                        >
-                            <Trash2 className="mr-2 h-4 w-4" /> Hapus
-                        </Button>
                     </div>
                 </div>
 
@@ -98,11 +89,25 @@ export default function Show({ contact }) {
                         </div>
                     </CardContent>
                 </Card>
+
+                <div className="flex justify-end gap-4 pt-6">
+                    <Link href="/admin/kontak" preserveState={false}>
+                        <Button type="button" variant="outline">
+                            Batal
+                        </Button>
+                    </Link>
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={() => setIsDeleting(true)}
+                    >
+                        <Trash2 className="mr-2 h-4 w-4" /> Hapus
+                    </Button>
+                </div>
             </div>
 
-            {/* ## PERUBAHAN 4: Tombol Aksi untuk Mobile & Tablet (Floating) ## */}
-            {/* Grup ini HANYA akan tampil di layar kecil (md:hidden) */}
-            <div className="fixed right-6 bottom-6 z-50 block flex flex-col gap-3 md:hidden">
+            {/* ## PERUBAHAN 4: Hapus floating button sebelumnya ## */}
+            {/* <div className="block md:hidden fixed bottom-6 right-6 z-50 flex flex-col gap-3">
                 <Button
                     variant="destructive"
                     size="lg"
@@ -112,7 +117,7 @@ export default function Show({ contact }) {
                     <Trash2 className="mr-2 h-4 w-4" />
                     Hapus
                 </Button>
-                <Link href="/admin/kontak">
+                <Link href="/admin/kontak" preserveState={false}>
                     <Button
                         variant="secondary"
                         size="lg"
@@ -121,7 +126,7 @@ export default function Show({ contact }) {
                         Batal
                     </Button>
                 </Link>
-            </div>
+            </div> */}
 
             <AlertDialog open={isDeleting} onOpenChange={setIsDeleting}>
                 <AlertDialogContent>

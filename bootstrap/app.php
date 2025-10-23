@@ -28,5 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException $e, Illuminate\Http\Request $request) {
+            if ($request->header('X-Inertia')) {
+                return back()->with('error', 'Anda terlalu sering mengirim pesan. Silakan coba lagi dalam beberapa saat.');
+            }
+        });
     })->create();

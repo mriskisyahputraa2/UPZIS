@@ -6,14 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdatePermohonanRequest;
 use App\Models\Periode;
 use App\Models\Permohonan;
-use App\Repositories\PermohonanRepository;
-use App\Services\PermohonanService;
+use App\Repositories\Admin\PermohonanRepository as AdminPermohonanRepository;
+use App\Services\Admin\PermohonanService as AdminPermohonanService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PermohonanController extends Controller
 {
-    public function __construct(protected PermohonanRepository $permohonanRepository, protected PermohonanService $permohonanService) {}
+    public function __construct(protected AdminPermohonanRepository $permohonanRepository, protected AdminPermohonanService $permohonanService) {}
 
     public function index(Request $request)
     {

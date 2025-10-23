@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\ContactControllerAdmin;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MustahikController;
 use App\Http\Controllers\Admin\PenyaluranController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TransaksiAdminController;
 use App\Http\Controllers\Admin\ZakatTypeController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\GaleriController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\KalkulatorController;
@@ -28,7 +30,6 @@ use Inertia\Inertia;
 // Halaman Beranda
 Route::get('/', [HomePageController::class, 'index'])->name('home');
 
-
 // Halaman Ajukan Bantuan
 Route::get('ajukan-bantuan', [PermohonanBantuanController::class, 'create'])->name('permohonan.create');
 Route::post('ajukan-bantuan', [PermohonanBantuanController::class, 'store'])->name('permohonan.store');
@@ -38,6 +39,13 @@ Route::get('lacak-status', [PermohonanBantuanController::class, 'lacak'])->name(
 Route::get('kalkulator-zakat', [KalkulatorController::class, 'index'])->name('kalkulator.index');
 Route::post('kalkulator-zakat/hitung', [KalkulatorController::class, 'hitung'])->name('kalkulator.hitung');
 
+// Route untuk Galeri Program Publik
+Route::get('galeri', [GaleriController::class, 'index'])->name('galeri.index');
+Route::get('galeri/{program}', [GaleriController::class, 'show'])->name('galeri.show');
+
+// Route Untuk Kontak
+Route::get('kontak', [ContactController::class, 'index'])->name('kontak.index');
+Route::post('kontak', [ContactController::class, 'store'])->name('kontak.store')->middleware('throttle:1,1');;
 /*
 |--------------------------------------------------------------------------
 | ROUTE PENGGUNA (Untuk Muzakki)
@@ -67,10 +75,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('donasi', [TransaksiController::class, 'store'])->name('donasi.store');
     Route::get('transaksi/{order_id}', [TransaksiController::class, 'show'])->name('transaksi.show');
     Route::post('transaksi/{order_id}/upload', [TransaksiController::class, 'uploadProof'])->name('transaksi.upload');
-
-    // Route untuk Galeri Program Publik
-    Route::get('galeri', [GaleriController::class, 'index'])->name('galeri.index');
-    Route::get('galeri/{program}', [GaleriController::class, 'show'])->name('galeri.show');
 });
 
 /*
@@ -100,6 +104,9 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
         Route::resource('/transaksi', TransaksiAdminController::class);
 
         Route::resource('/programs', ProgramController::class)->except(['show']);
+
+
+       Route::resource('/kontak', ContactControllerAdmin::class)->only(['index', 'show', 'destroy']);
 
         Route::prefix('settings')
             ->name('settings.')
