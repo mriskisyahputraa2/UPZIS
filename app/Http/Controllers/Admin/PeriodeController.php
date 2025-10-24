@@ -65,8 +65,18 @@ class PeriodeController extends Controller
      */
     public function edit(Periode $periode)
     {
+        // return Inertia::render('admin/periode/edit', [
+        //     'periode' => $periode,
+        // ]);
         return Inertia::render('admin/periode/edit', [
-            'periode' => $periode,
+            'periode' => [
+                'id' => $periode->id,
+                'name' => $periode->name,
+                'description' => $periode->description,
+                'start_date' => $periode->start_date ? $periode->start_date->format('Y-m-d') : null,
+                'end_date' => $periode->end_date ? $periode->end_date->format('Y-m-d') : null,
+                'status' => $periode->status,
+            ],
         ]);
     }
 

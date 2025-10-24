@@ -20,6 +20,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { format } from 'date-fns';
 import { ArrowLeft, Info } from 'lucide-react';
 
 const breadcrumbs = [
@@ -125,11 +126,25 @@ export default function Create() {
                                                     Tanggal Mulai *
                                                 </Label>
                                                 <DatePicker
-                                                    date={data.start_date}
+                                                    date={
+                                                        data.start_date
+                                                            ? new Date(
+                                                                  data.start_date.replace(
+                                                                      /-/g,
+                                                                      '/',
+                                                                  ),
+                                                              )
+                                                            : null
+                                                    }
                                                     setDate={(date) =>
                                                         setData(
                                                             'start_date',
-                                                            date,
+                                                            date
+                                                                ? format(
+                                                                      date,
+                                                                      'yyyy-MM-dd',
+                                                                  )
+                                                                : null,
                                                         )
                                                     }
                                                 />
@@ -142,11 +157,25 @@ export default function Create() {
                                                     Tanggal Selesai *
                                                 </Label>
                                                 <DatePicker
-                                                    date={data.end_date}
+                                                    date={
+                                                        data.end_date
+                                                            ? new Date(
+                                                                  data.end_date.replace(
+                                                                      /-/g,
+                                                                      '/',
+                                                                  ),
+                                                              )
+                                                            : null
+                                                    }
                                                     setDate={(date) =>
                                                         setData(
                                                             'end_date',
-                                                            date,
+                                                            date
+                                                                ? format(
+                                                                      date,
+                                                                      'yyyy-MM-dd',
+                                                                  )
+                                                                : null,
                                                         )
                                                     }
                                                 />

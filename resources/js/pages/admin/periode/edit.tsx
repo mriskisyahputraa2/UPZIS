@@ -20,6 +20,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { format } from 'date-fns';
 import { ArrowLeft, Info } from 'lucide-react';
 
 const breadcrumbs = [
@@ -28,12 +29,28 @@ const breadcrumbs = [
     { title: 'Edit Periode' },
 ];
 
+// Helper function untuk validasi dan parsing tanggal
+const parseDate = (dateString) => {
+    if (!dateString) return null;
+
+    // Coba parse berbagai format
+    const date = new Date(dateString);
+
+    // Validasi apakah tanggal valid
+    if (isNaN(date.getTime())) {
+        console.warn('Invalid date string:', dateString);
+        return null;
+    }
+
+    return date;
+};
+
 export default function Edit({ periode }) {
     const { data, setData, put, processing, errors } = useForm({
         name: periode.name || '',
         description: periode.description || '',
-        start_date: periode.start_date ? new Date(periode.start_date) : null,
-        end_date: periode.end_date ? new Date(periode.end_date) : null,
+        start_date: periode.start_date || null,
+        end_date: periode.end_date || null,
         status: periode.status || 'Tidak Aktif',
     });
 
@@ -72,7 +89,6 @@ export default function Edit({ periode }) {
 
                     <div className="grid grid-cols-1 gap-8 pt-6 lg:grid-cols-3">
                         <div className="order-last lg:order-first lg:col-span-2">
-                            {/* Kolom Kiri: Form Isian Utama */}
                             <div className="lg:col-span-2">
                                 <Card>
                                     <CardHeader>
@@ -125,11 +141,18 @@ export default function Edit({ periode }) {
                                                     Tanggal Mulai *
                                                 </Label>
                                                 <DatePicker
-                                                    date={data.start_date}
+                                                    date={parseDate(
+                                                        data.start_date,
+                                                    )}
                                                     setDate={(date) =>
                                                         setData(
                                                             'start_date',
-                                                            date,
+                                                            date
+                                                                ? format(
+                                                                      date,
+                                                                      'yyyy-MM-dd',
+                                                                  )
+                                                                : null,
                                                         )
                                                     }
                                                 />
@@ -142,11 +165,18 @@ export default function Edit({ periode }) {
                                                     Tanggal Selesai *
                                                 </Label>
                                                 <DatePicker
-                                                    date={data.end_date}
+                                                    date={parseDate(
+                                                        data.end_date,
+                                                    )}
                                                     setDate={(date) =>
                                                         setData(
                                                             'end_date',
-                                                            date,
+                                                            date
+                                                                ? format(
+                                                                      date,
+                                                                      'yyyy-MM-dd',
+                                                                  )
+                                                                : null,
                                                         )
                                                     }
                                                 />
@@ -185,7 +215,6 @@ export default function Edit({ periode }) {
                                 </Card>
                             </div>
                         </div>
-                        {/* Kolom Kanan: Kartu Informasi */}
                         <div className="lg:col-span-1">
                             <Card>
                                 <CardHeader className="flex-row items-center gap-2 space-y-0 text-red-500">
@@ -193,19 +222,18 @@ export default function Edit({ periode }) {
                                     <CardTitle>Informasi Penting</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    {/* ## PERUBAHAN: Format dan redaksi teks diperbarui ## */}
                                     <div className="mt-2 space-y-4 text-sm text-muted-foreground">
                                         <p>
                                             Pastikan{' '}
                                             <strong>Tanggal Mulai</strong> harus
-                                            lebih besar dari{' '}
-                                            <strong>Tanggal Selesai.</strong>.
+                                            lebih kecil dari{' '}
+                                            <strong>Tanggal Selesai</strong>.
                                         </p>
                                         <p>
                                             Sistem hanya mengizinkan{' '}
                                             <strong>satu periode</strong> untuk
                                             berstatus <strong>"Aktif"</strong>{' '}
-                                            dalam satu periode.
+                                            dalam satu waktu.
                                         </p>
                                         <p>
                                             Mengubah status periode menjadi{' '}
