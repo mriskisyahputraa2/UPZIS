@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\ContactControllerAdmin;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\LaporanPenyaluranController;
 use App\Http\Controllers\Admin\MustahikController;
 use App\Http\Controllers\Admin\PenyaluranController;
 use App\Http\Controllers\Admin\PeriodeController;
@@ -107,6 +108,10 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
 
 
        Route::resource('/kontak', ContactControllerAdmin::class)->only(['index', 'show', 'destroy']);
+
+
+        Route::get('/laporan-penyaluran', [LaporanPenyaluranController::class, 'index'])->name('laporan.penyaluran');
+
 
         Route::prefix('settings')
             ->name('settings.')

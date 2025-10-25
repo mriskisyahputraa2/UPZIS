@@ -17,6 +17,7 @@ import {
     ClipboardList,
     FileText,
     GalleryHorizontal,
+    HandCoins,
     Inbox,
     LayoutGrid,
     Settings,
@@ -56,6 +57,11 @@ const mainNavItems: NavItem[] = [
         title: 'Manajemen Permohonan',
         href: '/admin/permohonan',
         icon: FileText,
+    },
+    {
+        title: 'Penyaluran Bantuan',
+        href: '/admin/laporan-penyaluran',
+        icon: HandCoins,
     },
     {
         title: 'Manajemen Program',
