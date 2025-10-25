@@ -116,6 +116,8 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
         Route::resource('/kontak', ContactControllerAdmin::class)->only(['index', 'show', 'destroy']);
 
         Route::get('/laporan-penyaluran', [LaporanPenyaluranController::class, 'index'])->name('laporan.penyaluran');
+        Route::get('/laporan-penyaluran/export-excel', [LaporanPenyaluranController::class, 'exportExcel'])->name('laporan.penyaluran.export.excel');
+        Route::get('/laporan-penyaluran/export-pdf', [LaporanPenyaluranController::class, 'exportPdf'])->name('laporan.penyaluran.export.pdf');
 
         Route::prefix('settings')
             ->name('settings.')

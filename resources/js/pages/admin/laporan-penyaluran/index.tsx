@@ -9,6 +9,12 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
     Pagination,
@@ -45,6 +51,7 @@ import { id } from 'date-fns/locale';
 import {
     Banknote,
     Calendar as CalendarIcon,
+    Download,
     Eye,
     Search,
     Users,
@@ -168,6 +175,24 @@ export default function Index({ penyalurans, summary, filters, periodes }) {
         );
     };
 
+    const getExportUrl = (format: 'excel' | 'pdf') => {
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        if (periodeId !== 'all') params.append('periode_id', periodeId);
+        if (kategoriAlokasi !== 'all')
+            params.append('kategori_alokasi', kategoriAlokasi);
+        if (kategoriPenerima !== 'all')
+            params.append('kategori_pemohon', kategoriPenerima);
+        if (date?.from)
+            params.append('start_date', format(date.from, 'y-MM-dd'));
+        if (date?.to) params.append('end_date', format(date.to, 'y-MM-dd'));
+
+        const baseUrl =
+            format === 'pdf'
+                ? '/admin/laporan-penyaluran/export-pdf'
+                : '/admin/laporan-penyaluran/export-excel';
+        return `${baseUrl}?${params.toString()}`;
+    };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Laporan Penyaluran Bantuan" />
@@ -314,7 +339,7 @@ export default function Index({ penyalurans, summary, filters, periodes }) {
                                 </Button>
                             )}
                         </div>
-                        <div className="w-full sm:w-auto">
+                        <div className="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row">
                             <Select
                                 onValueChange={handlePerPageChange}
                                 defaultValue={String(filters.per_page || '5')}
@@ -331,6 +356,35 @@ export default function Index({ penyalurans, summary, filters, periodes }) {
                                         100 Data
                                     </SelectItem>
                                 </SelectContent>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full sm:w-auto"
+                                        >
+                                            <Download className="mr-2 h-4 w-4" />
+                                            Ekspor
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem asChild>
+                                            <a
+                                                href={getExportUrl('excel')}
+                                                target="_blank"
+                                            >
+                                                Ekspor ke Excel (.xlsx)
+                                            </a>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <a
+                                                href={getExportUrl('pdf')}
+                                                target="_blank"
+                                            >
+                                                Ekspor ke PDF (.pdf)
+                                            </a>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </Select>
                         </div>
                     </div>
@@ -352,7 +406,7 @@ export default function Index({ penyalurans, summary, filters, periodes }) {
                         <Card>
                             <CardHeader className="flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium">
-                                    Jumlah Penerima Unik
+                                    Jumlah Penerima Bantuan
                                 </CardTitle>
                                 <Users className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
