@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Periode;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class TransaksiAdminController extends Controller
 {
@@ -22,6 +24,7 @@ class TransaksiAdminController extends Controller
             'status' => 'nullable|string',
             'type' => 'nullable|string|in:zakat,infaq,sedekah', // Validasi jenis donasi
             'per_page' => 'nullable|integer|in:5,10,20,50',
+            'periode_id' => 'nullable|integer|exists:periodes,id',
         ]);
         $query = Transaksi::with('user')->latest();
 
@@ -42,6 +45,16 @@ class TransaksiAdminController extends Controller
         //Terapkan filter jenis donasi
         if ($request->filled('type')) {
             $query->where('type', $request->input('type'));
+        }
+        // Terapkan filter periode
+        if ($request->filled('periode_id')) {
+            $periode = Periode::find($request->input('periode_id'));
+            if ($periode) {
+                // Pastikan tanggal awal dan akhir mencakup keseluruhan hari dengan Carbon
+                $startDate = Carbon::parse($periode->start_date)->startOfDay();
+                $endDate = Carbon::parse($periode->end_date)->endOfDay();
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            }
         }
 
         // Ambil data dengan paginasi dan transformasikan hasilnya
@@ -65,9 +78,13 @@ class TransaksiAdminController extends Controller
             ],
         );
 
+        // Ambil semua periode untuk dropdown filter
+        $periodes = Periode::select('id', 'name')->get();
+
         return Inertia::render('admin/transaksi-admin/index', [
             'transaksis' => $transaksis,
-            'filters' => $request->only(['search', 'status', 'type', 'per_page']),
+            'filters' => $request->only(['search', 'status', 'type', 'per_page', 'periode_id']),
+            'periodes' => $periodes,
         ]);
     }
 

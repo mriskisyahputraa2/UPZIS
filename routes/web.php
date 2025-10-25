@@ -103,6 +103,7 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
         Route::resource('/periode', PeriodeController::class);
         // Manajemen Transaksi
         Route::resource('/transaksi', TransaksiAdminController::class);
+        Route::get('/transaksi-export', [TransaksiAdminController::class, 'export'])->name('transaksi.export');
 
         Route::resource('/programs', ProgramController::class)->except(['show']);
 

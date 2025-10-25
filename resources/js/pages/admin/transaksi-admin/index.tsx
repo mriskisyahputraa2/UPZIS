@@ -26,7 +26,7 @@ const breadcrumbs = [
     { title: 'Manajemen Transaksi' },
 ];
 
-export default function Index({ transaksis, filters }) {
+export default function Index({ transaksis, filters, periodes }) {
     const { flash } = usePage().props;
 
     // Tambahkan state untuk loading
@@ -69,6 +69,7 @@ export default function Index({ transaksis, filters }) {
                     <TransactionFilters
                         filters={filters}
                         setIsLoading={setIsLoading}
+                        periodes={periodes}
                     />
 
                     {/* Kirim isLoading sebagai prop */}
