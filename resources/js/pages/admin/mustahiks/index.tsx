@@ -59,6 +59,7 @@ import {
 } from '@radix-ui/react-tooltip';
 import {
     AlertTriangle,
+    Download,
     Ellipsis,
     Eye,
     FilePen,
@@ -110,6 +111,24 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
     );
     const [deleteId, setDeleteId] = useState(null);
     const isInitialMount = useRef(true);
+
+    // ## FUNGSI BARU UNTUK MEMBUAT URL EKSPOR ##
+    const getExportUrl = (format: 'excel' | 'pdf') => {
+        const params = new URLSearchParams();
+        if (filters.search) params.append('search', filters.search);
+        if (filters.status) params.append('status', filters.status);
+        if (filters.kategori_pemohon)
+            params.append('kategori_pemohon', filters.kategori_pemohon);
+        if (filters.jenis_kelamin)
+            params.append('jenis_kelamin', filters.jenis_kelamin);
+        if (filters.periode_id) params.append('periode_id', filters.periode_id);
+
+        const baseUrl =
+            format === 'pdf'
+                ? '/admin/mustahiks-export-pdf'
+                : '/admin/mustahiks-export-excel';
+        return `${baseUrl}?${params.toString()}`;
+    };
 
     useEffect(() => {
         if (flash && flash.success) toast.success(flash.success);
@@ -172,6 +191,7 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
                         <CardTitle>
                             Daftar Penerima Manfaat (Mustahik)
                         </CardTitle>
+
                         {activePeriode ? (
                             <Link href="/admin/mustahiks/create">
                                 <Button>
@@ -330,20 +350,52 @@ export default function Index({ mustahiks, filters, periodes, activePeriode }) {
                                 </Button>
                             )}
                         </div>
-                        <Select
-                            onValueChange={handlePerPageChange}
-                            defaultValue={String(filters.per_page || '5')}
-                        >
-                            <SelectTrigger className="w-full sm:w-[120px]">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="5">5 Data</SelectItem>
-                                <SelectItem value="10">10 Data</SelectItem>
-                                <SelectItem value="20">20 Data</SelectItem>
-                                <SelectItem value="50">50 Data</SelectItem>
-                            </SelectContent>
-                        </Select>
+
+                        <div className="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row">
+                            <Select
+                                onValueChange={handlePerPageChange}
+                                defaultValue={String(filters.per_page || '5')}
+                            >
+                                <SelectTrigger className="w-full sm:w-[120px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="5">5 Data</SelectItem>
+                                    <SelectItem value="10">10 Data</SelectItem>
+                                    <SelectItem value="20">20 Data</SelectItem>
+                                    <SelectItem value="50">50 Data</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full sm:w-auto"
+                                    >
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Ekspor
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem asChild>
+                                        <a
+                                            href={getExportUrl('excel')}
+                                            target="_blank"
+                                        >
+                                            Ekspor ke Excel (.xlsx)
+                                        </a>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <a
+                                            href={getExportUrl('pdf')}
+                                            target="_blank"
+                                        >
+                                            Ekspor ke PDF (.pdf)
+                                        </a>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </div>
                     <div className="flex-1 overflow-auto rounded-md border">
                         <Table>

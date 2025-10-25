@@ -93,6 +93,10 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
         Route::get('dashboard', [DashboardController::class, 'index']);
         // Manajemen Mustahik
         Route::resource('mustahiks', MustahikController::class);
+
+        Route::get('mustahiks-export-excel', [MustahikController::class, 'exportExcel'])->name('mustahiks.export.excel');
+        Route::get('mustahiks-export-pdf', [MustahikController::class, 'exportPdf'])->name('mustahiks.export.pdf');
+
         // Manajemen Permohonan dan Status
         Route::resource('permohonan', PermohonanController::class)->only(['index', 'show', 'update', 'destroy']);
         Route::post('permohonan/bulk-update-status', [PermohonanController::class, 'bulkUpdateStatus'])->name('permohonan.bulkUpdateStatus');

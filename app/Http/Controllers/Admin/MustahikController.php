@@ -16,17 +16,21 @@ use Inertia\Inertia;
 use App\Models\Penyaluran;
 use App\Models\Setting;
 use App\Models\Transaksi;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\MustahiksExport;
 
 class MustahikController extends Controller
 {
     // Menampilkan halaman daftar mustahik
-    public function index(Request $request)
+   public function index(Request $request)
     {
         $request->validate([
             'search' => 'nullable|string|max:100',
             'periode_id' => 'nullable|integer|exists:periodes,id',
             'jenis_kelamin' => 'nullable|string|in:Laki-laki,Perempuan',
             'kategori_pemohon' => 'nullable|string|in:mahasiswa,umum',
+            'per_page' => 'nullable|integer',
         ]);
 
         $activePeriode = Periode::where('status', 'Aktif')->first();
@@ -45,21 +49,29 @@ class MustahikController extends Controller
                 $query->where('jenis_kelamin', $jenisKelamin);
             })
             ->when($request->input('kategori_pemohon'), function ($query, $kategori) {
-                // Filter based on the latest permohonan
                 $query->whereHas('latestPermohonan', function ($q) use ($kategori) {
                     $q->where('kategori_pemohon', $kategori);
                 });
-            })
-            ->when($request->input('periode_id'), function ($query, $periode_id) {
-                $query->whereHas('permohonans', function ($q) use ($periode_id) {
-                    $q->where('periode_id', $periode_id);
-                });
-            })
-            ->when(!$request->filled('periode_id') && $activePeriode, function ($query) use ($activePeriode) {
-                $query->whereHas('permohonans', function ($q) use ($activePeriode) {
-                    $q->where('periode_id', $activePeriode->id)->where('status', 'Disetujui');
-                });
             });
+
+        // ## PERBAIKAN UTAMA: Logika filter periode disempurnakan ##
+
+        // Kondisi 1: Filter berdasarkan periode spesifik jika dipilih.
+        // Laravel secara otomatis akan mengubah input `periode_id` yang kosong menjadi null,
+        // sehingga ->filled() akan bernilai false dan blok ini tidak akan berjalan saat "Semua Periode" dipilih.
+        if ($request->filled('periode_id')) {
+            $mustahiksQuery->whereHas('permohonans', function ($q) use ($request) {
+                $q->where('periode_id', $request->input('periode_id'));
+            });
+        }
+        // Kondisi 2: Filter berdasarkan periode aktif HANYA JIKA halaman baru dibuka (parameter 'periode_id' tidak ada sama sekali).
+        elseif (!$request->has('periode_id') && $activePeriode) {
+            $mustahiksQuery->whereHas('permohonans', function ($q) use ($activePeriode) {
+                $q->where('periode_id', $activePeriode->id);
+            });
+        }
+        // Jika 'periode_id' ada tapi kosong (null), tidak ada filter periode yang diterapkan,
+        // sehingga semua data akan ditampilkan. Ini adalah perilaku yang benar untuk "Semua Periode".
 
         $mustahiks = $mustahiksQuery->distinct()->latest()->paginate($request->input('per_page', 5))->withQueryString();
 
@@ -237,9 +249,11 @@ class MustahikController extends Controller
     public function edit(Mustahik $mustahik)
     {
         // Muat relasi permohonan terbaru untuk mendapatkan kategori pemohon dan dokumennya
-      $mustahik->load(['permohonans' => function ($query) {
-            $query->with('dokumen')->orderBy('id', 'desc');
-        }]);
+        $mustahik->load([
+            'permohonans' => function ($query) {
+                $query->with('dokumen')->orderBy('id', 'desc');
+            },
+        ]);
 
         return Inertia::render('admin/mustahiks/edit', [
             'mustahik' => $mustahik,
@@ -374,6 +388,127 @@ class MustahikController extends Controller
         }
     }
 
+    /**
+     * Menangani permintaan ekspor Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        $fileName = $this->generateDynamicFileName($request, '.xlsx');
+        return Excel::download(new MustahiksExport($request), $fileName);
+    }
+
+    /**
+     * Menangani permintaan ekspor PDF.
+     */
+    public function exportPdf(Request $request)
+    {
+        // 1. Gunakan kembali query dari Export Class untuk mendapatkan data yang sudah difilter
+        $export = new MustahiksExport($request);
+        $mustahiks = $export->query()->get();
+
+        // 2. Dapatkan deskripsi filter yang aktif untuk ditampilkan di kop laporan
+        $filtersDescription = $this->getFiltersDescription($request);
+
+        // 3. Buat nama file yang dinamis
+        $fileName = $this->generateDynamicFileName($request, '.pdf');
+
+        // 4. Load view Blade, kirim semua data (termasuk deskripsi filter), dan unduh sebagai PDF
+        $pdf = Pdf::loadView('reports.mustahik', [
+            'mustahiks' => $mustahiks,
+            'filtersDescription' => $filtersDescription,
+        ]);
+
+        // Atur orientasi kertas menjadi landscape agar muat lebih banyak kolom
+        return $pdf->setPaper('a4', 'landscape')->download($fileName);
+    }
+
+    /**
+     * Helper untuk mengubah parameter request menjadi deskripsi yang mudah dibaca.
+     */
+    private function getFiltersDescription(Request $request): array
+    {
+        $filtersDescription = [];
+        if ($request->filled('kategori_pemohon')) {
+            $filtersDescription['Kategori'] = $request->input('kategori_pemohon') === 'umum' ? 'Fakir/Miskin' : 'Mahasiswa';
+        }
+        if ($request->filled('jenis_kelamin')) {
+            $filtersDescription['Jenis Kelamin'] = $request->input('jenis_kelamin');
+        }
+        if ($request->filled('periode_id')) {
+            $periode = Periode::find($request->input('periode_id'));
+            if ($periode) {
+                $filtersDescription['Periode'] = $periode->name;
+            }
+        }
+        if ($request->filled('search')) {
+            $filtersDescription['Pencarian'] = '"' . $request->input('search') . '"';
+        }
+        return $filtersDescription;
+    }
+
+    /**
+     * Helper untuk membuat nama file yang dinamis.
+     */
+    private function generateDynamicFileName(Request $request, string $extension): string
+    {
+        $fileNameParts = ['laporan-mustahik'];
+        if ($request->filled('kategori_pemohon')) {
+            $kategori = $request->input('kategori_pemohon') === 'umum' ? 'fakir-miskin' : 'mahasiswa';
+            $fileNameParts[] = $kategori;
+        }
+        if ($request->filled('jenis_kelamin')) {
+            $fileNameParts[] = $request->input('jenis_kelamin');
+        }
+        if ($request->filled('periode_id')) {
+            $periode = Periode::find($request->input('periode_id'));
+            if ($periode) {
+                $fileNameParts[] = 'periode-' . $periode->name;
+            }
+        }
+        $fileNameParts[] = now()->format('d-m-Y');
+
+        return Str::slug(implode('-', $fileNameParts)) . $extension;
+    }
+
+    public function show(Mustahik $mustahik)
+    {
+        // Ambil persentase alokasi
+        $alokasiPersen = (float) Setting::where('setting_key', 'alokasi_fakir_miskin_persen')->value('setting_value') ?: 10;
+        $persenFakirMiskin = $alokasiPersen / 100;
+        $persenKampus = 1 - $persenFakirMiskin;
+
+        // Hitung total dana masuk
+        $totalDanaZakat = Transaksi::where('status', 'Berhasil')->where('type', 'zakat')->sum('final_amount');
+        $totalInfaqTerkumpul = Transaksi::where('status', 'Berhasil')->where('type', 'infaq')->sum('final_amount');
+        $totalSedekahTerkumpul = Transaksi::where('status', 'Berhasil')->where('type', 'sedekah')->sum('final_amount');
+
+        // Hitung total dana keluar
+        $penyaluranFakirMiskin = Penyaluran::where('kategori_alokasi', 'fakir_miskin')->sum('amount');
+        $penyaluranKampus = Penyaluran::where('kategori_alokasi', 'kampus')->sum('amount');
+        $penyaluranInfaq = Penyaluran::where('kategori_alokasi', 'infaq')->sum('amount');
+        $penyaluranSedekah = Penyaluran::where('kategori_alokasi', 'sedekah')->sum('amount');
+
+        // Hitung sisa saldo
+        $availableFunds = [
+            'sisaDanaKampus' => $totalDanaZakat * $persenKampus - $penyaluranKampus,
+            'sisaDanaFakirMiskin' => $totalDanaZakat * $persenFakirMiskin - $penyaluranFakirMiskin,
+            'sisaDanaInfaq' => $totalInfaqTerkumpul - $penyaluranInfaq,
+            'sisaDanaSedekah' => $totalSedekahTerkumpul - $penyaluranSedekah,
+        ];
+
+        // Muat relasi mustahik
+        $mustahik->load([
+            'permohonans' => function ($query) {
+                $query->with(['periode', 'penyalurans.admin', 'dokumen'])->latest();
+            },
+        ]);
+
+        return Inertia::render('admin/mustahiks/show', [
+            'mustahik' => $mustahik,
+            'availableFunds' => $availableFunds,
+        ]);
+    }
+
     // Menghapus data mustahik dari database
     public function destroy(Mustahik $mustahik)
     {
@@ -398,44 +533,5 @@ class MustahikController extends Controller
         $mustahik->delete(); // Karena ada cascade on delete, permohonan dan dokumen akan ikut terhapus
 
         return redirect()->route('admin.mustahiks.index')->with('success', 'Data Mustahik berhasil dihapus.');
-    }
-
-    public function show(Mustahik $mustahik)
-    {
-        // Ambil persentase alokasi
-        $alokasiPersen = (float) Setting::where('setting_key', 'alokasi_fakir_miskin_persen')->value('setting_value') ?: 10;
-        $persenFakirMiskin = $alokasiPersen / 100;
-        $persenKampus = 1 - $persenFakirMiskin;
-
-        // Hitung total dana masuk
-        $totalDanaZakat = Transaksi::where('status', 'Berhasil')->where('type', 'zakat')->sum('final_amount');
-        $totalInfaqTerkumpul = Transaksi::where('status', 'Berhasil')->where('type', 'infaq')->sum('final_amount');
-        $totalSedekahTerkumpul = Transaksi::where('status', 'Berhasil')->where('type', 'sedekah')->sum('final_amount');
-
-        // Hitung total dana keluar
-        $penyaluranFakirMiskin = Penyaluran::where('kategori_alokasi', 'fakir_miskin')->sum('amount');
-        $penyaluranKampus = Penyaluran::where('kategori_alokasi', 'kampus')->sum('amount');
-        $penyaluranInfaq = Penyaluran::where('kategori_alokasi', 'infaq')->sum('amount');
-        $penyaluranSedekah = Penyaluran::where('kategori_alokasi', 'sedekah')->sum('amount');
-
-        // Hitung sisa saldo
-        $availableFunds = [
-            'sisaDanaKampus' => ($totalDanaZakat * $persenKampus) - $penyaluranKampus,
-            'sisaDanaFakirMiskin' => ($totalDanaZakat * $persenFakirMiskin) - $penyaluranFakirMiskin,
-            'sisaDanaInfaq' => $totalInfaqTerkumpul - $penyaluranInfaq,
-            'sisaDanaSedekah' => $totalSedekahTerkumpul - $penyaluranSedekah,
-        ];
-
-        // Muat relasi mustahik
-        $mustahik->load([
-            'permohonans' => function ($query) {
-                $query->with(['periode', 'penyalurans.admin', 'dokumen'])->latest();
-            },
-        ]);
-
-        return Inertia::render('admin/mustahiks/show', [
-            'mustahik' => $mustahik,
-            'availableFunds' => $availableFunds,
-        ]);
     }
 }
