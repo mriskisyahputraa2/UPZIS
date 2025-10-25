@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 
 // Helper format mata uang
 const formatCurrency = (value) =>
@@ -49,6 +50,41 @@ export default function PenyaluranForm({
         notes: penyaluran?.notes || '',
         kategori_alokasi: penyaluran?.kategori_alokasi || defaultKategori,
     });
+
+    // ## PERUBAHAN 1: Tambahkan state untuk error lokal ##
+    const [localError, setLocalError] = useState('');
+    // ## PERUBAHAN 2: Tambahkan useEffect untuk validasi saldo secara real-time ##
+    useEffect(() => {
+        const amountValue = Number(data.amount);
+        if (amountValue <= 0) {
+            setLocalError('');
+            return;
+        }
+
+        let availableBalance = 0;
+        switch (data.kategori_alokasi) {
+            case 'kampus':
+                availableBalance = availableFunds.sisaDanaKampus;
+                break;
+            case 'fakir_miskin':
+                availableBalance = availableFunds.sisaDanaFakirMiskin;
+                break;
+            case 'infaq':
+                availableBalance = availableFunds.sisaDanaInfaq;
+                break;
+            case 'sedekah':
+                availableBalance = availableFunds.sisaDanaSedekah;
+                break;
+        }
+
+        if (amountValue > availableBalance) {
+            setLocalError(
+                'Jumlah melebihi dana yang tersedia untuk kategori ini.',
+            );
+        } else {
+            setLocalError('');
+        }
+    }, [data.amount, data.kategori_alokasi, availableFunds]); // Dijalankan setiap kali jumlah atau kategori berubah
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/\D/g, '');
@@ -155,9 +191,14 @@ export default function PenyaluranForm({
                             onChange={handleAmountChange}
                             placeholder="Contoh: 500000"
                         />
-                        {errors.amount && (
+                        {/* {errors.amount && (
                             <p className="text-sm text-red-500">
                                 {errors.amount}
+                            </p>
+                        )} */}
+                        {(errors.amount || localError) && (
+                            <p className="text-sm text-red-500">
+                                {localError || errors.amount}
                             </p>
                         )}
                     </div>
@@ -265,7 +306,14 @@ export default function PenyaluranForm({
                     >
                         Batal
                     </Button>
-                    <Button type="submit" disabled={processing}>
+                    {/* <Button type="submit" disabled={processing}>
+                        {processing ? 'Menyimpan...' : 'Simpan Data'}
+                    </Button> */}
+                    <Button
+                        type="submit"
+                        disabled={processing || !!localError}
+                        className="w-full sm:w-auto"
+                    >
                         {processing ? 'Menyimpan...' : 'Simpan Data'}
                     </Button>
                 </DialogFooter>

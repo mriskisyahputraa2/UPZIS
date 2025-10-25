@@ -1,94 +1,56 @@
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
-import { AlertTriangle, Info } from 'lucide-react';
-import LaporanTab from './partials/LaporanTab';
-import RingkasanTab from './partials/RingkasanTab';
+import { Head, usePage } from '@inertiajs/react';
+
+// Import semua partials yang baru kita buat
+import AlokasiZakatCard from './partials/AlokasiZakatCard';
+import DashboardHeaderStats from './partials/DashboardHeaderStats';
+import LaporanFilterPanel from './partials/LaporanFilterPanel';
+import LaporanPerformaCards from './partials/LaporanPerformaCards';
+import TugasDanAktivitas from './partials/TugasDanAktivitas';
 
 export default function Dashboard({
     realtimeStats,
     performanceStats,
     activeFilters,
-    activePeriode,
     periodes,
+    alokasiAturan,
 }) {
     const breadcrumbs = [{ title: 'Dashboard' }];
+    const { auth } = usePage().props;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
-            <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+
+            <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+                {/* BAGIAN 1: HEADER & KPI UTAMA */}
                 <div>
-                    <h1 className="text-2xl font-bold">Dashboard Analitik</h1>
+                    <h1 className="text-2xl font-bold tracking-tight">
+                        Selamat Datang Kembali, {auth.user.name}!
+                    </h1>
                     <p className="text-muted-foreground">
-                        Ringkasan aktivitas dan dana di UPZIS.
+                        Berikut adalah ringkasan aktivitas dan performa UPZIS.
                     </p>
                 </div>
+                <DashboardHeaderStats
+                    performanceStats={performanceStats}
+                    realtimeStats={realtimeStats}
+                />
 
-                {activePeriode ? (
-                    <Alert
-                        variant="info"
-                        className="border-blue-200 bg-blue-50"
-                    >
-                        <Info className="h-4 w-4 text-blue-600" />
-                        <AlertTitle className="font-bold text-blue-800">
-                            Periode Pendaftaran Aktif
-                        </AlertTitle>
-                        <AlertDescription className="text-blue-700">
-                            Pendaftaran dibuka untuk periode:{' '}
-                            <strong>{activePeriode.name}</strong>.
-                        </AlertDescription>
-                    </Alert>
-                ) : (
-                    <Alert
-                        variant="warning"
-                        className="border-yellow-200 bg-yellow-50"
-                    >
-                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                        <AlertTitle className="font-bold text-yellow-800">
-                            Pendaftaran Ditutup
-                        </AlertTitle>
-                        <AlertDescription className="text-yellow-700">
-                            Tidak ada periode pendaftaran aktif.{' '}
-                            <Button
-                                variant="link"
-                                asChild
-                                className="h-auto p-0 text-yellow-800 hover:text-yellow-900"
-                            >
-                                <Link href="/admin/periode">
-                                    Aktifkan Periode
-                                </Link>
-                            </Button>
-                            .
-                        </AlertDescription>
-                    </Alert>
-                )}
+                {/* BAGIAN 2: LAPORAN PERFORMA DENGAN FILTER */}
+                <div className="space-y-6">
+                    <h2 className="text-xl font-bold">Laporan Performa</h2>
+                    <LaporanFilterPanel
+                        periodes={periodes}
+                        activeFilters={activeFilters}
+                    />
+                    <AlokasiZakatCard alokasiAturan={alokasiAturan} />
+                    <LaporanPerformaCards performanceStats={performanceStats} />
+                </div>
 
-                <Tabs defaultValue="ringkasan" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="ringkasan">
-                            Ringkasan Real-time
-                        </TabsTrigger>
-                        <TabsTrigger value="laporan">
-                            Laporan Performa
-                        </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="ringkasan" className="mt-6">
-                        <RingkasanTab stats={realtimeStats} />
-                    </TabsContent>
-
-                    <TabsContent value="laporan" className="mt-6">
-                        <LaporanTab
-                            stats={performanceStats}
-                            periodes={periodes}
-                            activeFilters={activeFilters}
-                        />
-                    </TabsContent>
-                </Tabs>
-            </div>
+                {/* BAGIAN 3: TUGAS & AKTIVITAS TERBARU */}
+                <TugasDanAktivitas realtimeStats={realtimeStats} />
+            </main>
         </AppLayout>
     );
 }
