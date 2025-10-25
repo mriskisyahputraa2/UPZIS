@@ -122,7 +122,7 @@ class TransaksiAdminController extends Controller
         ]);
 
         // Buat query yang sama persis dengan di TransaksisExport
-        $query = Transaksi::with('user');
+      $query = Transaksi::with('user');
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
@@ -147,9 +147,39 @@ class TransaksiAdminController extends Controller
         }
         $transaksis = $query->latest()->get();
 
+        //Kumpulkan deskripsi filter yang aktif
+        $filtersDescription = [];
+        if ($request->filled('status')) {
+            $filtersDescription['Status'] = $request->input('status');
+        }
+        if ($request->filled('type')) {
+            $filtersDescription['Jenis Donasi'] = ucfirst($request->input('type'));
+        }
+        if ($request->filled('periode_id')) {
+            $periode = Periode::find($request->input('periode_id'));
+            if ($periode) {
+                $filtersDescription['Periode'] = $periode->name;
+            }
+        }
+        if ($request->filled('search')) {
+            $filtersDescription['Pencarian'] = '"' . $request->input('search') . '"';
+        }
+
+        //Hitung ringkasan total
+        $summary = [
+            'totalAmount' => $transaksis->sum('final_amount'),
+            'totalTransactions' => $transaksis->count(),
+        ];
+
         $fileName = $this->generateDynamicFileName($request, '.pdf');
 
-        $pdf = Pdf::loadView('reports.transaksi', ['transaksis' => $transaksis]);
+
+        // Load view Blade, kirim semua data, dan unduh sebagai PDF
+        $pdf = Pdf::loadView('reports.transaksi', [
+            'transaksis' => $transaksis,
+            'filtersDescription' => $filtersDescription,
+            'summary' => $summary,
+        ]);
         return $pdf->download($fileName);
     }
 
