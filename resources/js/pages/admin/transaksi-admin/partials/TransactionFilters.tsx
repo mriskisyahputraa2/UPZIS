@@ -1,4 +1,10 @@
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -8,13 +14,20 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { router } from '@inertiajs/react';
-import { Search, X } from 'lucide-react';
+import { Download, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-export default function TransactionFilters({ filters, setIsLoading }) {
+export default function TransactionFilters({
+    filters,
+    setIsLoading,
+    periodes,
+}) {
     const [search, setSearch] = useState(filters.search || '');
     const [filterStatus, setFilterStatus] = useState(filters.status || 'all');
     const [filterType, setFilterType] = useState(filters.type || 'all');
+    const [filterPeriode, setFilterPeriode] = useState(
+        filters.periode_id ? String(filters.periode_id) : 'all',
+    );
     const isInitialMount = useRef(true);
 
     useEffect(() => {
@@ -27,6 +40,7 @@ export default function TransactionFilters({ filters, setIsLoading }) {
             per_page: filters.per_page,
             status: filterStatus === 'all' ? '' : filterStatus,
             type: filterType === 'all' ? '' : filterType, // ## PERUBAHAN 2: Tambahkan 'type' ke parameter request ##
+            periode_id: filterPeriode === 'all' ? '' : filterPeriode,
         };
         const timeout = setTimeout(() => {
             router.get('/admin/transaksi', params, {
@@ -37,12 +51,13 @@ export default function TransactionFilters({ filters, setIsLoading }) {
             });
         }, 500);
         return () => clearTimeout(timeout);
-    }, [search, filterStatus, filterType]); // ## PERUBAHAN 3: Tambahkan 'filterType' ke dependency array ##
+    }, [search, filterStatus, filterType, filterPeriode]); // ## PERUBAHAN 3: Tambahkan 'filterType' ke dependency array ##
 
     const resetFilters = () => {
         setSearch('');
         setFilterStatus('all');
         setFilterType('all'); // ## PERUBAHAN 4: Reset filter 'type' juga ##
+        setFilterPeriode('all');
     };
 
     const handlePerPageChange = (perPage) => {
@@ -54,6 +69,7 @@ export default function TransactionFilters({ filters, setIsLoading }) {
                 status: filterStatus === 'all' ? '' : filterStatus,
                 type: filterType === 'all' ? '' : filterType, // ## PERUBAHAN 5: Tambahkan 'type' saat ganti per_page ##
                 per_page: perPage,
+                periode_id: filterPeriode === 'all' ? '' : filterPeriode,
             },
             {
                 preserveState: true,
@@ -62,6 +78,21 @@ export default function TransactionFilters({ filters, setIsLoading }) {
                 onFinish: () => setIsLoading(false),
             },
         );
+    };
+
+    // ## FUNGSI BARU UNTUK MEMBUAT URL EKSPOR ##
+    const getExportUrl = (format: 'excel' | 'pdf') => {
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        if (filterStatus !== 'all') params.append('status', filterStatus);
+        if (filterType !== 'all') params.append('type', filterType);
+        if (filterPeriode !== 'all') params.append('periode_id', filterPeriode);
+
+        const baseUrl =
+            format === 'pdf'
+                ? '/admin/transaksi-export-pdf'
+                : '/admin/transaksi-export-excel';
+        return `${baseUrl}?${params.toString()}`;
     };
 
     return (
@@ -77,6 +108,23 @@ export default function TransactionFilters({ filters, setIsLoading }) {
                     />
                     <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 </div>
+
+                <Select value={filterPeriode} onValueChange={setFilterPeriode}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Semua Periode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Semua Periode</SelectItem>
+                        {periodes.map((periode) => (
+                            <SelectItem
+                                key={periode.id}
+                                value={String(periode.id)}
+                            >
+                                {periode.name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
 
                 {/* ## PERUBAHAN 6: Tambahkan Select/Dropdown untuk filter jenis donasi ## */}
                 <Select value={filterType} onValueChange={setFilterType}>
@@ -108,7 +156,10 @@ export default function TransactionFilters({ filters, setIsLoading }) {
                     </SelectContent>
                 </Select>
                 {/* ## PERUBAHAN 7: Update kondisi untuk menampilkan tombol Reset ## */}
-                {(filters.search || filters.status || filters.type) && (
+                {(filters.search ||
+                    filters.status ||
+                    filters.type ||
+                    filters.periode_id) && (
                     <Button
                         variant="destructive-outline"
                         onClick={resetFilters}
@@ -117,7 +168,7 @@ export default function TransactionFilters({ filters, setIsLoading }) {
                     </Button>
                 )}
             </div>
-            <div className="w-full sm:w-auto">
+            <div className="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row">
                 <Select
                     onValueChange={handlePerPageChange}
                     defaultValue={String(filters.per_page || '5')}
@@ -132,6 +183,26 @@ export default function TransactionFilters({ filters, setIsLoading }) {
                         <SelectItem value="50">50 Data</SelectItem>
                     </SelectContent>
                 </Select>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="w-full sm:w-auto">
+                            <Download className="mr-2 h-4 w-4" />
+                            Ekspor
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                            <a href={getExportUrl('excel')} target="_blank">
+                                Ekspor ke Excel (.xlsx)
+                            </a>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <a href={getExportUrl('pdf')} target="_blank">
+                                Ekspor ke PDF (.pdf)
+                            </a>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </div>
     );

@@ -46,7 +46,9 @@ Route::get('galeri/{program}', [GaleriController::class, 'show'])->name('galeri.
 
 // Route Untuk Kontak
 Route::get('kontak', [ContactController::class, 'index'])->name('kontak.index');
-Route::post('kontak', [ContactController::class, 'store'])->name('kontak.store')->middleware('throttle:1,1');;
+Route::post('kontak', [ContactController::class, 'store'])
+    ->name('kontak.store')
+    ->middleware('throttle:1,1');
 /*
 |--------------------------------------------------------------------------
 | ROUTE PENGGUNA (Untuk Muzakki)
@@ -103,16 +105,13 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
         Route::resource('/periode', PeriodeController::class);
         // Manajemen Transaksi
         Route::resource('/transaksi', TransaksiAdminController::class);
-        Route::get('/transaksi-export', [TransaksiAdminController::class, 'export'])->name('transaksi.export');
-
+        Route::get('/transaksi-export-excel', [TransaksiAdminController::class, 'exportExcel'])->name('transaksi.export.excel');
+        Route::get('/transaksi-export-pdf', [TransaksiAdminController::class, 'exportPdf'])->name('transaksi.export.pdf');
         Route::resource('/programs', ProgramController::class)->except(['show']);
 
-
-       Route::resource('/kontak', ContactControllerAdmin::class)->only(['index', 'show', 'destroy']);
-
+        Route::resource('/kontak', ContactControllerAdmin::class)->only(['index', 'show', 'destroy']);
 
         Route::get('/laporan-penyaluran', [LaporanPenyaluranController::class, 'index'])->name('laporan.penyaluran');
-
 
         Route::prefix('settings')
             ->name('settings.')

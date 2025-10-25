@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\TransaksisExport;
 use App\Http\Controllers\Controller;
 use App\Models\Periode;
 use App\Models\Transaksi;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str;
 
 class TransaksiAdminController extends Controller
 {
@@ -89,6 +93,67 @@ class TransaksiAdminController extends Controller
     }
 
     /**
+     * Menangani permintaan ekspor Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        $request->validate([
+            'search' => 'nullable|string|max:100',
+            'status' => 'nullable|string',
+            'type' => 'nullable|string|in:zakat,infaq,sedekah',
+            'periode_id' => 'nullable|integer|exists:periodes,id',
+        ]);
+
+        $fileName = $this->generateDynamicFileName($request, '.xlsx');
+
+        return Excel::download(new TransaksisExport($request), $fileName);
+    }
+
+    /**
+     * Menangani permintaan ekspor PDF.
+     */
+    public function exportPdf(Request $request)
+    {
+        $request->validate([
+            'search' => 'nullable|string|max:100',
+            'status' => 'nullable|string',
+            'type' => 'nullable|string|in:zakat,infaq,sedekah',
+            'periode_id' => 'nullable|integer|exists:periodes,id',
+        ]);
+
+        // Buat query yang sama persis dengan di TransaksisExport
+        $query = Transaksi::with('user');
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('order_id', 'like', "%{$search}%")->orWhereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+        if ($request->filled('type')) {
+            $query->where('type', $request->input('type'));
+        }
+        if ($request->filled('periode_id')) {
+            $periode = Periode::find($request->input('periode_id'));
+            if ($periode) {
+                $startDate = Carbon::parse($periode->start_date)->startOfDay();
+                $endDate = Carbon::parse($periode->end_date)->endOfDay();
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            }
+        }
+        $transaksis = $query->latest()->get();
+
+        $fileName = $this->generateDynamicFileName($request, '.pdf');
+
+        $pdf = Pdf::loadView('reports.transaksi', ['transaksis' => $transaksis]);
+        return $pdf->download($fileName);
+    }
+
+    /**
      * Memperbarui status transaksi.
      */
     public function update(Request $request, Transaksi $transaksi)
@@ -126,5 +191,28 @@ class TransaksiAdminController extends Controller
         return Inertia::render('admin/transaksi-admin/show', [
             'transaksi' => $transaksi,
         ]);
+    }
+
+    /**
+     * Helper private untuk membuat nama file yang dinamis berdasarkan filter.
+     */
+    private function generateDynamicFileName(Request $request, string $extension): string
+    {
+        $fileNameParts = ['laporan-transaksi'];
+        if ($request->filled('status')) {
+            $fileNameParts[] = $request->input('status');
+        }
+        if ($request->filled('type')) {
+            $fileNameParts[] = 'jenis-' . $request->input('type');
+        }
+        if ($request->filled('periode_id')) {
+            $periode = Periode::find($request->input('periode_id'));
+            if ($periode) {
+                $fileNameParts[] = 'periode-' . $periode->name;
+            }
+        }
+        $fileNameParts[] = now()->format('d-m-Y');
+
+        return Str::slug(implode('-', $fileNameParts)) . $extension;
     }
 }
