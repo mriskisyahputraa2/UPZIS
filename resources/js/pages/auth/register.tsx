@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, UserPlus } from 'lucide-react';
@@ -136,9 +137,8 @@ export default function Register() {
                                             <Label htmlFor="password">
                                                 Password
                                             </Label>
-                                            <Input
+                                            <PasswordInput
                                                 id="password"
-                                                type="password"
                                                 name="password"
                                                 value={data.password}
                                                 autoComplete="new-password"
@@ -160,9 +160,8 @@ export default function Register() {
                                             <Label htmlFor="password_confirmation">
                                                 Konfirmasi Password
                                             </Label>
-                                            <Input
+                                            <PasswordInput
                                                 id="password_confirmation"
-                                                type="password"
                                                 name="password_confirmation"
                                                 value={
                                                     data.password_confirmation

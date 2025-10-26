@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import PublicLayout from '@/layouts/publicLayout';
 import { Head, router } from '@inertiajs/react';
 import { useEffect } from 'react';
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 import ProfileSidebarNav from './partials/ProfileSidebarNav';
 import TransactionHistory from './partials/TransactionHistory';
 import UpdatePasswordForm from './partials/UpdatePasswordForm';
@@ -42,7 +42,6 @@ export default function Index({
     return (
         <PublicLayout>
             <Head title="Profil Saya" />
-            <Toaster richColors position="top-center" />
 
             <section className="bg-green-700 pt-28 pb-24 text-white md:pt-32">
                 <div className="container mx-auto max-w-7xl px-6">

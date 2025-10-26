@@ -7,8 +7,8 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/ui/password-input';
 import { useForm } from '@inertiajs/react';
 
 export default function UpdatePasswordForm({ className = '' }) {
@@ -44,9 +44,8 @@ export default function UpdatePasswordForm({ className = '' }) {
                         <Label htmlFor="current_password">
                             Password Saat Ini
                         </Label>
-                        <Input
+                        <PasswordInput
                             id="current_password"
-                            type="password"
                             value={data.current_password}
                             onChange={(e) =>
                                 setData('current_password', e.target.value)
@@ -62,9 +61,8 @@ export default function UpdatePasswordForm({ className = '' }) {
 
                     <div className="space-y-2">
                         <Label htmlFor="password">Password Baru</Label>
-                        <Input
+                        <PasswordInput
                             id="password"
-                            type="password"
                             value={data.password}
                             onChange={(e) =>
                                 setData('password', e.target.value)
@@ -82,9 +80,8 @@ export default function UpdatePasswordForm({ className = '' }) {
                         <Label htmlFor="password_confirmation">
                             Konfirmasi Password Baru
                         </Label>
-                        <Input
+                        <PasswordInput
                             id="password_confirmation"
-                            type="password"
                             value={data.password_confirmation}
                             onChange={(e) =>
                                 setData('password_confirmation', e.target.value)

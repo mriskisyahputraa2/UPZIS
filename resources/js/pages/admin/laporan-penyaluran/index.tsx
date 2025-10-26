@@ -175,7 +175,7 @@ export default function Index({ penyalurans, summary, filters, periodes }) {
         );
     };
 
-    const getExportUrl = (format: 'excel' | 'pdf') => {
+    const getExportUrl = (exportFormat: 'excel' | 'pdf') => {
         const params = new URLSearchParams();
         if (search) params.append('search', search);
         if (periodeId !== 'all') params.append('periode_id', periodeId);
@@ -188,7 +188,7 @@ export default function Index({ penyalurans, summary, filters, periodes }) {
         if (date?.to) params.append('end_date', format(date.to, 'y-MM-dd'));
 
         const baseUrl =
-            format === 'pdf'
+            exportFormat === 'pdf'
                 ? '/admin/laporan-penyaluran/export-pdf'
                 : '/admin/laporan-penyaluran/export-excel';
         return `${baseUrl}?${params.toString()}`;

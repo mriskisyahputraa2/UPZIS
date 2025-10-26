@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/ui/password-input';
 
 // isEdit adalah prop untuk mengubah teks di form (Edit vs Tambah)
 export function AdminForm({ data, setData, errors, isEdit = false }) {
@@ -56,9 +57,8 @@ export function AdminForm({ data, setData, errors, isEdit = false }) {
                     <Label htmlFor="password">
                         {isEdit ? 'Password Baru' : 'Password *'}
                     </Label>
-                    <Input
+                    <PasswordInput
                         id="password"
-                        type="password"
                         value={data.password}
                         onChange={(e) => setData('password', e.target.value)}
                     />
@@ -70,9 +70,8 @@ export function AdminForm({ data, setData, errors, isEdit = false }) {
                             ? 'Konfirmasi Password Baru'
                             : 'Konfirmasi Password *'}
                     </Label>
-                    <Input
+                    <PasswordInput
                         id="password_confirmation"
-                        type="password"
                         value={data.password_confirmation}
                         onChange={(e) =>
                             setData('password_confirmation', e.target.value)
