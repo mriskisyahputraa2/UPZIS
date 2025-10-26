@@ -1,3 +1,9 @@
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from '@/components/ui/accordion';
 import PublicLayout from '@/layouts/publicLayout';
 import { Head, Link } from '@inertiajs/react';
 import { format } from 'date-fns';
@@ -112,11 +118,11 @@ export default function Homepage({ muzakkiCount, mustahikCount, programs }) {
     const faqs = [
         {
             q: 'Bagaimana cara berdonasi di platform ini?',
-            a: 'Anda bisa mendaftar atau login, kemudian pilih menu Donasi. Kami menyediakan berbagai metode pembayaran online yang aman dan terverifikasi otomatis untuk Zakat, Infaq, dan Sedekah.',
+            a: 'Anda bisa mendaftar atau login, kemudian pilih menu Donasi. Kami menyediakan metode pembayaran yang mudah untuk Zakat, Infaq, dan Sedekah, melalui DANA & GoPay dan pembayaran tunai secara langsung.',
         },
         {
             q: 'Siapa saja yang berhak menerima bantuan?',
-            a: 'Sesuai prioritas kami, penerima bantuan saat ini adalah mahasiswa aktif semester akhir di sekitar lingkungan kampus yang memenuhi kriteria tidak mampu dan tidak sedang menerima beasiswa lain.',
+            a: 'Sesuai prioritas kami, penerima bantuan terbagi menjadi dua kategori utama: Mahasiswa (dengan kriteria aktif semester akhir, kurang mampu, dan tidak sedang menerima beasiswa lain) serta masyarakat umum yang termasuk dalam kategori fakir/miskin.',
         },
         {
             q: 'Apakah data saya aman?',
@@ -427,6 +433,51 @@ export default function Homepage({ muzakkiCount, mustahikCount, programs }) {
                             Lihat Semua Program{' '}
                             <ArrowRight className="ml-2 h-5 w-5" />
                         </Link>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* ## 6. SEKSI FAQ (DITAMBAHKAN KEMBALI) ## */}
+            <section className="bg-green-50 py-24">
+                <div className="container mx-auto max-w-4xl px-6">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, amount: 0.5 }}
+                        transition={{ duration: 0.5 }}
+                        className="text-center"
+                    >
+                        <h2 className="text-3xl font-bold text-gray-800">
+                            Pertanyaan Umum
+                        </h2>
+                        <p className="mx-auto mt-4 max-w-2xl text-slate-600">
+                            Menemukan jawaban cepat untuk pertanyaan paling umum
+                            tentang proses di platform kami.
+                        </p>
+                    </motion.div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, amount: 0.5 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="mt-12"
+                    >
+                        <Accordion type="single" collapsible className="w-full">
+                            {faqs.map((faq, index) => (
+                                <AccordionItem
+                                    key={index}
+                                    value={`item-${index + 1}`}
+                                    className="border-green-200"
+                                >
+                                    <AccordionTrigger className="text-left text-lg font-semibold text-green-800 hover:no-underline">
+                                        {faq.q}
+                                    </AccordionTrigger>
+                                    <AccordionContent className="text-base text-slate-600">
+                                        {faq.a}
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
                     </motion.div>
                 </div>
             </section>
