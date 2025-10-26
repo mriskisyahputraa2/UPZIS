@@ -34,45 +34,67 @@ const mainNavItems: NavItem[] = [
         href: '/admin/dashboard',
         icon: LayoutGrid,
     },
-
     {
-        title: 'Verifikasi Transaksi',
-        href: '/admin/transaksi',
-        icon: ClipboardList,
+        title: 'Master Data',
+        icon: BookType,
+        subItems: [
+            {
+                title: 'Manajemen Mustahik',
+                href: '/admin/mustahiks',
+                icon: Users,
+            },
+            {
+                title: 'Manajemen Periode',
+                href: '/admin/periode',
+                icon: Calendar,
+            },
+            {
+                title: 'Jenis Zakat',
+                href: '/admin/settings/zakat-types',
+                icon: BookType,
+            },
+        ],
     },
-
     {
-        title: 'Manajemen Periode',
-        href: '/admin/periode',
-        icon: Calendar,
+        title: 'Transaksi',
+        icon: Wallet,
+        subItems: [
+            {
+                title: 'Verifikasi Transaksi',
+                href: '/admin/transaksi',
+                icon: ClipboardList,
+            },
+            {
+                title: 'Penyaluran Bantuan',
+                href: '/admin/laporan-penyaluran',
+                icon: HandCoins,
+            },
+        ],
     },
-
     {
-        title: 'Manajemen Mustahik',
-        href: '/admin/mustahiks',
-        icon: Users,
-    },
-
-    {
-        title: 'Manajemen Permohonan',
+        title: 'Permohonan Bantuan',
         href: '/admin/permohonan',
         icon: FileText,
     },
     {
-        title: 'Penyaluran Bantuan',
-        href: '/admin/laporan-penyaluran',
-        icon: HandCoins,
-    },
-    {
-        title: 'Manajemen Program',
-        href: '/admin/programs',
+        title: 'Konten & Program',
         icon: GalleryHorizontal,
+        subItems: [
+            {
+                title: 'Manajemen Program',
+                href: '/admin/programs',
+                icon: GalleryHorizontal,
+            },
+            {
+                title: 'Pesan Masuk',
+                href: '/admin/kontak',
+                icon: Inbox,
+            },
+        ],
     },
-
     {
         title: 'Pengaturan',
         icon: Settings,
-        // Item induk tidak memiliki href, tetapi memiliki subItems
         subItems: [
             {
                 title: 'Umum',
@@ -85,19 +107,9 @@ const mainNavItems: NavItem[] = [
                 icon: Wallet,
             },
             {
-                title: 'Jenis Zakat',
-                href: '/admin/settings/zakat-types',
-                icon: BookType,
-            },
-            {
                 title: 'Manajemen Admin',
                 href: '/admin/settings/admins',
                 icon: UserCog,
-            },
-            {
-                title: 'Pesan Masuk',
-                href: '/admin/kontak',
-                icon: Inbox,
             },
         ],
     },
