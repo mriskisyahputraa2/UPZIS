@@ -112,17 +112,17 @@ class DashboardController extends Controller
 
         $performanceStats = [
             'danaTerkumpul' => [
-                'zakat' => (clone $danaMasukQuery)->where('type', 'zakat')->sum('final_amount'),
-                'infaq' => (clone $danaMasukQuery)->where('type', 'infaq')->sum('final_amount'),
-                'sedekah' => (clone $danaMasukQuery)->where('type', 'sedekah')->sum('final_amount'),
-                'total' => (clone $danaMasukQuery)->sum('final_amount'),
+                'zakat' => (float) (clone $danaMasukQuery)->where('type', 'zakat')->sum('final_amount'),
+                'infaq' => (float) (clone $danaMasukQuery)->where('type', 'infaq')->sum('final_amount'),
+                'sedekah' => (float) (clone $danaMasukQuery)->where('type', 'sedekah')->sum('final_amount'),
+                'total' => (float) (clone $danaMasukQuery)->sum('final_amount'),
             ],
             'danaDisalurkan' => [
-                'kampus' => (clone $danaDisalurkanQuery)->where('kategori_alokasi', 'kampus')->sum('amount'),
-                'fakir_miskin' => (clone $danaDisalurkanQuery)->where('kategori_alokasi', 'fakir_miskin')->sum('amount'),
-                'infaq' => (clone $danaDisalurkanQuery)->where('kategori_alokasi', 'infaq')->sum('amount'),
-                'sedekah' => (clone $danaDisalurkanQuery)->where('kategori_alokasi', 'sedekah')->sum('amount'),
-                'total' => (clone $danaDisalurkanQuery)->sum('amount'),
+                'kampus' => (float) (clone $danaDisalurkanQuery)->where('kategori_alokasi', 'kampus')->sum('amount'),
+                'fakir_miskin' => (float) (clone $danaDisalurkanQuery)->where('kategori_alokasi', 'fakir_miskin')->sum('amount'),
+                'infaq' => (float) (clone $danaDisalurkanQuery)->where('kategori_alokasi', 'infaq')->sum('amount'),
+                'sedekah' => (float) (clone $danaDisalurkanQuery)->where('kategori_alokasi', 'sedekah')->sum('amount'),
+                'total' => (float) (clone $danaDisalurkanQuery)->sum('amount'),
             ],
         ];
 

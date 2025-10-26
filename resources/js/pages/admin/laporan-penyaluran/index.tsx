@@ -61,7 +61,7 @@ import { useEffect, useRef, useState } from 'react';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/admin/dashboard' },
-    { title: 'Laporan Penyaluran Bantuan' },
+    { title: 'Daftar Laporan Penyaluran Bantuan' },
 ];
 
 // Helper Functions
@@ -195,10 +195,10 @@ export default function Index({ penyalurans, summary, filters, periodes }) {
     };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Laporan Penyaluran Bantuan" />
+            <Head title="Daftar Laporan Penyaluran Bantuan" />
             <Card className="flex h-full flex-1 flex-col">
                 <CardHeader>
-                    <CardTitle>Laporan Penyaluran Bantuan</CardTitle>
+                    <CardTitle>Daftar Laporan Penyaluran Bantuan</CardTitle>
                     <CardDescription>
                         Lacak dan audit semua dana yang telah disalurkan kepada
                         mustahik.
