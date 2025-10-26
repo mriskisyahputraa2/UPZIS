@@ -132,7 +132,7 @@ export default function Create() {
                         <div className="lg:col-span-1">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Foto Mustahik *</CardTitle>
+                                    <CardTitle>Foto Mustahik <span className="text-red-500">*</span></CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {previewImage ? (
@@ -201,7 +201,7 @@ export default function Create() {
                         <div className="space-y-6 lg:col-span-2">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Kategori Mustahik *</CardTitle>
+                                    <CardTitle>Kategori Mustahik <span className="text-red-500">*</span></CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <RadioGroup
@@ -243,7 +243,7 @@ export default function Create() {
                                 <CardContent className="space-y-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="name">
-                                            Nama Lengkap *
+                                            Nama Lengkap <span className="text-red-500">*</span>
                                         </Label>
                                         <Input
                                             id="name"
@@ -257,7 +257,7 @@ export default function Create() {
                                         <InputError message={errors.name} />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Jenis Kelamin *</Label>
+                                        <Label>Jenis Kelamin <span className="text-red-500">*</span></Label>
                                         <RadioGroup
                                             value={data.jenis_kelamin}
                                             onValueChange={(value) =>
@@ -290,7 +290,7 @@ export default function Create() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="phone_number">
-                                            Nomor Telepon *
+                                            Nomor Telepon <span className="text-red-500">*</span>
                                         </Label>
                                         <div className="relative">
                                             <Phone className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -322,7 +322,7 @@ export default function Create() {
                                 <CardContent className="space-y-4">
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label htmlFor="nik">NIK *</Label>
+                                            <Label htmlFor="nik">NIK <span className="text-red-500">*</span></Label>
                                             <div className="relative">
                                                 <Users className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                                 <Input
@@ -344,7 +344,7 @@ export default function Create() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="kk_number">
-                                                No. KK *
+                                                No. KK <span className="text-red-500">*</span>
                                             </Label>
                                             <div className="relative">
                                                 <Users className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -370,7 +370,7 @@ export default function Create() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="address">
-                                            Alamat Lengkap *
+                                            Alamat Lengkap <span className="text-red-500">*</span>
                                         </Label>
                                         <Textarea
                                             id="address"
@@ -400,7 +400,7 @@ export default function Create() {
                                         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                             <div className="space-y-2">
                                                 <Label htmlFor="pekerjaan">
-                                                    Pekerjaan *
+                                                    Pekerjaan <span className="text-red-500">*</span>
                                                 </Label>
                                                 <Input
                                                     id="pekerjaan"
@@ -418,7 +418,7 @@ export default function Create() {
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="jumlah_tanggungan">
-                                                    Jumlah Tanggungan *
+                                                    Jumlah Tanggungan <span className="text-red-500">*</span>
                                                 </Label>
                                                 <Input
                                                     id="jumlah_tanggungan"
@@ -441,7 +441,7 @@ export default function Create() {
                                             </div>
                                             <div className="space-y-2 sm:col-span-2">
                                                 <Label htmlFor="status_rumah">
-                                                    Status Kepemilikan Rumah *
+                                                    Status Kepemilikan Rumah <span className="text-red-500">*</span>
                                                 </Label>
                                                 <Select
                                                     value={data.status_rumah}
@@ -485,7 +485,7 @@ export default function Create() {
                                         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                             <div className="space-y-2">
                                                 <Label htmlFor="file_sktm">
-                                                    SKTM *
+                                                    Surat Keterangan Miskin <span className="text-red-500">*</span>
                                                 </Label>
                                                 <Input
                                                     id="file_sktm"
@@ -503,7 +503,7 @@ export default function Create() {
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="file_rumah_depan">
-                                                    Foto Rumah (Depan) *
+                                                    Foto Rumah (Depan) <span className="text-red-500">*</span>
                                                 </Label>
                                                 <Input
                                                     id="file_rumah_depan"
@@ -523,7 +523,7 @@ export default function Create() {
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="file_rumah_belakang">
-                                                    Foto Rumah (Belakang) *
+                                                    Foto Rumah (Belakang) <span className="text-red-500">*</span>
                                                 </Label>
                                                 <Input
                                                     id="file_rumah_belakang"
@@ -543,7 +543,7 @@ export default function Create() {
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="file_rumah_kiri">
-                                                    Foto Rumah (Kiri) *
+                                                    Foto Rumah (Kiri) <span className="text-red-500">*</span>
                                                 </Label>
                                                 <Input
                                                     id="file_rumah_kiri"
@@ -563,7 +563,7 @@ export default function Create() {
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="file_rumah_kanan">
-                                                    Foto Rumah (Kanan) *
+                                                    Foto Rumah (Kanan) <span className="text-red-500">*</span>
                                                 </Label>
                                                 <Input
                                                     id="file_rumah_kanan"

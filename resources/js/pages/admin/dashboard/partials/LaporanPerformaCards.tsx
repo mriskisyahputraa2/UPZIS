@@ -90,12 +90,21 @@ export default function LaporanPerformaCards({ performanceStats }) {
                     </div>
                     <div className="flex items-center justify-between rounded-md border p-3">
                         <span className="text-sm font-medium text-muted-foreground">
-                            Infaq & Sedekah
+                            Infaq
                         </span>
                         <span className="font-semibold">
                             {formatCurrency(
-                                performanceStats.danaDisalurkan.infaq +
-                                    performanceStats.danaDisalurkan.sedekah,
+                                performanceStats.danaDisalurkan.infaq,
+                            )}
+                        </span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-md border p-3">
+                        <span className="text-sm font-medium text-muted-foreground">
+                            Sedekah
+                        </span>
+                        <span className="font-semibold">
+                            {formatCurrency(
+                                performanceStats.danaDisalurkan.sedekah,
                             )}
                         </span>
                     </div>

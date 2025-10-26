@@ -1,5 +1,8 @@
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { AlertTriangle, Info } from 'lucide-react';
 
 // Import semua partials yang baru kita buat
 import AlokasiZakatCard from './partials/AlokasiZakatCard';
@@ -14,6 +17,7 @@ export default function Dashboard({
     activeFilters,
     periodes,
     alokasiAturan,
+    activePeriode,
 }) {
     const breadcrumbs = [{ title: 'Dashboard' }];
     const { auth } = usePage().props;
@@ -32,6 +36,39 @@ export default function Dashboard({
                         Berikut adalah ringkasan aktivitas dan performa UPZIS.
                     </p>
                 </div>
+
+                {activePeriode ? (
+                    <Alert variant="info">
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>Periode Pendaftaran Aktif</AlertTitle>
+                        <AlertDescription>
+                            Saat ini periode pendaftaran yang sedang aktif
+                            adalah{' '}
+                            <strong className="text-green-600">
+                                {activePeriode.name}
+                            </strong>
+                            .
+                        </AlertDescription>
+                    </Alert>
+                ) : (
+                    <Alert variant="warning">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Tidak Ada Periode Aktif</AlertTitle>
+                        <AlertDescription>
+                            Formulir pendaftaran publik saat ini sedang ditutup.{' '}
+                            <Button
+                                variant="link"
+                                asChild
+                                className="ml-1 h-auto p-0"
+                            >
+                                <Link href="/admin/periode">
+                                    Aktifkan periode.
+                                </Link>
+                            </Button>
+                        </AlertDescription>
+                    </Alert>
+                )}
+
                 <DashboardHeaderStats
                     performanceStats={performanceStats}
                     realtimeStats={realtimeStats}
