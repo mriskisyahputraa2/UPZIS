@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { PlusCircle, Trash2 } from 'lucide-react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 // Tipe data untuk props paymentSettings
 interface PaymentDetail {
@@ -42,6 +44,12 @@ export default function PaymentAccountSettings({
         gopay: paymentSettings.gopay || { account: '', name: '', steps: [''] },
         tunai: paymentSettings.tunai || { account: '', name: '', steps: [''] },
     });
+
+    useEffect(() => {
+        if (flash?.success) {
+            toast.success(flash.success as string);
+        }
+    }, [flash]);
 
     // Helper untuk mengelola array 'steps'
     const handleStepChange = (
@@ -77,15 +85,6 @@ export default function PaymentAccountSettings({
 
             {/* --- PERUBAHAN DI SINI: Tambahkan padding responsif --- */}
             <div className="p-4 sm:p-6 lg:p-8">
-                {flash?.success && (
-                    <div
-                        className="mb-6 border-l-4 border-green-500 bg-green-100 p-4 text-green-700"
-                        role="alert"
-                    >
-                        <p>{flash.success}</p>
-                    </div>
-                )}
-
                 <form onSubmit={handleSubmit} className="space-y-8">
                     {/* --- KARTU DANA --- */}
                     <Card>
@@ -265,7 +264,7 @@ export default function PaymentAccountSettings({
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="tunai_account">
-                                    Judul Lokasi (cth: Sekretariat UPZIS)
+                                    Nama Lokasi Setor (cth: Sekretariat UPZIS)
                                 </Label>
                                 <Input
                                     id="tunai_account"
@@ -280,7 +279,7 @@ export default function PaymentAccountSettings({
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="tunai_name">
-                                    Alamat Lengkap
+                                    Detail Alamat Lokasi
                                 </Label>
                                 <Input
                                     id="tunai_name"

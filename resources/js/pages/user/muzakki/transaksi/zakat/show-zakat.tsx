@@ -17,7 +17,11 @@ import {
     CheckCircle,
     Circle,
     Loader,
+    MapPin,
+    Smartphone,
     Upload,
+    User,
+    Wallet,
     X,
     XCircle,
 } from 'lucide-react';
@@ -97,6 +101,55 @@ const StatusStepper = ({ status }) => {
                     </div>
                 );
             })}
+        </div>
+    );
+};
+
+// ## KOMPONEN BARU YANG "PINTAR" UNTUK MENAMPILKAN DETAIL PEMBAYARAN ##
+const PaymentDetailsDisplay = ({ method, details }) => {
+    if (!details) return null;
+
+    // Jika metode pembayaran adalah Tunai
+    if (method === 'Tunai') {
+        return (
+            <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                    <Wallet className="mt-1 h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                    <div>
+                        <p className="text-sm text-muted-foreground">
+                            Setor ke:
+                        </p>
+                        <p className="font-semibold">{details.account}</p>
+                    </div>
+                </div>
+                <div className="flex items-start gap-3">
+                    <MapPin className="mt-1 h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                    <div>
+                        <p className="text-sm text-muted-foreground">Alamat:</p>
+                        <p className="font-semibold">{details.name}</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Untuk metode pembayaran lain (DANA, GoPay)
+    return (
+        <div className="space-y-4">
+            <div className="flex items-start gap-3">
+                <User className="mt-1 h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                <div>
+                    <p className="text-sm text-muted-foreground">Atas Nama:</p>
+                    <p className="font-semibold">{details.name}</p>
+                </div>
+            </div>
+            <div className="flex items-start gap-3">
+                <Smartphone className="mt-1 h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                <div>
+                    <p className="text-sm text-muted-foreground">Nomor Akun:</p>
+                    <p className="font-semibold">{details.account}</p>
+                </div>
+            </div>
         </div>
     );
 };
@@ -239,7 +292,7 @@ export default function Show({ transaksi, paymentDetails }) {
 
                     {transaksi.status === 'Menunggu Pembayaran' && (
                         <>
-                            {instructions && (
+                            {paymentDetails && (
                                 <Card className="shadow-lg duration-500 animate-in fade-in">
                                     <CardHeader>
                                         <CardTitle>
@@ -247,22 +300,22 @@ export default function Show({ transaksi, paymentDetails }) {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="space-y-2 text-sm">
+                                        <div className="space-y-4 text-sm">
                                             <p>
                                                 Silakan lakukan pembayaran ke
                                                 akun berikut:
                                             </p>
-                                            <div className="rounded-md bg-muted/30 p-3">
-                                                <p className="text-base font-semibold">
-                                                    {instructions.account}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    Atas Nama:{' '}
-                                                    {instructions.name}
-                                                </p>
+                                            <div className="rounded-md bg-muted/30 p-4">
+                                                {/* ## MENGGUNAKAN KOMPONEN PINTAR ## */}
+                                                <PaymentDetailsDisplay
+                                                    method={
+                                                        transaksi.payment_method
+                                                    }
+                                                    details={paymentDetails}
+                                                />
                                             </div>
-                                            <ol className="list-inside list-decimal space-y-1 pt-2">
-                                                {instructions.steps.map(
+                                            <ol className="list-inside list-decimal space-y-1 pt-2 text-muted-foreground">
+                                                {paymentDetails.steps.map(
                                                     (step, i) => (
                                                         <li key={i}>{step}</li>
                                                     ),

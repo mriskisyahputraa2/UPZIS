@@ -116,10 +116,8 @@ export default function Login({ status, canResetPassword }) {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <Label htmlFor="password">
-                                                    Password
-                                                </Label>
+                                            {/* <div className="flex items-center justify-between">
+
                                                 {canResetPassword && (
                                                     <Link
                                                         href="/forgot-password"
@@ -128,7 +126,10 @@ export default function Login({ status, canResetPassword }) {
                                                         Lupa password?
                                                     </Link>
                                                 )}
-                                            </div>
+                                            </div> */}
+                                            <Label htmlFor="password">
+                                                Password
+                                            </Label>
                                             <PasswordInput
                                                 id="password"
                                                 value={data.password}

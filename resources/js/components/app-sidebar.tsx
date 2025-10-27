@@ -9,8 +9,9 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-// import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
+// BARU: Import usePage untuk mendapatkan data user
+import { usePage } from '@inertiajs/react';
 import {
     BookType,
     Calendar,
@@ -28,6 +29,7 @@ import {
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
+// Definisikan semua kemungkinan item menu di sini
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -115,7 +117,48 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+// BARU: Definisikan rute yang diizinkan untuk role 'admin'
+const adminAllowedRoutes = [
+    '/admin/dashboard',
+    '/admin/mustahiks',
+    '/admin/transaksi',
+    '/admin/laporan-penyaluran',
+    '/admin/permohonan',
+    '/admin/programs',
+    '/admin/kontak',
+];
+
 export function AppSidebar() {
+    // BARU: Dapatkan data user dari props halaman
+    const { auth } = usePage().props as any;
+    const userRole = auth.user.role;
+
+    // BARU: Logika untuk memfilter item menu berdasarkan role
+    const visibleNavItems =
+        userRole === 'superadmin'
+            ? mainNavItems // Super Admin melihat semua menu
+            : mainNavItems.reduce((acc, item) => {
+                  // Jika item tidak punya sub-menu
+                  if (!item.subItems) {
+                      if (adminAllowedRoutes.includes(item.href)) {
+                          acc.push(item);
+                      }
+                      return acc;
+                  }
+
+                  // Jika item punya sub-menu, filter sub-menunya
+                  const allowedSubItems = item.subItems.filter((subItem) =>
+                      adminAllowedRoutes.includes(subItem.href),
+                  );
+
+                  // Jika ada sub-menu yang diizinkan, tampilkan menu utamanya
+                  if (allowedSubItems.length > 0) {
+                      acc.push({ ...item, subItems: allowedSubItems });
+                  }
+
+                  return acc;
+              }, [] as NavItem[]);
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -129,11 +172,11 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                {/* DIUBAH: Gunakan array menu yang sudah difilter */}
+                <NavMain items={visibleNavItems} />
             </SidebarContent>
 
             <SidebarFooter>
-                {/* <NavFooter items={footerNavItems} className="mt-auto" /> */}
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
