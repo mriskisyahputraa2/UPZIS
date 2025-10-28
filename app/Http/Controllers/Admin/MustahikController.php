@@ -23,7 +23,7 @@ use App\Exports\MustahiksExport;
 class MustahikController extends Controller
 {
     // Menampilkan halaman daftar mustahik
-   public function index(Request $request)
+    public function index(Request $request)
     {
         $request->validate([
             'search' => 'nullable|string|max:100',
@@ -113,12 +113,11 @@ class MustahikController extends Controller
                 'name' => 'required|string|max:255',
                 'jenis_kelamin' => 'required|string|in:Laki-laki,Perempuan',
                 'kategori_pemohon' => 'required|string|in:mahasiswa,umum',
-                'nik' => 'required|string|size:16|unique:mustahiks,nik',
-                'kk_number' => 'required|string|size:16|unique:mustahiks,kk_number',
+                'nik' => 'required|string|size:16',
+                'kk_number' => 'required|string|size:16',
                 'phone_number' => 'required|string|max:20',
                 'address' => 'required|string',
                 'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-                // Aturan yang benar: Wajib jika 'umum', dan boleh kosong (nullable) jika tidak.
                 'pekerjaan' => [Rule::requiredIf($isUmum), 'nullable', 'string', 'max:255'],
                 'jumlah_tanggungan' => [Rule::requiredIf($isUmum), 'nullable', 'integer', 'min:0'],
                 'status_rumah' => [Rule::requiredIf($isUmum), 'nullable', 'string', 'in:Milik Sendiri,Sewa/Kontrak,Menumpang'],
@@ -184,29 +183,52 @@ class MustahikController extends Controller
             ],
         );
 
+        // ## PERUBAHAN UTAMA: Logika Pengecekan Duplikasi ##
+        $customErrors = [];
+        $mustahikByNik = Mustahik::where('nik', $validated['nik'])->first();
+        $mustahikByKk = Mustahik::where('kk_number', $validated['kk_number'])->first();
+
+        // Cek 1: Apakah NIK ini sudah mendaftar di PERIODE YANG SAMA? (Tolak pendaftaran)
+        if ($mustahikByNik) {
+            $existingPermohonan = Permohonan::where('mustahik_id', $mustahikByNik->id)->where('periode_id', $activePeriode->id)->exists();
+            if ($existingPermohonan) {
+                $customErrors['nik'] = 'Mustahik dengan NIK ini sudah terdaftar pada periode bantuan ini.';
+            }
+        }
+
+        // Cek 2: Apakah No. KK ini sudah dipakai oleh NIK yang berbeda?
+        if ($mustahikByKk && (!$mustahikByNik || $mustahikByNik->id !== $mustahikByKk->id)) {
+            $customErrors['kk_number'] = 'No. KK ini sudah terdaftar untuk NIK yang berbeda.';
+        }
+
+        if (!empty($customErrors)) {
+            return back()->withErrors($customErrors)->withInput();
+        }
+
         try {
             DB::beginTransaction();
 
-            // Tentukan folder dinamis untuk foto profil
             $folderPath = $validated['kategori_pemohon'] === 'mahasiswa' ? 'mustahik-mahasiswa' : 'mustahik-umum';
-
             $photoPath = $request->file('photo')->store($folderPath, 'public');
 
-            // Buat data Mustahik
-            $mustahik = Mustahik::create([
-                'name' => $validated['name'],
-                'jenis_kelamin' => $validated['jenis_kelamin'],
-                'pekerjaan' => $validated['pekerjaan'] ?? null,
-                'jumlah_tanggungan' => $validated['jumlah_tanggungan'] ?? 0,
-                'status_rumah' => $validated['status_rumah'] ?? null,
-                'nik' => $validated['nik'],
-                'kk_number' => $validated['kk_number'],
-                'phone_number' => $validated['phone_number'],
-                'address' => $validated['address'],
-                'photo' => $photoPath,
-            ]);
+            // ## LOGIKA INTI: "Cari atau Buat Baru" berdasarkan NIK ##
+            $mustahik = Mustahik::updateOrCreate(
+                ['nik' => $validated['nik']], // Kunci untuk mencari
+                [
+                    // Data untuk diisi (jika baru) atau diperbarui (jika sudah ada)
+                    'name' => $validated['name'],
+                    'jenis_kelamin' => $validated['jenis_kelamin'],
+                    'pekerjaan' => $validated['pekerjaan'] ?? null,
+                    'jumlah_tanggungan' => $validated['jumlah_tanggungan'] ?? 0,
+                    'status_rumah' => $validated['status_rumah'] ?? null,
+                    'kk_number' => $validated['kk_number'],
+                    'phone_number' => $validated['phone_number'],
+                    'address' => $validated['address'],
+                    'photo' => $photoPath,
+                ],
+            );
 
-            // Buat data Permohonan inti
+            // Selalu buat catatan permohonan BARU untuk periode saat ini
             $permohonan = Permohonan::create([
                 'mustahik_id' => $mustahik->id,
                 'periode_id' => $activePeriode->id,
@@ -214,7 +236,6 @@ class MustahikController extends Controller
                 'kategori_pemohon' => $validated['kategori_pemohon'],
                 'status' => $isUmum ? 'Disetujui' : 'Baru',
             ]);
-
             // Simpan file-file lampiran ke tabel permohonan_dokumens
             $paths = [];
             $fileKeys = [

@@ -7,16 +7,13 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Dialog } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
-import { Dialog } from '@radix-ui/react-dialog';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
-    Bookmark,
-    Calendar,
+    Briefcase,
     Copy,
     Download,
     Edit,
@@ -29,7 +26,6 @@ import {
     ZoomIn,
 } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import PenyaluranForm from '../permohonan/partials/PenyaluranForm';
 import PenyaluranItem from '../permohonan/partials/PenyaluranItem';
 
@@ -39,28 +35,29 @@ const breadcrumbs = [
     { title: 'Detail Mustahik' },
 ];
 
-const PersonalDetailItem = ({ icon: Icon, label, value, canCopy = false }) => {
+const PersonalDetailItem = ({
+    icon: Icon,
+    label,
+    value,
+    children,
+    canCopy = false,
+}) => {
     const copyToClipboard = () => {
         if (!value) return;
-        navigator.clipboard.writeText(value);
+        navigator.clipboard.writeText(String(value));
         toast.success(`"${label}" berhasil disalin!`);
     };
     return (
         <div className="flex items-start justify-between py-3">
-            {' '}
             <div className="flex items-start gap-4">
-                {' '}
-                <Icon className="h-5 w-5 flex-shrink-0 text-muted-foreground" />{' '}
+                <Icon className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
                 <div>
-                    {' '}
-                    <p className="text-sm text-muted-foreground">
-                        {label}
-                    </p>{' '}
-                    <p className="font-semibold break-all text-foreground">
-                        {value || '-'}
-                    </p>{' '}
-                </div>{' '}
-            </div>{' '}
+                    <p className="text-sm text-muted-foreground">{label}</p>
+                    <div className="font-semibold break-all text-foreground">
+                        {children || value || '-'}
+                    </div>
+                </div>
+            </div>
             {canCopy && value && (
                 <Button
                     variant="ghost"
@@ -69,10 +66,9 @@ const PersonalDetailItem = ({ icon: Icon, label, value, canCopy = false }) => {
                     onClick={copyToClipboard}
                     aria-label={`Salin ${label}`}
                 >
-                    {' '}
-                    <Copy className="h-4 w-4" />{' '}
+                    <Copy className="h-4 w-4" />
                 </Button>
-            )}{' '}
+            )}
         </div>
     );
 };
@@ -81,10 +77,9 @@ const DocumentCard = ({ file_path, label }) => {
     if (!file_path) return null;
     const fileUrl = `/storage/${file_path}`;
     const isImage = /\.(jpe?g|png|gif|webp)$/i.test(file_path);
-    const isPdf = /\.pdf$/i.test(file_path);
+
     return (
         <div className="group relative overflow-hidden rounded-lg border">
-            {' '}
             {isImage ? (
                 <img
                     src={fileUrl}
@@ -92,24 +87,15 @@ const DocumentCard = ({ file_path, label }) => {
                     className="h-28 w-full object-cover"
                     loading="lazy"
                 />
-            ) : isPdf ? (
-                <iframe
-                    src={fileUrl}
-                    className="h-28 w-full border-0"
-                    title={label}
-                    loading="lazy"
-                ></iframe>
             ) : (
                 <div className="flex h-28 w-full flex-col items-center justify-center bg-gray-100 dark:bg-gray-800">
-                    {' '}
-                    <FileText className="h-8 w-8 text-gray-400" />{' '}
+                    <FileText className="h-8 w-8 text-gray-400" />
                     <span className="mt-2 text-xs text-gray-500">
                         File Dokumen
-                    </span>{' '}
+                    </span>
                 </div>
-            )}{' '}
+            )}
             <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
-                {' '}
                 <a
                     href={fileUrl}
                     target="_blank"
@@ -119,24 +105,25 @@ const DocumentCard = ({ file_path, label }) => {
                     <Button variant="outline" size="icon" className="h-8 w-8">
                         <ZoomIn className="h-4 w-4" />
                     </Button>
-                </a>{' '}
+                </a>
                 <a href={fileUrl} download title="Unduh">
                     <Button variant="outline" size="icon" className="h-8 w-8">
                         <Download className="h-4 w-4" />
                     </Button>
-                </a>{' '}
-            </div>{' '}
+                </a>
+            </div>
             <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 to-transparent p-2">
                 <p className="truncate text-xs font-semibold text-white">
                     {label}
                 </p>
-            </div>{' '}
+            </div>
         </div>
     );
 };
 
 const StatusBadge = ({ status }) => {
-    let variant;
+    let variant: 'info' | 'warning' | 'success' | 'destructive' | 'secondary' =
+        'secondary';
     switch (status) {
         case 'Baru':
             variant = 'info';
@@ -150,8 +137,6 @@ const StatusBadge = ({ status }) => {
         case 'Ditolak':
             variant = 'destructive';
             break;
-        default:
-            variant = 'secondary';
     }
     return (
         <Badge variant={variant} className="capitalize">
@@ -161,14 +146,18 @@ const StatusBadge = ({ status }) => {
 };
 
 export default function Show({ mustahik, availableFunds }) {
-    // State untuk form edit penyaluran
     const [toEdit, setToEdit] = useState(null);
     const [toDelete, setToDelete] = useState(null);
-    const getInitials = (name) => {
-        if (!name) return '??';
-        const names = name.split(' ');
-        if (names.length === 1) return names[0].substring(0, 2).toUpperCase();
-        return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    const latestPermohonan = mustahik.permohonans[0];
+    const isMahasiswa = latestPermohonan?.kategori_pemohon === 'mahasiswa';
+
+    const handleDeletePenyaluran = () => {
+        if (toDelete) {
+            router.delete(`/admin/penyaluran/${toDelete.id}`, {
+                preserveScroll: true,
+                onSuccess: () => setToDelete(null),
+            });
+        }
     };
 
     return (
@@ -201,15 +190,14 @@ export default function Show({ mustahik, availableFunds }) {
                         </Link>
                         <Link href={`/admin/mustahiks/${mustahik.id}/edit`}>
                             <Button>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
+                                <Edit className="mr-2 h-4 w-4" /> Edit Data
+                                Induk
                             </Button>
                         </Link>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-8 pt-6 lg:grid-cols-3">
-                    {/* Kolom Kiri: Kartu Profil */}
                     <div className="lg:col-span-1">
                         <Card className="overflow-hidden text-center">
                             <CardContent className="flex flex-col items-center gap-4 p-6">
@@ -231,16 +219,22 @@ export default function Show({ mustahik, availableFunds }) {
                                     <h2 className="text-2xl font-bold">
                                         {mustahik.name}
                                     </h2>
-                                    <p className="flex items-center justify-center gap-2 text-muted-foreground">
-                                        <User className="h-4 w-4" />
-                                        <span>Mustahik</span>
-                                    </p>
+                                    <Badge
+                                        variant={
+                                            isMahasiswa
+                                                ? 'default'
+                                                : 'secondary'
+                                        }
+                                    >
+                                        {isMahasiswa
+                                            ? 'Mahasiswa'
+                                            : 'Fakir/Miskin'}
+                                    </Badge>
                                 </div>
                             </CardContent>
                         </Card>
                     </div>
 
-                    {/* Kolom Kanan: Informasi Detail dengan TAB */}
                     <div className="lg:col-span-2">
                         <Tabs defaultValue="profil" className="w-full">
                             <TabsList className="grid w-full grid-cols-2">
@@ -251,6 +245,7 @@ export default function Show({ mustahik, availableFunds }) {
                                     Riwayat Permohonan
                                 </TabsTrigger>
                             </TabsList>
+
                             <TabsContent value="profil" className="mt-6">
                                 <Card>
                                     <CardHeader>
@@ -281,40 +276,41 @@ export default function Show({ mustahik, availableFunds }) {
                                             value={mustahik.jenis_kelamin}
                                         />
                                         <PersonalDetailItem
-                                            icon={Bookmark}
-                                            label="Kategori Mustahik"
-                                            value={
-                                                <Badge
-                                                    variant={
-                                                        mustahik.permohonans[0]
-                                                            ?.kategori_pemohon ===
-                                                        'mahasiswa'
-                                                            ? 'default'
-                                                            : 'secondary'
-                                                    }
-                                                >
-                                                    {mustahik.permohonans[0]
-                                                        ?.kategori_pemohon ===
-                                                    'mahasiswa'
-                                                        ? 'Mahasiswa'
-                                                        : mustahik
-                                                                .permohonans[0]
-                                                                ?.kategori_pemohon ===
-                                                            'umum'
-                                                          ? 'Fakir/Miskin'
-                                                          : '-'}
-                                                </Badge>
-                                            }
-                                        />
-
-                                        <PersonalDetailItem
                                             icon={Home}
                                             label="Alamat Lengkap"
                                             value={mustahik.address}
                                         />
                                     </CardContent>
                                 </Card>
+
+                                {!isMahasiswa && (
+                                    <Card className="mt-6">
+                                        <CardHeader>
+                                            <CardTitle>
+                                                Data Ekonomi & Kondisi
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="divide-y">
+                                            <PersonalDetailItem
+                                                icon={Briefcase}
+                                                label="Pekerjaan"
+                                                value={mustahik.pekerjaan}
+                                            />
+                                            <PersonalDetailItem
+                                                icon={Users}
+                                                label="Jumlah Tanggungan"
+                                                value={`${mustahik.jumlah_tanggungan} Orang`}
+                                            />
+                                            <PersonalDetailItem
+                                                icon={Home}
+                                                label="Status Kepemilikan Rumah"
+                                                value={mustahik.status_rumah}
+                                            />
+                                        </CardContent>
+                                    </Card>
+                                )}
                             </TabsContent>
+
                             <TabsContent value="riwayat" className="mt-6">
                                 <Card>
                                     <CardHeader>
@@ -363,109 +359,110 @@ export default function Show({ mustahik, availableFunds }) {
                                                                 </div>
                                                             </div>
                                                             <div className="mt-4 border-t pt-4">
-                                                                <p className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-                                                                    <Calendar className="h-4 w-4" />
-                                                                    <span>
-                                                                        Tanggal
-                                                                        Pengajuan:{' '}
-                                                                        {format(
-                                                                            new Date(
-                                                                                permohonan.created_at,
-                                                                            ),
-                                                                            'dd MMMM yyyy',
-                                                                            {
-                                                                                locale: id,
-                                                                            },
-                                                                        )}
-                                                                    </span>
-                                                                </p>
-                                                                <p className="text-sm font-semibold">
+                                                                <p className="mb-2 text-sm font-semibold">
                                                                     Lampiran
                                                                     Dokumen:
                                                                 </p>
-
                                                                 {permohonan.dokumen ? (
-                                                                    <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                                                                        <DocumentCard
-                                                                            file_path={
-                                                                                permohonan
-                                                                                    .dokumen
-                                                                                    ?.file_ktp
-                                                                            }
-                                                                            label="KTP"
-                                                                        />
-                                                                        <DocumentCard
-                                                                            file_path={
-                                                                                permohonan
-                                                                                    .dokumen
-                                                                                    ?.file_kk
-                                                                            }
-                                                                            label="Kartu Keluarga"
-                                                                        />
-                                                                        <DocumentCard
-                                                                            file_path={
-                                                                                permohonan
-                                                                                    .dokumen
-                                                                                    ?.file_khs
-                                                                            }
-                                                                            label="KHS"
-                                                                        />
-                                                                        <DocumentCard
-                                                                            file_path={
-                                                                                permohonan
-                                                                                    .dokumen
-                                                                                    ?.file_surat_fakir_miskin
-                                                                            }
-                                                                            label="Surat Fakir/Miskin"
-                                                                        />
-                                                                        <DocumentCard
-                                                                            file_path={
-                                                                                permohonan
-                                                                                    .dokumen
-                                                                                    ?.file_tidak_menerima_beasiswa
-                                                                            }
-                                                                            label="Surat Ket. Tdk Menerima Beasiswa"
-                                                                        />
-                                                                        <DocumentCard
-                                                                            file_path={
-                                                                                permohonan
-                                                                                    .dokumen
-                                                                                    ?.file_surat_permohonan
-                                                                            }
-                                                                            label="Surat Permohonan"
-                                                                        />
-                                                                        <DocumentCard
-                                                                            file_path={
-                                                                                permohonan
-                                                                                    .dokumen
-                                                                                    ?.file_rumah_depan
-                                                                            }
-                                                                            label="Rumah (Depan)"
-                                                                        />
-                                                                        <DocumentCard
-                                                                            file_path={
-                                                                                permohonan
-                                                                                    .dokumen
-                                                                                    ?.file_rumah_belakang
-                                                                            }
-                                                                            label="Rumah (Belakang)"
-                                                                        />
-                                                                        <DocumentCard
-                                                                            file_path={
-                                                                                permohonan
-                                                                                    .dokumen
-                                                                                    ?.file_rumah_kiri
-                                                                            }
-                                                                            label="Rumah (Kiri)"
-                                                                        />
-                                                                        <DocumentCard
-                                                                            file_path={
-                                                                                permohonan
-                                                                                    .dokumen
-                                                                                    ?.file_rumah_kanan
-                                                                            }
-                                                                            label="Rumah (Kanan)"
-                                                                        />
+                                                                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                                                                        {permohonan.kategori_pemohon ===
+                                                                            'mahasiswa' && (
+                                                                            <>
+                                                                                <DocumentCard
+                                                                                    file_path={
+                                                                                        permohonan
+                                                                                            .dokumen
+                                                                                            ?.file_ktp
+                                                                                    }
+                                                                                    label="KTP"
+                                                                                />
+                                                                                <DocumentCard
+                                                                                    file_path={
+                                                                                        permohonan
+                                                                                            .dokumen
+                                                                                            ?.file_kk
+                                                                                    }
+                                                                                    label="Kartu Keluarga"
+                                                                                />
+                                                                                <DocumentCard
+                                                                                    file_path={
+                                                                                        permohonan
+                                                                                            .dokumen
+                                                                                            ?.file_khs
+                                                                                    }
+                                                                                    label="KHS"
+                                                                                />
+                                                                                <DocumentCard
+                                                                                    file_path={
+                                                                                        permohonan
+                                                                                            .dokumen
+                                                                                            ?.file_surat_fakir_miskin
+                                                                                    }
+                                                                                    label="Surat Fakir/Miskin"
+                                                                                />
+                                                                                <DocumentCard
+                                                                                    file_path={
+                                                                                        permohonan
+                                                                                            .dokumen
+                                                                                            ?.file_tidak_menerima_beasiswa
+                                                                                    }
+                                                                                    label="Surat Ket. Tdk Menerima Beasiswa"
+                                                                                />
+                                                                                <DocumentCard
+                                                                                    file_path={
+                                                                                        permohonan
+                                                                                            .dokumen
+                                                                                            ?.file_surat_permohonan
+                                                                                    }
+                                                                                    label="Surat Permohonan"
+                                                                                />
+                                                                            </>
+                                                                        )}
+                                                                        {permohonan.kategori_pemohon ===
+                                                                            'umum' && (
+                                                                            <>
+                                                                                <DocumentCard
+                                                                                    file_path={
+                                                                                        permohonan
+                                                                                            .dokumen
+                                                                                            ?.file_surat_fakir_miskin
+                                                                                    }
+                                                                                    label="SKTM"
+                                                                                />
+                                                                                <DocumentCard
+                                                                                    file_path={
+                                                                                        permohonan
+                                                                                            .dokumen
+                                                                                            ?.file_rumah_depan
+                                                                                    }
+                                                                                    label="Rumah (Depan)"
+                                                                                />
+                                                                                <DocumentCard
+                                                                                    file_path={
+                                                                                        permohonan
+                                                                                            .dokumen
+                                                                                            ?.file_rumah_belakang
+                                                                                    }
+                                                                                    label="Rumah (Belakang)"
+                                                                                />
+                                                                                <DocumentCard
+                                                                                    file_path={
+                                                                                        permohonan
+                                                                                            .dokumen
+                                                                                            ?.file_rumah_kiri
+                                                                                    }
+                                                                                    label="Rumah (Kiri)"
+                                                                                />
+                                                                                <DocumentCard
+                                                                                    file_path={
+                                                                                        permohonan
+                                                                                            .dokumen
+                                                                                            ?.file_rumah_kanan
+                                                                                    }
+                                                                                    label="Rumah (Kanan)"
+                                                                                />
+                                                                            </>
+                                                                        )}
                                                                     </div>
                                                                 ) : (
                                                                     <p className="mt-2 text-sm text-muted-foreground">
@@ -495,71 +492,26 @@ export default function Show({ mustahik, availableFunds }) {
                                                                                             p,
                                                                                         ) => (
                                                                                             <PenyaluranItem
-                                                                                                onEdit={
-                                                                                                    setToEdit
-                                                                                                }
                                                                                                 key={
                                                                                                     p.id
                                                                                                 }
                                                                                                 penyaluran={
                                                                                                     p
                                                                                                 }
-                                                                                                showActions={
-                                                                                                    false
+                                                                                                onEdit={
+                                                                                                    setToEdit
+                                                                                                }
+                                                                                                onDelete={
+                                                                                                    setToDelete
                                                                                                 }
                                                                                                 className="px-4"
                                                                                             />
                                                                                         ),
                                                                                     )}
                                                                                 </ul>
-                                                                                <div className="flex justify-between rounded-b-lg bg-muted/50 px-4 py-3 text-lg font-bold">
-                                                                                    <span>
-                                                                                        Total
-                                                                                        Disalurkan
-                                                                                    </span>
-                                                                                    <span className="text-green-600">
-                                                                                        {new Intl.NumberFormat(
-                                                                                            'id-ID',
-                                                                                            {
-                                                                                                style: 'currency',
-                                                                                                currency:
-                                                                                                    'IDR',
-                                                                                                minimumFractionDigits: 0,
-                                                                                            },
-                                                                                        ).format(
-                                                                                            permohonan.penyalurans.reduce(
-                                                                                                (
-                                                                                                    sum,
-                                                                                                    p,
-                                                                                                ) =>
-                                                                                                    sum +
-                                                                                                    parseFloat(
-                                                                                                        p.amount,
-                                                                                                    ),
-                                                                                                0,
-                                                                                            ),
-                                                                                        )}
-                                                                                    </span>
-                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     )}
-
-                                                                {permohonan.notes_admin && (
-                                                                    <div className="mt-4">
-                                                                        <p className="text-sm font-semibold">
-                                                                            Catatan
-                                                                            Admin:
-                                                                        </p>
-                                                                        <div className="mt-1 rounded-md border bg-gray-50 p-3 text-sm text-muted-foreground dark:bg-gray-800">
-                                                                            <p className="whitespace-pre-wrap">
-                                                                                {
-                                                                                    permohonan.notes_admin
-                                                                                }
-                                                                            </p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
                                                             </div>
                                                         </div>
                                                     ),
@@ -578,34 +530,31 @@ export default function Show({ mustahik, availableFunds }) {
                     </div>
                 </div>
 
-                {/* ## PERUBAHAN 3: Tambahkan Dialog untuk Form Edit ## */}
-                <Dialog open={!!toEdit} onOpenChange={() => setToEdit(null)}>
-                    {toEdit && (
-                        <PenyaluranForm
-                            // Temukan permohonan yang sesuai dengan penyaluran yang akan diedit
-                            permohonan={mustahik.permohonans.find(
-                                (p) => p.id === toEdit.permohonan_id,
-                            )}
-                            penyaluran={toEdit}
-                            availableFunds={availableFunds}
-                            onOpenChange={() => setToEdit(null)}
-                            onSuccess={() => setToEdit(null)}
-                        />
-                    )}
-                </Dialog>
-
                 <div className="mt-6 flex w-full justify-end gap-2 md:hidden">
                     <Link href="/admin/mustahiks">
                         <Button variant="outline">Kembali</Button>
                     </Link>
                     <Link href={`/admin/mustahiks/${mustahik.id}/edit`}>
                         <Button>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
+                            <Edit className="mr-2 h-4 w-4" /> Edit Data Induk
                         </Button>
                     </Link>
                 </div>
             </div>
+
+            <Dialog open={!!toEdit} onOpenChange={() => setToEdit(null)}>
+                {toEdit && (
+                    <PenyaluranForm
+                        permohonan={mustahik.permohonans.find(
+                            (p) => p.id === toEdit.permohonan_id,
+                        )}
+                        penyaluran={toEdit}
+                        availableFunds={availableFunds}
+                        onOpenChange={() => setToEdit(null)}
+                        onSuccess={() => setToEdit(null)}
+                    />
+                )}
+            </Dialog>
         </AppLayout>
     );
 }
