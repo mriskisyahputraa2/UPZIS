@@ -124,7 +124,7 @@ export default function ContactIndex() {
                                         </ContactInfoItem>
                                     </div>
                                 </div>
-                                <div className="flex flex-col rounded-b-lg border-t bg-gray-50 p-6 sm:p-10 lg:col-span-3 lg:rounded-r-lg lg:rounded-bl-none lg:border-t-0 lg:border-l dark:bg-slate-900/50">
+                                <div className="flex flex-col rounded-b-lg border-t p-6 sm:p-10 lg:col-span-3 lg:rounded-r-lg lg:rounded-bl-none lg:border-t-0 lg:border-l">
                                     <h2 className="text-3xl font-bold">
                                         Kirim Pesan
                                     </h2>

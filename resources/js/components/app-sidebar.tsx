@@ -30,6 +30,7 @@ import {
 import AppLogo from './app-logo';
 
 // Definisikan semua kemungkinan item menu di sini
+// Ganti array mainNavItems Anda dengan yang ini
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -37,8 +38,45 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Master Data',
-        icon: BookType,
+        title: 'Operasional',
+        icon: Wallet, // Ikon yang merepresentasikan aktivitas utama
+        subItems: [
+            {
+                title: 'Verifikasi Transaksi',
+                href: '/admin/transaksi',
+                icon: ClipboardList,
+            },
+            {
+                title: 'Permohonan Bantuan',
+                href: '/admin/permohonan',
+                icon: FileText,
+            },
+            {
+                title: 'Penyaluran Bantuan',
+                href: '/admin/laporan-penyaluran',
+                icon: HandCoins,
+            },
+        ],
+    },
+    {
+        title: 'Publikasi & Konten',
+        icon: GalleryHorizontal,
+        subItems: [
+            {
+                title: 'Manajemen Program',
+                href: '/admin/programs',
+                icon: GalleryHorizontal,
+            },
+            {
+                title: 'Pesan Masuk',
+                href: '/admin/kontak',
+                icon: Inbox,
+            },
+        ],
+    },
+    {
+        title: 'Manajemen Data',
+        icon: BookType, // Ikon untuk data referensi
         subItems: [
             {
                 title: 'Manajemen Mustahik',
@@ -54,43 +92,6 @@ const mainNavItems: NavItem[] = [
                 title: 'Jenis Zakat',
                 href: '/admin/settings/zakat-types',
                 icon: BookType,
-            },
-        ],
-    },
-    {
-        title: 'Transaksi',
-        icon: Wallet,
-        subItems: [
-            {
-                title: 'Verifikasi Transaksi',
-                href: '/admin/transaksi',
-                icon: ClipboardList,
-            },
-            {
-                title: 'Penyaluran Bantuan',
-                href: '/admin/laporan-penyaluran',
-                icon: HandCoins,
-            },
-        ],
-    },
-    {
-        title: 'Permohonan Bantuan',
-        href: '/admin/permohonan',
-        icon: FileText,
-    },
-    {
-        title: 'Konten & Program',
-        icon: GalleryHorizontal,
-        subItems: [
-            {
-                title: 'Manajemen Program',
-                href: '/admin/programs',
-                icon: GalleryHorizontal,
-            },
-            {
-                title: 'Pesan Masuk',
-                href: '/admin/kontak',
-                icon: Inbox,
             },
         ],
     },

@@ -158,7 +158,10 @@ export default function Index({ contacts, filters }) {
                                 </SelectContent>
                             </Select>
                             {(filters.search || filters.status) && (
-                                <Button variant="ghost" onClick={resetFilters}>
+                                <Button
+                                    variant="destructive-outline"
+                                    onClick={resetFilters}
+                                >
                                     <X className="mr-2 h-4 w-4" /> Reset
                                 </Button>
                             )}
