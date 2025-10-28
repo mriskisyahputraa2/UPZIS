@@ -226,3 +226,36 @@
         transform: translateX(75%) translateY(75%) rotate(25deg);
     }
 }
+
+/* ====================================================================== */
+/* ## KODE KUSTOM UNTUK SCROLLBAR HIJAU (LATAR TRANSPARAN) ##             */
+/* ====================================================================== */
+
+/* Untuk browser berbasis Firefox */
+html {
+    scrollbar-width: thin;
+    /* Ganti warna kedua menjadi 'transparent' */
+    scrollbar-color: var(--primary) transparent;
+}
+
+/* Untuk browser berbasis WebKit (Chrome, Safari, Edge, Opera) */
+body::-webkit-scrollbar {
+    width: 8px;
+}
+
+body::-webkit-scrollbar-track {
+    /* Ganti warna latar menjadi transparan */
+    background-color: transparent;
+}
+
+body::-webkit-scrollbar-thumb {
+    background-color: var(--primary); /* Warna handle scrollbar, hijau utama */
+    border-radius: var(--radius); /* Memberi sudut yang membulat */
+    border: 2px solid var(--background); /* Memberi sedikit jarak dari tepi */
+}
+
+body::-webkit-scrollbar-thumb:hover {
+    background-color: oklch(
+        0.58 0.18 145
+    ); /* Warna handle saat cursor di atasnya (hijau sedikit lebih gelap) */
+}
