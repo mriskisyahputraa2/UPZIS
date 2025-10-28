@@ -61,6 +61,15 @@ class PeriodeController extends Controller
     }
 
     /**
+     * Menampilkan data periode tertentu.
+     * Method ini sengaja dibuat untuk menangani route-model binding dan menampilkan 404 jika model tidak ditemukan.
+     */
+    public function show(Periode $periode)
+    {
+        abort(404);
+    }
+
+    /**
      * Menampilkan form untuk mengedit periode.
      */
     public function edit(Periode $periode)

@@ -55,8 +55,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'sidebarOpen' => !$request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
 
-            // Tambahkan data settings ke dalam props yang dibagikan
-         'generalSettings' => $generalSettings,
+            'generalSettings' => $generalSettings,
         ];
     }
 }
