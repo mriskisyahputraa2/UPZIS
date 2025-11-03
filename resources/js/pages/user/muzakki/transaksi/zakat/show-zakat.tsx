@@ -66,6 +66,13 @@ const StatusStepper = ({ status }) => {
         currentStepIndex = 0;
     }
 
+    // Definisikan warna untuk setiap langkah
+    const stepColors = {
+        0: 'text-blue-500', // Biru untuk Lakukan Pembayaran
+        1: 'text-yellow-500', // Kuning untuk Menunggu Verifikasi
+        2: 'text-green-500', // Hijau untuk Pembayaran Berhasil
+    };
+
     return (
         <div className="flex items-center justify-between text-sm">
             {steps.map((step, index) => {
@@ -90,7 +97,7 @@ const StatusStepper = ({ status }) => {
                                 className={`absolute top-2.5 left-0 h-0.5 w-full -translate-x-1/2 ${isActive ? 'bg-green-500' : 'bg-gray-300'}`}
                             ></div>
                         )}
-                        <div className="relative z-10 rounded-full bg-white p-1 dark:bg-slate-900">
+                        <div className="relative z-10 rounded-full bg-white p-1">
                             {icon}
                         </div>
                         <p

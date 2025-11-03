@@ -296,7 +296,8 @@ export default function Edit({
                                             <Button
                                                 type="button"
                                                 size="sm"
-                                                variant="destructive-outline"
+                                                // variant="destructive-outline"
+                                                className="border-rose-200 bg-rose-100 text-rose-800 hover:bg-rose-200"
                                                 onClick={
                                                     handleDeselectAllFiltered
                                                 }

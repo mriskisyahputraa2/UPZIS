@@ -91,7 +91,7 @@ const KategoriBadge = ({ kategori }) => {
     }
     const isMahasiswa = kategori === 'mahasiswa';
     return (
-        <Badge variant={isMahasiswa ? 'default' : 'secondary'}>
+        <Badge variant={isMahasiswa ? 'default' : 'warning'}>
             {isMahasiswa ? 'Mahasiswa' : 'Fakir/Miskin'}
         </Badge>
     );

@@ -17,13 +17,27 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
-        success:
-            'border-transparent bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-900/20 dark:text-green-400',
+        // success:
+        //     'border-transparent bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-900/20 dark:text-green-400',
 
-        warning: // Kuning untuk 'Diverifikasi'
-                    'border-transparent bg-yellow-50 text-yellow-800 hover:bg-yellow-50/80 dark:bg-yellow-900/20 dark:text-yellow-300',
-                info: // Biru untuk 'Baru'
-                    'border-transparent bg-blue-50 text-blue-800 hover:bg-blue-50/80 dark:bg-blue-900/20 dark:text-blue-300',
+       // --- PERUBAHAN DI SINI ---
+        // success: // Hijau untuk 'Zakat'
+        //     'border-transparent bg-green-500 text-white hover:bg-green-500/80 dark:bg-green-600 dark:text-green-50',
+
+        // warning: // Oranye/Kuning untuk 'Sedekah'
+        //     'border-transparent bg-amber-500 text-white hover:bg-amber-500/80 dark:bg-amber-600 dark:text-amber-50',
+
+        // info: // Biru untuk 'Infaq'
+        //     'border-transparent bg-blue-500 text-white hover:bg-blue-500/80 dark:bg-blue-600 dark:text-blue-50',
+        success: // Hijau untuk 'Zakat'
+            'border-emerald-200 bg-emerald-100 text-emerald-800',
+
+        warning: // Oranye/Kuning untuk 'Sedekah'
+           'border-amber-200 bg-amber-100 text-amber-800',
+
+        info: // Biru untuk 'Infaq'
+            'border-blue-200 bg-blue-100 text-blue-800',
+
       },
     },
     defaultVariants: {

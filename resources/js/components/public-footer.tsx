@@ -21,10 +21,22 @@ const publicNavItems = [
 
 // Data untuk link media sosial (bisa juga dibuat dinamis dari backend)
 const socialLinks = [
-    { icon: Facebook, href: '#', name: 'Facebook' },
-    { icon: Instagram, href: '#', name: 'Instagram' },
-    { icon: Twitter, href: '#', name: 'Twitter' },
-    { icon: Youtube, href: '#', name: 'Youtube' },
+    {
+        icon: Facebook,
+        href: 'https://web.facebook.com/politekniknegerilhokseumaweofficial?_rdc=1&_rdr#',
+        name: 'Facebook',
+    },
+    {
+        icon: Instagram,
+        href: 'https://www.instagram.com/humas_pnl/',
+        name: 'Instagram',
+    },
+    { icon: Twitter, href: 'https://x.com/pnl_manunggal', name: 'Twitter' },
+    {
+        icon: Youtube,
+        href: 'https://www.youtube.com/channel/UCt4l9CHZA6XUYw95dmzoLqQ',
+        name: 'Youtube',
+    },
 ];
 
 // 1. Menerima props 'settings' yang dikirim dari PublicLayout
