@@ -256,7 +256,7 @@ export default function Create() {
                         >
                             {processing
                                 ? 'Menyimpan...'
-                                : 'Simpan & Lanjutkan Menghubungkan Penyaluran'}
+                                : 'Simpan & Lanjutkan Penyaluran'}
                         </Button>
                     </div>
                 </form>
