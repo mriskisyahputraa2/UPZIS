@@ -14,7 +14,7 @@ export default function AppLogo({ className }) {
             <img
                 src={logoImage}
                 alt="UPZIS Logo"
-                className="h-8 w-auto" // Atur ukuran logo di sini
+                className="h-10 w-auto" // Atur ukuran logo di sini
             />
             {/* Tampilkan teks UPZIS */}
             <span className="text-lg leading-tight font-semibold text-inherit">

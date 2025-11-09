@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -40,6 +41,18 @@ const getStatusTriggerClass = (status) => {
         default:
             return '';
     }
+};
+
+const KategoriBadge = ({ kategori }) => {
+    if (!kategori) {
+        return <Badge variant="secondary">N/A</Badge>;
+    }
+    const isMahasiswa = kategori === 'mahasiswa';
+    return (
+        <Badge variant={isMahasiswa ? 'default' : 'warning'}>
+            {isMahasiswa ? 'Mahasiswa' : 'Fakir/Miskin'}
+        </Badge>
+    );
 };
 
 export default function PermohonanTable({
@@ -123,10 +136,15 @@ export default function PermohonanTable({
                                 <TableCell>
                                     {permohonan.mustahik.jenis_kelamin || '-'}
                                 </TableCell>
-                                <TableCell className="capitalize">
+                                {/* <TableCell className="capitalize">
                                     {permohonan.kategori_pemohon === 'umum'
                                         ? 'Fakir/Miskin'
                                         : permohonan.kategori_pemohon}
+                                </TableCell> */}
+                                <TableCell>
+                                    <KategoriBadge
+                                        kategori={permohonan.kategori_pemohon}
+                                    />
                                 </TableCell>
                                 <TableCell>{permohonan.periode.name}</TableCell>
                                 <TableCell>

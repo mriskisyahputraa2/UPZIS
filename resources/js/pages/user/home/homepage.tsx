@@ -155,7 +155,7 @@ export default function Homepage({ muzakkiCount, mustahikCount, programs }) {
                                 }}
                             >
                                 <h1 className="text-5xl leading-tight font-extrabold tracking-tight md:text-6xl">
-                                    Unit Pengumpul Zakat, Infaq dan Sedekah
+                                    Unit Pengumpul Zakat, Infaq, dan Sedekah
                                 </h1>
                                 <p className="mt-4 max-w-2xl text-xl font-medium text-green-100 lg:text-2xl">
                                     Politeknik Negeri Lhokseumawe

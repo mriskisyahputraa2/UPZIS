@@ -1,46 +1,55 @@
 import { Link } from '@inertiajs/react';
+// 1. Menggunakan ikon kontak dari 'react-icons' juga untuk konsistensi monokrom
 import {
-    Facebook,
-    Instagram,
-    Mail,
-    MapPin,
-    Phone,
-    Twitter,
-    Youtube,
-} from 'lucide-react';
-import AppLogo from './app-logo'; // Asumsi Anda punya komponen Logo
+    FaEnvelope,
+    FaFacebookF,
+    FaInstagram,
+    FaMapPin,
+    FaPhone,
+    FaTiktok,
+    FaXTwitter,
+    FaYoutube,
+} from 'react-icons/fa6';
+import AppLogo from './app-logo';
 
-// Data navigasi, bisa dibiarkan statis atau dibuat dinamis juga jika perlu
+// Data navigasi
 const publicNavItems = [
     { title: 'Beranda', href: '/' },
     { title: 'Galeri Program', href: '/galeri' },
-    { title: 'Kalkulator Zakat', href: '/kalkulator' },
+    { title: 'Kalkulator Zakat', href: '/kalkulator-zakat' },
     { title: 'Ajukan Bantuan', href: '/ajukan-bantuan' },
     { title: 'Kontak', href: '/kontak' },
 ];
 
-// Data untuk link media sosial (bisa juga dibuat dinamis dari backend)
+// 2. Data socialLinks kini hanya berisi ikon dan href, tidak ada bgClass
 const socialLinks = [
     {
-        icon: Facebook,
+        icon: FaFacebookF,
         href: 'https://web.facebook.com/politekniknegerilhokseumaweofficial?_rdc=1&_rdr#',
         name: 'Facebook',
     },
     {
-        icon: Instagram,
-        href: 'https://www.instagram.com/humas_pnl/',
+        icon: FaInstagram,
+        href: 'https://www.instagram.com/pnl_manunggal/',
         name: 'Instagram',
     },
-    { icon: Twitter, href: 'https://x.com/pnl_manunggal', name: 'Twitter' },
     {
-        icon: Youtube,
+        icon: FaXTwitter,
+        href: 'https://x.com/pnl_manunggal',
+        name: 'X (Twitter)',
+    },
+    {
+        icon: FaYoutube,
         href: 'https://www.youtube.com/channel/UCt4l9CHZA6XUYw95dmzoLqQ',
         name: 'Youtube',
     },
+    {
+        icon: FaTiktok,
+        href: 'https://www.tiktok.com/@pnl_manunggal',
+        name: 'Tiktok',
+    },
 ];
 
-// 1. Menerima props 'settings' yang dikirim dari PublicLayout
-//    Diberi nilai default objek kosong ({}) untuk mencegah error
 export function PublicFooter({ settings = {} }) {
     return (
         <footer className="bg-green-700 text-white">
@@ -78,22 +87,24 @@ export function PublicFooter({ settings = {} }) {
                         <h3 className="text-lg font-semibold">Hubungi Kami</h3>
                         <ul className="mt-4 space-y-3">
                             <li className="flex items-start">
-                                <MapPin className="mt-1 h-5 w-5 flex-shrink-0" />
+                                {/* Menggunakan FaMapPin dari react-icons */}
+                                <FaMapPin className="mt-1 h-5 w-5 flex-shrink-0" />
                                 <span className="ml-3 text-sm text-green-100">
-                                    {/* 2. Menampilkan data dinamis dengan fallback text */}
                                     {settings?.contact_address ||
                                         'Alamat belum diatur.'}
                                 </span>
                             </li>
                             <li className="flex items-center">
-                                <Phone className="h-5 w-5 flex-shrink-0" />
+                                {/* Menggunakan FaPhone dari react-icons */}
+                                <FaPhone className="h-5 w-5 flex-shrink-0" />
                                 <span className="ml-3 text-sm text-green-100">
                                     {settings?.contact_phone ||
                                         'Telepon belum diatur.'}
                                 </span>
                             </li>
                             <li className="flex items-center">
-                                <Mail className="h-5 w-5 flex-shrink-0" />
+                                {/* Menggunakan FaEnvelope dari react-icons */}
+                                <FaEnvelope className="h-5 w-5 flex-shrink-0" />
                                 <span className="ml-3 text-sm text-green-100">
                                     {settings?.contact_email ||
                                         'Email belum diatur.'}
@@ -109,14 +120,17 @@ export function PublicFooter({ settings = {} }) {
                             Dapatkan informasi terbaru mengenai program kami
                             melalui media sosial.
                         </p>
-                        <div className="mt-4 flex space-x-4">
+
+                        {/* 3. Tautan media sosial tanpa latar belakang berwarna */}
+                        <div className="mt-6 flex space-x-4">
                             {socialLinks.map((social) => (
                                 <a
                                     key={social.name}
                                     href={social.href}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-green-100 hover:text-white"
+                                    // Ikon akan langsung berwarna putih dari text-white parent
+                                    className="text-green-100 transition-opacity hover:opacity-80"
                                 >
                                     <span className="sr-only">
                                         {social.name}
