@@ -2,172 +2,93 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Mustahik;
-use App\Models\Periode;
-use App\Models\Permohonan;
-use App\Models\PermohonanDokumen;
+use App\Http\Requests\User\StorePermohonanBantuanRequest;
+use App\Repositories\User\PermohonanBantuanRepository;
+use App\Services\User\PermohonanBantuanService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Illuminate\Validation\Rule; // <-- 1. TAMBAHKAN IMPORT INI
+use Inertia\Response;
 
+/**
+ * Class PermohonanBantuanController
+ * @package App\Http\Controllers
+ * @description Controller untuk menangani alur permohonan bantuan dari sisi publik (user).
+ * Controller ini menerapkan Service dan Repository Pattern, sehingga hanya bertanggung jawab
+ * untuk menerima HTTP request dan memberikan HTTP response.
+ */
 class PermohonanBantuanController extends Controller
 {
-    public function create()
-    {
-        $activePeriode = Periode::where('status', 'Aktif')->first();
+    /**
+     * @var PermohonanBantuanService
+     */
+    protected $permohonanService;
 
+    /**
+     * @var PermohonanBantuanRepository
+     */
+    protected $permohonanRepository;
+
+    /**
+     * PermohonanBantuanController constructor.
+     * Dependency Injection untuk Service dan Repository.
+     *
+     * @param PermohonanBantuanService $permohonanService
+     * @param PermohonanBantuanRepository $permohonanRepository
+     */
+    public function __construct(PermohonanBantuanService $permohonanService, PermohonanBantuanRepository $permohonanRepository)
+    {
+        $this->permohonanService = $permohonanService;
+        $this->permohonanRepository = $permohonanRepository;
+    }
+
+    /**
+     * Menampilkan formulir untuk membuat permohonan bantuan.
+     *
+     * @return Response
+     */
+    public function create(): Response
+    {
+        // Mengambil data periode aktif melalui repository dan menampilkannya di view.
         return Inertia::render('user/permohonan/create', [
-            'activePeriode' => $activePeriode,
+            'activePeriode' => $this->permohonanRepository->findActivePeriode(),
         ]);
     }
 
-    // ## GANTI SELURUH METHOD STORE ANDA DENGAN INI ##
-    public function store(Request $request)
+    /**
+     * Menyimpan permohonan bantuan baru yang dikirim dari formulir.
+     * Validasi request ditangani oleh `StorePermohonanBantuanRequest`.
+     * Logika bisnis dieksekusi oleh `PermohonanBantuanService`.
+     *
+     * @param StorePermohonanBantuanRequest $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function store(StorePermohonanBantuanRequest $request)
     {
-        $activePeriode = Periode::where('status', 'Aktif')->first();
-        if (!$activePeriode) {
-            return back()->with('error', 'Saat ini tidak ada periode pendaftaran yang dibuka.');
-        }
-
-        // Langkah 1: Validasi format dasar
-        $validated = $request->validate(
-            [
-                'name' => 'required|string|max:255',
-                'jenis_kelamin' => 'required|string|in:Laki-laki,Perempuan',
-                'nik' => 'required|string|size:16',
-                'kk_number' => 'required|string|size:16',
-                'phone_number' => 'required|string|max:20',
-                'address' => 'required|string',
-                'photo' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-                'file_ktp' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-                'file_kk' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-                'file_khs' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-                'file_surat_fakir_miskin' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-                'file_tidak_menerima_beasiswa' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-                'file_surat_permohonan' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            ],
-            [
-                // Pesan kustom untuk setiap aturan validasi
-                'photo.required' => 'Foto profil wajib diunggah.',
-                'photo.image' => 'File yang diunggah harus berupa gambar.',
-                'photo.mimes' => 'Format foto harus jpg, jpeg, atau png.',
-                'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih.',
-                'name.required' => 'Kolom Nama Lengkap wajib diisi.',
-                'nik.required' => 'Kolom NIK wajib diisi.',
-                'kk_number.required' => 'Kolom No. KK wajib diisi.',
-                'phone_number.required' => 'Kolom No. Telepon wajib diisi.',
-                'address.required' => 'Kolom Alamat wajib diisi.',
-                'file_ktp.required' => 'Kolom KTP wajib diisi ',
-                'file_kk.required' => 'Kolom KK wajib diisi ',
-                'file_khs.required' => 'Kolom KHS wajib diisi ',
-                'file_ktp.mimes' => 'Format file harus jpg, jpeg, png dan pdf',
-                'file_kk.mimes' => 'Format file harus jpg, jpeg, png dan pdf',
-                'file_khs.mimes' => 'Format file harus jpg, jpeg, png dan pdf',
-                'phone_number.max' => 'Kolom No. Telepon maksimal 20 karakter.',
-                'kk_number.size' => 'Kolom KK harus 16 karakter',
-                'nik.size' => 'Kolom NIK harus 16 karakter',
-                'file_surat_fakir_miskin.required' => 'Surat Keterangan Fakir/Miskin wajib diunggah.',
-                'file_tidak_menerima_beasiswa.required' => 'Surat Keterangan Tidak Menerima Beasiswa wajib diunggah.',
-                'file_surat_permohonan.required' => 'Surat Permohonan wajib diunggah.',
-            ],
-        );
-
-        // Langkah 2: Lakukan semua pengecekan duplikasi secara manual
-        $customErrors = [];
-        $mustahikByNik = Mustahik::where('nik', $validated['nik'])->first();
-        $mustahikByKk = Mustahik::where('kk_number', $validated['kk_number'])->first();
-
-        // Cek #1: Apakah NIK sudah mendaftar di periode ini?
-        if ($mustahikByNik) {
-            $existingPermohonan = Permohonan::where('mustahik_id', $mustahikByNik->id)->where('periode_id', $activePeriode->id)->exists();
-            if ($existingPermohonan) {
-                $customErrors['nik'] = 'NIK Anda sudah terdaftar pada periode bantuan ini.';
-            }
-        }
-
-        // Cek #2: Apakah No. KK sudah digunakan oleh NIK yang berbeda?
-        if ($mustahikByKk && (!$mustahikByNik || $mustahikByNik->id !== $mustahikByKk->id)) {
-            $customErrors['kk_number'] = 'No. KK ini sudah terdaftar untuk NIK yang berbeda.';
-        }
-
-        // Langkah 3: Jika ada error terkumpul, kirim semuanya sekaligus
-        if (!empty($customErrors)) {
-            return back()->withErrors($customErrors)->withInput();
-        }
-
-        // Langkah 4: Jika tidak ada error, lanjutkan proses
         try {
-            DB::beginTransaction();
+            // Memanggil service untuk memproses data
+            $permohonan = $this->permohonanService->storePermohonan($request);
 
-            $photoPath = $request->file('photo')->store('mustahik-photos', 'public');
-
-            $mustahik = Mustahik::updateOrCreate(
-                ['nik' => $validated['nik']],
-                [
-                    'name' => $validated['name'],
-                    'jenis_kelamin' => $validated['jenis_kelamin'],
-                    'kk_number' => $validated['kk_number'],
-                    'phone_number' => $validated['phone_number'],
-                    'address' => $validated['address'],
-                    'photo' => $photoPath,
-                ],
-            );
-
-            $uniqueCode = 'UPZIS-' . time() . Str::upper(Str::random(4));
-
-            $permohonan = Permohonan::create([
-                'mustahik_id' => $mustahik->id,
-                'periode_id' => $activePeriode->id,
-                'kategori_pemohon' => 'mahasiswa', // Selalu 'mahasiswa' dari form publik
-                'unique_code' => $uniqueCode,
-                'status' => 'Baru',
-            ]);
-
-            $paths = [];
-            $fileKeys = ['file_ktp', 'file_kk', 'file_khs', 'file_surat_fakir_miskin', 'file_tidak_menerima_beasiswa', 'file_surat_permohonan'];
-            foreach ($fileKeys as $fileKey) {
-                if ($request->hasFile($fileKey)) {
-                    $paths[$fileKey] = $request->file($fileKey)->store("permohonan_files/{$permohonan->id}", 'public');
-                }
-            }
-
-            PermohonanDokumen::create([
-                'permohonan_id' => $permohonan->id,
-                'file_ktp' => $paths['file_ktp'] ?? null,
-                'file_kk' => $paths['file_kk'] ?? null,
-                'file_khs' => $paths['file_khs'] ?? null,
-                'file_surat_fakir_miskin' => $paths['file_surat_fakir_miskin'] ?? null,
-                'file_tidak_menerima_beasiswa' => $paths['file_tidak_menerima_beasiswa'] ?? null,
-                'file_surat_permohonan' => $paths['file_surat_permohonan'] ?? null,
-            ]);
-
-            DB::commit();
-
-            return redirect()->route('permohonan.success')->with('unique_code', $uniqueCode);
+            // Jika berhasil, redirect ke halaman sukses dengan kode unik
+            return redirect()->route('permohonan.success')->with('unique_code', $permohonan->unique_code);
         } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan pada sistem. Silakan coba lagi.');
+            // Jika terjadi error di service (misal: periode tidak aktif atau error transaksi),
+            // kembali ke halaman sebelumnya dengan pesan error.
+            return back()->with('error', 'Terjadi kesalahan pada sistem: ' . $e->getMessage())->withInput();
         }
     }
 
     /**
-     * Menampilkan halaman sukses setelah pendaftaran.
+     * Menampilkan halaman sukses setelah pendaftaran permohonan.
+     *
+     * @return Response|\Illuminate\Http\RedirectResponse
      */
     public function success()
     {
-        // if (!session('unique_code')) {
-        //     return redirect()->route('home');
-        // }
-
-        // return Inertia::render('user/permohonan/success', [
-        //     'unique_code' => session('unique_code'),
-        // ]);
-
+        // Memastikan halaman ini hanya bisa diakses setelah berhasil submit form.
         if (!session('unique_code')) {
             return redirect()->route('home');
         }
+
         return Inertia::render('user/permohonan/success', [
             'unique_code' => session('unique_code'),
         ]);
@@ -175,38 +96,20 @@ class PermohonanBantuanController extends Controller
 
     /**
      * Menampilkan halaman dan hasil pelacakan status permohonan.
+     *
+     * @param Request $request
+     * @return Response
      */
-    public function lacak(Request $request)
+    public function lacak(Request $request): Response
     {
-        // Validasi semua kemungkinan input
+        // Validasi input sederhana untuk pelacakan
         $validated = $request->validate([
             'kode' => 'nullable|string|max:255',
-            'identifier' => 'nullable|string|max:255', // <-- Menggantikan nik & phone_number
+            'identifier' => 'nullable|string|max:255',
         ]);
 
-        $permohonan = null;
-
-        if ($request->filled('kode')) {
-            // ALUR 1: Lacak dengan KODE UNIK
-            $permohonan = Permohonan::where('unique_code', $validated['kode'])
-                ->with(['mustahik', 'periode'])
-                ->first();
-        } elseif ($request->filled('identifier')) {
-            // ALUR 2: Lacak dengan NIK atau NO. TELEPON
-
-            $identifier = $validated['identifier'];
-
-            // 1. Cari mustahik yang NIK atau No. HP-nya cocok
-            $mustahik = Mustahik::where('nik', $identifier)->orWhere('phone_number', $identifier)->first();
-
-            // 2. Jika ditemukan, cari permohonan TERBARU miliknya
-            if ($mustahik) {
-                $permohonan = Permohonan::where('mustahik_id', $mustahik->id)
-                    ->with(['mustahik', 'periode'])
-                    ->latest() // Mengambil permohonan yang paling baru
-                    ->first();
-            }
-        }
+        // Memanggil service untuk melakukan logika pelacakan
+        $permohonan = $this->permohonanService->lacakPermohonan($request);
 
         return Inertia::render('user/permohonan/lacak', [
             'permohonan' => $permohonan,
