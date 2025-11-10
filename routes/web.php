@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\PeriodeController;
 use App\Http\Controllers\Admin\PermohonanController;
 use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\StrukturOrganisasiController;
+use App\Http\Controllers\Admin\StrukturOrganisasiController as AdminStrukturOrganisasiController;
 use App\Http\Controllers\Admin\TransaksiAdminController;
 use App\Http\Controllers\Admin\ZakatTypeController;
 use App\Http\Controllers\ContactController;
@@ -30,6 +32,9 @@ use Inertia\Inertia;
 
 // Halaman Beranda
 Route::get('/', [HomePageController::class, 'index'])->name('home');
+
+// Route Halaman Struktur Organisasi
+Route::get('struktur-organisasi', [StrukturOrganisasiController::class, 'index'])->name('struktur-organisasi.index');
 
 // Halaman Ajukan Bantuan
 Route::get('ajukan-bantuan', [PermohonanBantuanController::class, 'create'])->name('permohonan.create');
@@ -91,6 +96,11 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])
     ->group(function () {
         // Manajemen Dashboard
         Route::get('dashboard', [DashboardController::class, 'index']);
+
+        // Route Halaman Struktur Organisasi Admin
+        Route::get('struktur-organisasi', [AdminStrukturOrganisasiController::class, 'edit'])->name('struktur-organisasi.edit');
+        Route::post('struktur-organisasi', [AdminStrukturOrganisasiController::class, 'update'])->name('struktur-organisasi.update');
+
         // Manajemen Mustahik
         Route::resource('mustahiks', MustahikController::class);
 

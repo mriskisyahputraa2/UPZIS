@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { Link, usePage } from '@inertiajs/react';
 import {
     Calculator,
+    ChevronDown, // Pastikan ini ada
     FileText,
     HandHeart,
     Home,
@@ -34,24 +35,40 @@ import {
     Search,
     User,
     UserPlus,
+    Users2, // Pastikan ini ada
     X,
 } from 'lucide-react';
 import { useState } from 'react';
 
-// Data navigasi untuk link teks biasa
+// ## 1. Definisikan Dropdown Item ##
+const tentangKamiDropdownItems = [
+    {
+        title: 'Struktur Organisasi',
+        href: '/struktur-organisasi',
+        icon: Users2,
+    },
+    { title: 'Kontak', href: '/kontak', icon: Mail },
+];
+
+// ## 2. Data navigasi untuk link teks biasa ##
 const textNavItems = [
     { title: 'Beranda', href: '/', icon: Home },
     { title: 'Galeri Program', href: '/galeri', icon: Image },
     { title: 'Kalkulator Zakat', href: '/kalkulator-zakat', icon: Calculator },
     { title: 'Lacak Status', href: '/lacak-status', icon: Search },
-    { title: 'Kontak', href: '/kontak', icon: Mail },
+    // "Kontak" dipindahkan ke dropdown
 ];
 
-// Gabungkan semua item untuk digunakan di menu mobile
+// ## 3. Gabungkan semua item untuk menu mobile ##
 const allNavItems = [
     { title: 'Beranda', href: '/', icon: Home },
     { title: 'Donasi', href: '/donasi', icon: HandHeart },
     { title: 'Galeri Program', href: '/galeri', icon: Image },
+    {
+        title: 'Struktur Organisasi',
+        href: '/struktur-organisasi',
+        icon: Users2,
+    },
     { title: 'Kalkulator Zakat', href: '/kalkulator-zakat', icon: Calculator },
     { title: 'Ajukan Bantuan', href: '/ajukan-bantuan', icon: FileText },
     { title: 'Lacak Status', href: '/lacak-status', icon: Search },
@@ -83,7 +100,7 @@ export function PublicHeader() {
         <Link
             href={item.href}
             className={cn(
-                'group relative py-2 text-base font-medium transition-colors duration-300 hover:text-white',
+                'group relative py-2 text-base font-medium whitespace-nowrap transition-colors duration-300 hover:text-white', // <--- TAMBAHKAN INI
                 isActive(item.href) ? 'text-white' : 'text-white/80',
             )}
         >
@@ -102,9 +119,10 @@ export function PublicHeader() {
     return (
         <header className="absolute top-0 left-0 z-30 w-full text-white">
             <div className="container mx-auto flex h-20 items-center justify-between gap-8 px-4 md:max-w-7xl">
-                <div className="flex flex-1 items-center justify-start gap-8">
+                {/* ## PERUBAHAN UTAMA DI SINI ## */}
+                {/* 'flex-1' DIHAPUS dari div ini agar tidak "mendorong" grup kanan */}
+                <div className="flex items-center justify-start gap-8">
                     <AppLogo />
-                    {/* Navigasi Teks Sederhana */}
                     <nav className="hidden lg:flex">
                         <ul className="flex items-center gap-8">
                             {textNavItems.map((item) => (
@@ -112,11 +130,41 @@ export function PublicHeader() {
                                     <NavLink item={item} />
                                 </li>
                             ))}
+
+                            {/* ## 4. Tambahkan Dropdown "Tentang Kami" ## */}
+                            <li>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            className="group flex items-center gap-1 py-2 text-base font-medium whitespace-nowrap text-white/80 transition-colors duration-300 hover:bg-transparent hover:text-white focus-visible:ring-0" // <--- TAMBAHKAN INI
+                                        >
+                                            Tentang Kami
+                                            <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="mt-2">
+                                        {tentangKamiDropdownItems.map(
+                                            (item) => (
+                                                <DropdownMenuItem
+                                                    key={item.title}
+                                                    asChild
+                                                >
+                                                    <Link href={item.href}>
+                                                        <item.icon className="mr-2 h-4 w-4" />
+                                                        {item.title}
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                            ),
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </li>
                         </ul>
                     </nav>
                 </div>
 
-                {/* Tombol Aksi & Menu User */}
+                {/* Tombol Aksi & Menu User (Tidak ada perubahan di sini) */}
                 <div className="flex items-center space-x-2">
                     <div className="hidden items-center space-x-2 lg:flex">
                         <Link href="/ajukan-bantuan">
@@ -214,7 +262,7 @@ export function PublicHeader() {
                         )}
                     </div>
 
-                    {/* Trigger Mobile */}
+                    {/* Trigger Mobile (Tidak ada perubahan) */}
                     <div className="lg:hidden">
                         <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                             <SheetTrigger asChild>

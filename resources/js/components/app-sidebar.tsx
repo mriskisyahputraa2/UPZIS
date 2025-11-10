@@ -25,6 +25,7 @@ import {
     SlidersHorizontal,
     UserCog,
     Users,
+    Users2,
     Wallet,
 } from 'lucide-react';
 import AppLogo from './app-logo';
@@ -108,6 +109,11 @@ const mainNavItems: NavItem[] = [
                 title: 'Akun Pembayaran',
                 href: '/admin/settings/payment-accounts',
                 icon: Wallet,
+            },
+            {
+                title: 'Struktur Organisasi',
+                href: '/admin/struktur-organisasi',
+                icon: Users2,
             },
             {
                 title: 'Manajemen Admin',
