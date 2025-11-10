@@ -3,21 +3,42 @@
 namespace App\Http\Controllers;
 
 use App\Models\Program;
-use Illuminate\Http\Request;
+use App\Services\User\GaleriService;
 use Inertia\Inertia;
+use Inertia\Response;
 
+/**
+ * Class GaleriController
+ *
+ * Controller ini menangani request terkait halaman galeri program.
+ *
+ * @package App\Http\Controllers
+ */
 class GaleriController extends Controller
 {
     /**
-     * Menampilkan halaman daftar semua program yang sudah di-publish.
+     * @var GaleriService
      */
-    public function index()
+    protected $galeriService;
+
+    /**
+     * GaleriController constructor.
+     *
+     * @param GaleriService $galeriService
+     */
+    public function __construct(GaleriService $galeriService)
     {
-        $programs = Program::where('status', 'Published')
-            ->withSum('penyalurans', 'amount')
-            ->with('photos')
-            ->latest('program_date')
-            ->paginate(9); // Tampilkan 9 program per halaman
+        $this->galeriService = $galeriService;
+    }
+
+    /**
+     * Menampilkan halaman daftar semua program (galeri).
+     *
+     * @return \Inertia\Response
+     */
+    public function index(): Response
+    {
+        $programs = $this->galeriService->getProgramsForIndex();
 
         return Inertia::render('user/galeri/index', [
             'programs' => $programs,
@@ -26,21 +47,23 @@ class GaleriController extends Controller
 
     /**
      * Menampilkan halaman detail dari satu program.
+     *
+     * Jika program tidak ditemukan atau belum di-publish,
+     * akan menampilkan halaman 404.
+     *
+     * @param Program $program
+     * @return \Inertia\Response
      */
-    public function show(Program $program)
+    public function show(Program $program): Response
     {
-        // Pastikan hanya program yang sudah di-publish yang bisa diakses
-        if ($program->status !== 'Published') {
+        $programDetails = $this->galeriService->getProgramForShow($program);
+
+        if (!$programDetails) {
             abort(404);
         }
 
-        // Muat semua relasi yang dibutuhkan
-        $program->load('photos');
-        $program->loadSum('penyalurans', 'amount');
-        $program->loadCount('penyalurans');
-
         return Inertia::render('user/galeri/show', [
-            'program' => $program,
+            'program' => $programDetails,
         ]);
     }
 }
