@@ -2,35 +2,49 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Mustahik;
-use App\Models\Permohonan;
-use App\Models\Program;
-use App\Models\Transaksi;
-use App\Models\User;
-use Illuminate\Http\Request;
-
+use App\Services\User\HomePageService;
 use Inertia\Inertia;
+use Inertia\Response;
 
+/**
+ * Class HomePageController
+ *
+ * Controller ini menangani logika untuk menampilkan halaman utama (beranda)
+ * kepada pengguna.
+ *
+ * @package App\Http\Controllers
+ */
 class HomePageController extends Controller
 {
-    public function index()
+    /**
+     * @var HomePageService
+     */
+    protected $homePageService;
+
+    /**
+     * HomePageController constructor.
+     *
+     * Menginjeksikan dependency HomePageService ke dalam controller.
+     *
+     * @param HomePageService $homePageService
+     */
+    public function __construct(HomePageService $homePageService)
     {
-        $muzakkiCount = Transaksi::where('status', 'Berhasil')->distinct('user_id')->count('user_id');
-        $mustahikCount = Permohonan::where('status', 'Disetujui')->count();
+        $this->homePageService = $homePageService;
+    }
 
-        //Ambil 3 program terbaru yang sudah di-publish
-        $programs = Program::where('status', 'Published')
-            ->withSum('penyalurans', 'amount') // Hitung total dana
-            ->with('photos') // Ambil foto-fotonya
-            ->latest('program_date') // Urutkan berdasarkan tanggal program
-            ->take(3)
-            ->get();
+    /**
+     * Menampilkan halaman beranda.
+     *
+     * Mengambil data statistik dan program terbaru dari service
+     * dan menampilkannya menggunakan Inertia.
+     *
+     * @return \Inertia\Response
+     */
+    public function index(): Response
+    {
+        $homePageData = $this->homePageService->getHomePageData();
 
-        // Kirim data ke komponen React sebagai props
-        return Inertia::render('user/home/homepage', [
-            'muzakkiCount' => $muzakkiCount,
-            'mustahikCount' => $mustahikCount,
-            'programs' => $programs,
-        ]);
+        return Inertia::render('user/home/homepage', $homePageData);
     }
 }
