@@ -1,25 +1,20 @@
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+// Import file partials yang baru dibuat
+import StrukturOrganisasiForm from './partials/StrukturOrganisasiForm';
+import StrukturOrganisasiInfo from './partials/StrukturOrganisasiInfo';
+
 export default function EditStrukturOrganisasi({ dataStruktur }) {
     const { flash } = usePage().props;
     const [preview, setPreview] = useState(dataStruktur?.gambar_url || null);
 
+    // Semua state dan logika tetap di halaman utama
     const { data, setData, post, processing, errors } = useForm({
-        gambar: null, // Untuk file baru
+        gambar: null,
         keterangan: dataStruktur?.keterangan || '',
     });
 
@@ -43,7 +38,7 @@ export default function EditStrukturOrganisasi({ dataStruktur }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         post('/admin/struktur-organisasi', {
-            forceFormData: true, // Penting untuk upload file
+            forceFormData: true,
         });
     };
 
@@ -51,72 +46,44 @@ export default function EditStrukturOrganisasi({ dataStruktur }) {
         <AppLayout
             breadcrumbs={[
                 { title: 'Dashboard', href: '/admin/dashboard' },
-                { title: 'Struktur Organisasi' },
+                { title: 'Pengaturan', href: '#' },
+                {
+                    title: 'Struktur Organisasi',
+                    href: '/admin/struktur-organisasi',
+                },
             ]}
         >
             <Head title="Struktur Organisasi" />
-            <div className="p-4 sm:p-6 lg:p-8">
-                <form
-                    onSubmit={handleSubmit}
-                    className="mx-auto max-w-3xl space-y-6"
-                >
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Struktur Organisasi</CardTitle>
-                            <CardDescription>
-                                Perbarui gambar dan keterangan struktur
-                                organisasi yang akan ditampilkan di halaman
-                                publik.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="gambar">
-                                    Gambar Struktur Organisasi
-                                </Label>
-                                {preview && (
-                                    <div className="mt-2 w-full rounded-md border p-2">
-                                        <img
-                                            src={preview}
-                                            alt="Preview Struktur Organisasi"
-                                            className="h-auto w-full rounded"
-                                        />
-                                    </div>
-                                )}
-                                <Input
-                                    id="gambar"
-                                    type="file"
-                                    onChange={handleFileChange}
-                                    accept="image/png, image/jpeg, image/jpg"
-                                />
-                                {errors.gambar && (
-                                    <p className="text-sm text-red-600">
-                                        {errors.gambar}
-                                    </p>
-                                )}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="keterangan">
-                                    Keterangan (Opsional)
-                                </Label>
-                                <Textarea
-                                    id="keterangan"
-                                    value={data.keterangan}
-                                    onChange={(e) =>
-                                        setData('keterangan', e.target.value)
-                                    }
-                                    rows={8}
-                                    placeholder="Misal: Ketua: Prof. Dr. John Doe..."
-                                />
-                                {errors.keterangan && (
-                                    <p className="text-sm text-red-600">
-                                        {errors.keterangan}
-                                    </p>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <div className="flex justify-end">
+            <div className="space-y-4 p-4 sm:p-6 lg:p-8">
+                <form onSubmit={handleSubmit}>
+                    {/* Header Halaman */}
+                    <div>
+                        <h1 className="text-xl font-bold">
+                            Struktur Organisasi
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            Perbarui gambar dan keterangan struktur organisasi
+                            Anda.
+                        </p>
+                    </div>
+
+                    {/* Layout Grid 2 Kolom (Menggunakan Partials) */}
+                    <div className="grid grid-cols-1 gap-8 pt-6 lg:grid-cols-3">
+                        {/* Meneruskan semua props yang diperlukan ke partial form */}
+                        <StrukturOrganisasiForm
+                            data={data}
+                            setData={setData}
+                            errors={errors}
+                            preview={preview}
+                            handleFileChange={handleFileChange}
+                        />
+
+                        {/* Kolom Kanan: Kartu Informasi Sticky (dari partial) */}
+                        <StrukturOrganisasiInfo />
+                    </div>
+
+                    {/* Tombol Simpan */}
+                    <div className="flex justify-end gap-4 pt-6">
                         <Button type="submit" disabled={processing}>
                             {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
                         </Button>
