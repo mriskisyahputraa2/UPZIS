@@ -2,88 +2,59 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\JenisZakat;
-use App\Models\Setting;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
+use App\Http\Requests\User\HitungZakatRequest;
+use App\Services\User\KalkulatorService;
 use Inertia\Inertia;
 
+/**
+ * Class KalkulatorController
+ *
+ * @package App\Http\Controllers
+ * Controller untuk mengelola permintaan terkait kalkulator zakat.
+ * Bertanggung jawab untuk menampilkan halaman kalkulator dan memproses perhitungan zakat.
+ */
 class KalkulatorController extends Controller
 {
     /**
-     * Menampilkan halaman kalkulator zakat.
+     * @var KalkulatorService
      */
-    public function index()
+    protected KalkulatorService $kalkulatorService;
+
+    /**
+     * KalkulatorController constructor.
+     *
+     * @param KalkulatorService $kalkulatorService
+     */
+    public function __construct(KalkulatorService $kalkulatorService)
     {
-        // Ambil semua jenis zakat yang aktif
-        $jenisZakat = JenisZakat::where('status', 'Aktif')->get();
+        $this->kalkulatorService = $kalkulatorService;
+    }
 
-        // Ambil harga emas dari settings (dengan caching untuk performa)
-        $hargaEmas = Cache::remember('harga_emas_per_gram', 60, function () {
-            return Setting::where('setting_key', 'harga_emas_per_gram')->value('setting_value');
-        });
+    /**
+     * Menampilkan halaman kalkulator zakat.
+     * Mengambil data yang diperlukan melalui KalkulatorService.
+     *
+     * @return \Inertia\Response
+     */
+    public function index(): \Inertia\Response
+    {
+        $pageData = $this->kalkulatorService->getKalkulatorPageData();
 
-        return Inertia::render('user/kalkulator/index', [
-            'jenisZakat' => $jenisZakat,
-            'hargaEmas' => (float) $hargaEmas,
-        ]);
+        return Inertia::render('user/kalkulator/index', $pageData);
     }
 
     /**
      * Menghitung hasil zakat berdasarkan input pengguna.
+     * Validasi dilakukan oleh HitungZakatRequest.
+     * Logika perhitungan didelegasikan ke KalkulatorService.
+     *
+     * @param HitungZakatRequest $request
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function hitung(Request $request)
+    public function hitung(HitungZakatRequest $request): \Illuminate\Http\JsonResponse
     {
-        $request->validate([
-            'jenis_zakat_id' => 'required|exists:jenis_zakat,id',
-            'pendapatan_pokok' => 'required|numeric|min:0',
-            'pendapatan_lain' => 'nullable|numeric|min:0',
-            'hutang_cicilan' => 'nullable|numeric|min:0',
-        ]);
+        $result = $this->kalkulatorService->hitungZakat($request);
 
-        $jenisZakat = JenisZakat::find($request->jenis_zakat_id);
-        $hargaEmas = (float) Cache::remember('harga_emas_per_gram', 60, function () {
-            return Setting::where('setting_key', 'harga_emas_per_gram')->value('setting_value');
-        });
-
-        $nominalZakat = 0;
-        $wajibZakat = false;
-        $nisab = 0;
-        $pendapatanBersih = 0;
-
-        if (str_contains(strtolower($jenisZakat->name), 'profesi')) {
-            $pendapatanPokok = (float) $request->pendapatan_pokok;
-            $pendapatanLain = (float) $request->pendapatan_lain;
-            $hutangCicilan = (float) $request->hutang_cicilan;
-
-            $pendapatanBersih = $pendapatanPokok + $pendapatanLain - $hutangCicilan;
-
-            $nisabTahunan = $jenisZakat->nisab_quantity * $hargaEmas;
-            $nisabBulanan = $nisabTahunan / 12;
-            $nisab = $nisabBulanan;
-
-            if ($pendapatanBersih >= $nisabBulanan) {
-                $wajibZakat = true;
-                // Zakat dihitung dari pendapatan bersih bulanan
-                $nominalZakat = ($jenisZakat->rate_percent / 100) * $pendapatanBersih;
-            }
-        } else {
-            // Logika untuk Zakat Maal lainnya (sudah benar)
-            $nilaiHarta = (float) $request->pendapatan_pokok;
-            $nisab = $jenisZakat->nisab_quantity * $hargaEmas; // Nisab tahunan
-            $pendapatanBersih = $nilaiHarta;
-
-            if ($nilaiHarta >= $nisab) {
-                $wajibZakat = true;
-                $nominalZakat = ($jenisZakat->rate_percent / 100) * $nilaiHarta;
-            }
-        }
-
-        return response()->json([
-            'nisab' => $nisab,
-            'pendapatan_bersih' => $pendapatanBersih,
-            'wajib_zakat' => $wajibZakat,
-            'nominal_zakat' => $nominalZakat < 0 ? 0 : $nominalZakat,
-        ]);
+        return response()->json($result);
     }
 }
