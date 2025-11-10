@@ -45,6 +45,9 @@ Route::get('lacak-status', [PermohonanBantuanController::class, 'lacak'])->name(
 Route::get('kalkulator-zakat', [KalkulatorController::class, 'index'])->name('kalkulator.index');
 Route::post('kalkulator-zakat/hitung', [KalkulatorController::class, 'hitung'])->name('kalkulator.hitung');
 
+// Route menampilkan daftar donasi
+Route::get('donasi', [TransaksiController::class, 'selectDonationType'])->name('donasi.select');
+
 // Route untuk Galeri Program Publik
 Route::get('galeri', [GaleriController::class, 'index'])->name('galeri.index');
 Route::get('galeri/{program}', [GaleriController::class, 'show'])->name('galeri.show');
@@ -75,7 +78,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     | Halaman Transaksi Pengguna (Zakat, Infaq, Sedekah)
     |--------------------------------------------------------------------------
     */
-    Route::get('donasi', [TransaksiController::class, 'selectDonationType'])->name('donasi.select');
+    // Route::get('donasi', [TransaksiController::class, 'selectDonationType'])->name('donasi.select');
     Route::get('donasi/zakat', [TransaksiController::class, 'create'])->name('donasi.create.zakat');
     Route::get('donasi/{type}', [TransaksiController::class, 'createInfaqSedekah'])
         ->name('donasi.create.other')
