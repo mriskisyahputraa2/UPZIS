@@ -3,15 +3,38 @@
 namespace App\Http\Controllers\Muzakki;
 
 use App\Http\Controllers\Controller;
-use App\Models\Setting;
-use App\Models\Transaksi;
+use App\Http\Requests\User\StoreTransaksiRequest;
+use App\Http\Requests\User\UploadProofRequest;
+use App\Services\User\TransaksiService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Storage;
+
+/**
+ * Class TransaksiController
+ *
+ * Menangani alur permintaan HTTP untuk transaksi muzakki.
+ * Controller ini bertugas menerima request, memanggil service yang sesuai,
+ * dan mengembalikan response (biasanya dalam bentuk view Inertia atau redirect).
+ *
+ * @package App\Http\Controllers\Muzakki
+ */
 class TransaksiController extends Controller
 {
+    /**
+     * @var TransaksiService
+     */
+    protected TransaksiService $transaksiService;
+
+    /**
+     * TransaksiController constructor.
+     *
+     * @param TransaksiService $transaksiService
+     */
+    public function __construct(TransaksiService $transaksiService)
+    {
+        $this->transaksiService = $transaksiService;
+    }
+
     /**
      * Menampilkan halaman pemilihan jenis donasi.
      */
@@ -25,12 +48,9 @@ class TransaksiController extends Controller
      */
     public function create(Request $request)
     {
-        // Ambil harga emas dari settings
-        $hargaEmas = Setting::where('setting_key', 'harga_emas_per_gram')->value('setting_value');
-
         return Inertia::render('user/muzakki/transaksi/zakat/create-zakat', [
             'initialAmount' => $request->query('amount', ''),
-            'hargaEmas' => (float) $hargaEmas,
+            'hargaEmas' => $this->transaksiService->getZakatCreationData(),
         ]);
     }
 
@@ -40,41 +60,18 @@ class TransaksiController extends Controller
     public function createInfaqSedekah(string $type)
     {
         return Inertia::render('user/muzakki/transaksi/donasi/create-infaq-sedekah', [
-            'donationType' => $type, // Kirim 'infaq' or 'sedekah' ke view
+            'donationType' => $type,
         ]);
     }
 
     /**
      * Menyimpan transaksi baru ke database.
      */
-    public function store(Request $request)
+    public function store(StoreTransaksiRequest $request)
     {
-        // 1. Validasi input dari form
-        $request->validate(
-            [
-                'type' => 'required|string|in:zakat,infaq,sedekah',
-                'amount' => 'required|numeric|min:10000|max:9999999999999.99',
-                'payment_method' => 'required|string|in:DANA,GoPay,Tunai',
-            ],
-            [
-                // Pesan error kustom untuk aturan 'max' pada field 'amount'
-                'amount.max' => 'Nominal yang Anda masukkan terlalu besar.',
-            ],
-        );
+        $transaksi = $this->transaksiService->createTransaksi($request->validated());
 
-        // 2. Buat record transaksi baru
-        $transaksi = Transaksi::create([
-            'user_id' => Auth::id(),
-            'order_id' => Str::upper('INV-' . now()->format('Ymd') . '-' . Str::random(6)),
-            'type' => $request->type,
-            'amount' => $request->amount,
-            'final_amount' => $request->amount,
-            'payment_method' => $request->payment_method,
-            'status' => 'Menunggu Pembayaran',
-        ]);
-
-        // 3. Redirect ke halaman detail transaksi (akan dibuat selanjutnya)
-        return redirect('/transaksi/' . $transaksi->order_id) // Menggunakan URL manual
+        return redirect('/transaksi/' . $transaksi->order_id)
             ->with('success', 'Transaksi berhasil dibuat. Silakan selesaikan pembayaran.');
     }
 
@@ -83,52 +80,21 @@ class TransaksiController extends Controller
      */
     public function show($order_id)
     {
-        $transaksi = Transaksi::where('order_id', $order_id)->where('user_id', Auth::id())->firstOrFail();
+        $data = $this->transaksiService->getTransaksiDetails($order_id);
 
-        // ## PERUBAHAN DI SINI: Tambahkan atribut tanggal & waktu yang sudah diformat ##
-        $transaksi->formatted_date = $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('d F Y');
-        $transaksi->formatted_time = $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('H:i T');
-
-        // Ambil data setting pembayaran dari database
-        $paymentKey = 'payment_' . strtolower($transaksi->payment_method);
-        $paymentSetting = Setting::where('setting_key', $paymentKey)->first();
-
-        // Decode JSON menjadi array/object
-        $paymentDetails = $paymentSetting ? json_decode($paymentSetting->setting_value, true) : null;
-
-        // ## Ganti nama file view Anda jika berbeda ##
         return Inertia::render('user/muzakki/transaksi/zakat/show-zakat', [
-            'transaksi' => $transaksi,
-            'paymentDetails' => $paymentDetails,
+            'transaksi' => $data['transaksi'],
+            'paymentDetails' => $data['paymentDetails'],
         ]);
     }
 
     /**
      * Mengunggah dan memproses bukti pembayaran.
      */
-    public function uploadProof(Request $request, $order_id)
+    public function uploadProof(UploadProofRequest $request, $order_id)
     {
-        // 1. Validasi file yang diunggah
-        $request->validate([
-            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048', // Wajib, gambar, max 2MB
-        ]);
+        $this->transaksiService->handleProofUpload($order_id, $request->file('payment_proof'));
 
-        // 2. Cari transaksi yang sesuai
-        $transaksi = Transaksi::where('order_id', $order_id)->where('user_id', Auth::id())->firstOrFail();
-
-        // 3. Simpan file baru
-        $file = $request->file('payment_proof');
-        // Simpan file di dalam folder 'storage/app/public/proofs'
-        // dan dapatkan path-nya
-        $path = $file->store('bukti_pembayaran', 'public');
-
-        // 4. Update database
-        $transaksi->update([
-            'payment_proof' => $path,
-            'status' => 'Menunggu Verifikasi', // Status berubah
-        ]);
-
-        // 5. Kembalikan ke halaman yang sama dengan pesan sukses
         return back()->with('success', 'Bukti pembayaran berhasil diunggah.');
     }
 }
