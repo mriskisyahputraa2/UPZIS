@@ -1,5 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { format as formatDateFn } from 'date-fns';
+import { id } from 'date-fns/locale';
 
 /**
  * Menggabungkan beberapa class name menjadi satu string.
@@ -19,10 +21,31 @@ export function cn(...inputs: ClassValue[]) {
  */
 export const formatCurrency = (value: number | string | null | undefined) => {
     const numValue = Number(value);
-    if (value === null || value === undefined || isNaN(numValue)) return '';
+    if (value === null || value === undefined || isNaN(numValue)) {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0,
+        }).format(0);
+    }
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
         minimumFractionDigits: 0,
     }).format(numValue);
+};
+
+/**
+ * Memformat tanggal menjadi format tanggal Indonesia (e.g., "17 Agt 2024").
+ * @param dateString - String tanggal yang valid.
+ * @returns String tanggal yang sudah diformat atau string kosong jika tidak valid.
+ */
+export const formatDate = (dateString: string) => {
+    try {
+        return formatDateFn(new Date(dateString), 'dd MMM yyyy', {
+            locale: id,
+        });
+    } catch (error) {
+        return '';
+    }
 };
