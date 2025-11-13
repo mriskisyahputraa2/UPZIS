@@ -16,9 +16,28 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { ZakatTypeForm as ZakatTypeFormType } from '@/types/zakat-type';
 
-// Komponen ini menerima props dari useForm hook
-export function ZakatTypeForm({ data, setData, errors }) {
+/**
+ * @interface ZakatTypeFormProps
+ * @description Properti untuk komponen ZakatTypeForm.
+ * @property {Partial<ZakatTypeFormType>} data - Objek data dari hook useForm Inertia.
+ * @property {Function} setData - Fungsi untuk mengubah data form.
+ * @property {object} errors - Objek error validasi dari Inertia.
+ */
+interface ZakatTypeFormProps {
+    data: Partial<ZakatTypeFormType>;
+    setData: (field: keyof ZakatTypeFormType, value: any) => void;
+    errors: any;
+}
+
+/**
+ * @name ZakatTypeForm
+ * @description Komponen form untuk membuat atau mengedit data jenis zakat.
+ * @param {ZakatTypeFormProps} props - Properti komponen.
+ * @returns {JSX.Element}
+ */
+export function ZakatTypeForm({ data, setData, errors }: ZakatTypeFormProps) {
     return (
         <Card>
             <CardHeader>
@@ -40,7 +59,7 @@ export function ZakatTypeForm({ data, setData, errors }) {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="description">Deskripsi </Label>
+                    <Label htmlFor="description">Deskripsi *</Label>
                     <Textarea
                         id="description"
                         value={data.description}
