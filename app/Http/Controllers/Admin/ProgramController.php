@@ -3,113 +3,110 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Penyaluran;
-use App\Models\Periode;
+use App\Http\Requests\Admin\StoreProgramRequest;
+use App\Http\Requests\Admin\UpdateProgramRequest;
 use App\Models\Program;
-use App\Models\ProgramPhoto;
+use App\Repositories\Admin\ProgramRepository;
+use App\Services\Admin\ProgramService;
+use Exception;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Inertia\Response;
 
+/**
+ * Class ProgramController
+ *
+ * Controller ini menangani semua tindakan terkait manajemen program di area admin.
+ */
 class ProgramController extends Controller
 {
     /**
-     * Menampilkan daftar semua program.
+     * @var ProgramRepository
      */
-    public function index(Request $request)
+    protected $programRepository;
+
+    /**
+     * @var ProgramService
+     */
+    protected $programService;
+
+    /**
+     * ProgramController constructor.
+     *
+     * @param  ProgramRepository  $programRepository
+     * @param  ProgramService  $programService
+     */
+    public function __construct(ProgramRepository $programRepository, ProgramService $programService)
     {
-        // Validasi semua kemungkinan input filter
+        $this->programRepository = $programRepository;
+        $this->programService = $programService;
+    }
+
+    /**
+     * Menampilkan daftar semua program dengan filter dan paginasi.
+     *
+     * @param  Request  $request
+     * @return Response
+     */
+    public function index(Request $request): Response
+    {
+        // Validasi sederhana untuk filter bisa tetap di controller
         $request->validate([
             'search' => 'nullable|string|max:100',
             'status' => 'nullable|string|in:Draft,Published',
             'periode_id' => 'nullable|integer|exists:periodes,id',
         ]);
 
-        $programs = Program::withCount('photos', 'penyalurans')
-            ->withSum('penyalurans', 'amount')
-            // Filter berdasarkan pencarian nama
-            ->when($request->input('search'), function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%");
-            })
-            // Filter berdasarkan status
-            ->when($request->input('status'), function ($query, $status) {
-                $query->where('status', $status);
-            })
-            // Filter berdasarkan periode penyaluran
-            ->when($request->input('periode_id'), function ($query, $periodeId) {
-                $query->whereHas('penyalurans.permohonan', function ($q) use ($periodeId) {
-                    $q->where('periode_id', $periodeId);
-                });
-            })
-            ->latest()
-            ->paginate($request->input('per_page', 5))
-            ->withQueryString();
+        $programs = $this->programRepository->getPaginated($request);
+        $periodes = $this->programRepository->getPeriodes();
 
         return Inertia::render('admin/programs/index', [
             'programs' => $programs,
             'filters' => $request->only(['search', 'status', 'periode_id', 'per_page']),
-            'periodes' => Periode::latest()->get(['id', 'name']), // Kirim data periode untuk filter
+            'periodes' => $periodes,
         ]);
     }
 
     /**
      * Menampilkan form untuk membuat program baru.
+     *
+     * @return Response
      */
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('admin/programs/create');
     }
 
     /**
      * Menyimpan program baru ke database.
+     *
+     * @param  StoreProgramRequest  $request
+     * @return RedirectResponse
      */
-    public function store(Request $request)
+    public function store(StoreProgramRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'program_date' => 'required|date',
-            'status' => 'required|string|in:Draft,Published',
-            'photos' => 'nullable|array',
-            'photos.*' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-        ]);
-
         try {
-            DB::beginTransaction();
+            $program = $this->programService->storeProgram($request->validated());
 
-            $program = Program::create($request->only(['name', 'description', 'program_date', 'status']));
-
-            if ($request->hasFile('photos')) {
-                foreach ($request->file('photos') as $photo) {
-                    $path = $photo->store('program-photos/' . $program->id, 'public');
-                    $program->photos()->create(['photo_path' => $path]);
-                }
-            }
-
-            DB::commit();
-
-            // return redirect()->route('admin.programs.index')->with('success', 'Program baru berhasil dibuat.');
-        return redirect()->route('admin.programs.edit', $program)->with('success', 'Program baru berhasil dibuat. Silakan hubungkan data penyaluran.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan saat menyimpan program.');
+            return redirect()->route('admin.programs.edit', $program)->with('success', 'Program baru berhasil dibuat. Silakan hubungkan data penyaluran.');
+        } catch (Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
     }
 
     /**
      * Menampilkan form untuk mengedit program.
+     *
+     * @param  Program  $program
+     * @return Response
      */
-    public function edit(Program $program)
+    public function edit(Program $program): Response
     {
         $program->load('photos');
-
-        $availablePenyalurans = Penyaluran::with('permohonan.mustahik')->whereNull('program_id')->orWhere('program_id', $program->id)->latest('distribution_date')->get();
-
+        $availablePenyalurans = $this->programRepository->getAvailablePenyalurans($program);
         $linkedPenyaluranIds = $program->penyalurans()->pluck('id')->toArray();
-
-        // ambil semua periode
-        $periodes = Periode::latest()->get(['id', 'name']);
+        $periodes = $this->programRepository->getPeriodes();
 
         return Inertia::render('admin/programs/edit', [
             'program' => $program,
@@ -121,69 +118,36 @@ class ProgramController extends Controller
 
     /**
      * Memperbarui data program di database.
+     *
+     * @param  UpdateProgramRequest  $request
+     * @param  Program  $program
+     * @return RedirectResponse
      */
-    public function update(Request $request, Program $program)
+    public function update(UpdateProgramRequest $request, Program $program): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'program_date' => 'required|date',
-            'status' => 'required|string|in:Draft,Published',
-            'photos' => 'nullable|array',
-            'photos.*' => 'image|mimes:jpeg,png,jpg|max:2048',
-            'deleted_photos' => 'nullable|array',
-            'deleted_photos.*' => 'integer|exists:program_photos,id',
-            'penyaluran_ids' => 'nullable|array',
-            'penyaluran_ids.*' => 'integer|exists:penyalurans,id',
-        ]);
-
         try {
-            DB::beginTransaction();
+            $this->programService->updateProgram($program, $request->validated());
 
-            $program->update($request->only(['name', 'description', 'program_date', 'status']));
-
-            if ($request->filled('deleted_photos')) {
-                $photosToDelete = ProgramPhoto::whereIn('id', $request->deleted_photos)->get();
-                foreach ($photosToDelete as $photo) {
-                    Storage::disk('public')->delete($photo->photo_path);
-                    $photo->delete();
-                }
-            }
-
-            if ($request->hasFile('photos')) {
-                foreach ($request->file('photos') as $photo) {
-                    $path = $photo->store('program-photos/' . $program->id, 'public');
-                    $program->photos()->create(['photo_path' => $path]);
-                }
-            }
-
-            // Sinkronisasi data penyaluran
-            Penyaluran::where('program_id', $program->id)->update(['program_id' => null]);
-            if ($request->filled('penyaluran_ids')) {
-                Penyaluran::whereIn('id', $request->penyaluran_ids)->update(['program_id' => $program->id]);
-            }
-
-            DB::commit();
-
-            // return back()->with('success', 'Program berhasil diperbarui.');
             return redirect()->route('admin.programs.index')->with('success', 'Program berhasil diperbarui.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan saat memperbarui program.');
+        } catch (Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
     }
 
     /**
      * Menghapus program dari database.
+     *
+     * @param  Program  $program
+     * @return RedirectResponse
      */
-    public function destroy(Program $program)
+    public function destroy(Program $program): RedirectResponse
     {
-        // Hapus folder foto dari storage
-        Storage::disk('public')->deleteDirectory('program-photos/' . $program->id);
+        try {
+            $this->programService->deleteProgram($program);
 
-        // Hapus program (cascade akan menghapus foto, set null akan melepaskan penyaluran)
-        $program->delete();
-
-        return redirect()->route('admin.programs.index')->with('success', 'Program berhasil dihapus.');
+            return redirect()->route('admin.programs.index')->with('success', 'Program berhasil dihapus.');
+        } catch (Exception $e) {
+            return redirect()->route('admin.programs.index')->with('error', $e->getMessage());
+        }
     }
 }
