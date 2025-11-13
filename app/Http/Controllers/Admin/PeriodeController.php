@@ -3,25 +3,58 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StorePeriodeRequest;
+use App\Http\Requests\Admin\UpdatePeriodeRequest;
 use App\Models\Periode;
+use App\Repositories\Admin\PeriodeRepository;
+use App\Services\Admin\PeriodeService;
+use Exception;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Inertia\Response;
 
+/**
+ * Class PeriodeController
+ *
+ * Controller ini menangani semua tindakan terkait manajemen periode di area admin.
+ */
 class PeriodeController extends Controller
 {
     /**
-     * Menampilkan halaman daftar periode.
+     * @var PeriodeRepository
      */
-    public function index(Request $request)
+    protected $periodeRepository;
+
+    /**
+     * @var PeriodeService
+     */
+    protected $periodeService;
+
+    /**
+     * PeriodeController constructor.
+     *
+     * @param  PeriodeRepository  $periodeRepository
+     * @param  PeriodeService  $periodeService
+     */
+    public function __construct(PeriodeRepository $periodeRepository, PeriodeService $periodeService)
     {
-        $periodes = Periode::query()
-            ->when($request->input('search'), function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%");
-            })
-            ->latest()
-            ->paginate($request->input('per_page', 5))
-            ->withQueryString();
+        $this->periodeRepository = $periodeRepository;
+        $this->periodeService = $periodeService;
+    }
+
+    /**
+     * Menampilkan halaman daftar periode.
+     *
+     * Mengambil data periode secara paginasi menggunakan repository dan
+     * menampilkannya menggunakan Inertia.
+     *
+     * @param  Request  $request
+     * @return Response
+     */
+    public function index(Request $request): Response
+    {
+        $periodes = $this->periodeRepository->getAllPaginated($request);
 
         return Inertia::render('admin/periode/index', [
             'periodes' => $periodes,
@@ -31,52 +64,45 @@ class PeriodeController extends Controller
 
     /**
      * Menampilkan form untuk membuat periode baru.
+     *
+     * @return Response
      */
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('admin/periode/create');
     }
 
     /**
      * Menyimpan periode baru ke database.
+     *
+     * Validasi input ditangani oleh StorePeriodeRequest.
+     * Logika bisnis untuk pembuatan data ditangani oleh PeriodeService.
+     *
+     * @param  StorePeriodeRequest  $request
+     * @return RedirectResponse
      */
-    public function store(Request $request)
+    public function store(StorePeriodeRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:periodes',
-            'description' => 'nullable|string',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'status' => 'required|in:Aktif,Tidak Aktif',
-        ]);
+        try {
+            $this->periodeService->createPeriode($request->validated());
 
-        // Aturan Bisnis: Jika periode baru ini 'Aktif', nonaktifkan semua yang lain.
-        if ($validated['status'] === 'Aktif') {
-            Periode::where('status', 'Aktif')->update(['status' => 'Tidak Aktif']);
+            return redirect()->route('admin.periode.index')->with('success', 'Periode baru berhasil ditambahkan.');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menambahkan periode: '.$e->getMessage());
         }
-
-        Periode::create($validated);
-
-        return redirect()->route('admin.periode.index')->with('success', 'Periode baru berhasil ditambahkan.');
-    }
-
-    /**
-     * Menampilkan data periode tertentu.
-     * Method ini sengaja dibuat untuk menangani route-model binding dan menampilkan 404 jika model tidak ditemukan.
-     */
-    public function show(Periode $periode)
-    {
-        abort(404);
     }
 
     /**
      * Menampilkan form untuk mengedit periode.
+     *
+     * Data periode yang akan diedit diformat untuk memastikan konsistensi
+     * format tanggal sebelum dikirim ke frontend.
+     *
+     * @param  Periode  $periode
+     * @return Response
      */
-    public function edit(Periode $periode)
+    public function edit(Periode $periode): Response
     {
-        // return Inertia::render('admin/periode/edit', [
-        //     'periode' => $periode,
-        // ]);
         return Inertia::render('admin/periode/edit', [
             'periode' => [
                 'id' => $periode->id,
@@ -91,41 +117,42 @@ class PeriodeController extends Controller
 
     /**
      * Memperbarui data periode di database.
+     *
+     * Validasi input ditangani oleh UpdatePeriodeRequest.
+     * Logika bisnis untuk pembaruan data ditangani oleh PeriodeService.
+     *
+     * @param  UpdatePeriodeRequest  $request
+     * @param  Periode  $periode
+     * @return RedirectResponse
      */
-    public function update(Request $request, Periode $periode)
+    public function update(UpdatePeriodeRequest $request, Periode $periode): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', Rule::unique('periodes')->ignore($periode->id)],
-            'description' => 'nullable|string',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'status' => 'required|in:Aktif,Tidak Aktif',
-        ]);
+        try {
+            $this->periodeService->updatePeriode($periode, $request->validated());
 
-        // Aturan Bisnis: Jika periode ini diubah menjadi 'Aktif', nonaktifkan semua yang lain.
-        if ($validated['status'] === 'Aktif') {
-            Periode::where('id', '!=', $periode->id)
-                ->where('status', 'Aktif')
-                ->update(['status' => 'Tidak Aktif']);
+            return redirect()->route('admin.periode.index')->with('success', 'Data periode berhasil diperbarui.');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memperbarui periode: '.$e->getMessage());
         }
-
-        $periode->update($validated);
-
-        return redirect()->route('admin.periode.index')->with('success', 'Data periode berhasil diperbarui.');
     }
 
     /**
      * Menghapus periode dari database.
+     *
+     * Logika bisnis untuk penghapusan data (termasuk pengecekan relasi)
+     * ditangani oleh PeriodeService.
+     *
+     * @param  Periode  $periode
+     * @return RedirectResponse
      */
-    public function destroy(Periode $periode)
+    public function destroy(Periode $periode): RedirectResponse
     {
-        // Aturan Bisnis: Jangan hapus periode jika sudah ada permohonan terkait.
-        if ($periode->permohonans()->exists()) {
-            return redirect()->route('admin.periode.index')->with('error', 'Periode tidak dapat dihapus karena sudah memiliki data permohonan.');
+        try {
+            $this->periodeService->deletePeriode($periode);
+
+            return redirect()->route('admin.periode.index')->with('success', 'Periode berhasil dihapus.');
+        } catch (Exception $e) {
+            return redirect()->route('admin.periode.index')->with('error', $e->getMessage());
         }
-
-        $periode->delete();
-
-        return redirect()->route('admin.periode.index')->with('success', 'Periode berhasil dihapus.');
     }
 }
