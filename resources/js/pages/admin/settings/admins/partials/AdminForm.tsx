@@ -9,9 +9,35 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PasswordInput } from '@/components/ui/password-input';
+import { AdminForm as AdminFormType } from '@/types/admin';
 
-// isEdit adalah prop untuk mengubah teks di form (Edit vs Tambah)
-export function AdminForm({ data, setData, errors, isEdit = false }) {
+/**
+ * @interface AdminFormProps
+ * @description Properti untuk komponen AdminForm.
+ * @property {Partial<AdminFormType>} data - Objek data dari hook useForm Inertia.
+ * @property {Function} setData - Fungsi untuk mengubah data form.
+ * @property {object} errors - Objek error validasi dari Inertia.
+ * @property {boolean} [isEdit=false] - Flag untuk menandakan mode edit.
+ */
+interface AdminFormProps {
+    data: Partial<AdminFormType>;
+    setData: (field: keyof AdminFormType, value: any) => void;
+    errors: any;
+    isEdit?: boolean;
+}
+
+/**
+ * @name AdminForm
+ * @description Komponen form untuk membuat atau mengedit data admin.
+ * @param {AdminFormProps} props - Properti komponen.
+ * @returns {JSX.Element}
+ */
+export function AdminForm({
+    data,
+    setData,
+    errors,
+    isEdit = false,
+}: AdminFormProps) {
     return (
         <Card>
             <CardHeader>

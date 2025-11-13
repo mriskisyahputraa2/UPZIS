@@ -1,63 +1,14 @@
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/components/ui/pagination';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import {
-    Ellipsis,
-    FilePen,
-    PlusCircle,
-    Search,
-    Trash2,
-    Users,
-} from 'lucide-react';
+import { PaginatedAdmins } from '@/types/admin';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import AdminsTable from './partials/admins-table';
+import DeleteDialog from './partials/delete-dialog';
+import Header from './partials/header';
+import Pagination from './partials/pagination';
+import TableToolbar from './partials/table-toolbar';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/admin/dashboard' },
@@ -65,17 +16,36 @@ const breadcrumbs = [
     { title: 'Manajemen Admin' },
 ];
 
-export default function AdminsIndex({ admins, filters }) {
+/**
+ * @interface AdminsIndexProps
+ * @description Properti untuk halaman AdminsIndex.
+ * @property {PaginatedAdmins} admins - Data admin yang dipaginasi.
+ * @property {{ search: string; per_page: string }} filters - Filter yang diterapkan.
+ */
+interface AdminsIndexProps {
+    admins: PaginatedAdmins;
+    filters: { search: string; per_page: string };
+}
+
+/**
+ * @page AdminsIndex
+ * @description Halaman utama untuk manajemen admin, menampilkan daftar admin.
+ * @param {AdminsIndexProps} props - Properti halaman.
+ * @returns {JSX.Element}
+ */
+export default function AdminsIndex({ admins, filters }: AdminsIndexProps) {
     const { flash } = usePage().props;
     const [search, setSearch] = useState(filters.search || '');
-    const [deleteId, setDeleteId] = useState(null);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
     const isInitialMount = useRef(true);
 
+    // Menampilkan notifikasi toast dari flash message
     useEffect(() => {
-        if (flash && flash.success) toast.success(flash.success);
-        if (flash && flash.error) toast.error(flash.error);
+        if (flash && flash.success) toast.success(flash.success as string);
+        if (flash && flash.error) toast.error(flash.error as string);
     }, [flash]);
 
+    // Melakukan pencarian dengan debounce saat nilai `search` berubah
     useEffect(() => {
         if (isInitialMount.current) {
             isInitialMount.current = false;
@@ -91,7 +61,8 @@ export default function AdminsIndex({ admins, filters }) {
         return () => clearTimeout(timeout);
     }, [search]);
 
-    const handlePerPageChange = (perPage) => {
+    // Handler untuk mengubah jumlah data per halaman
+    const handlePerPageChange = (perPage: string) => {
         router.get(
             '/admin/settings/admins',
             { search: filters.search, per_page: perPage },
@@ -99,6 +70,7 @@ export default function AdminsIndex({ admins, filters }) {
         );
     };
 
+    // Handler untuk konfirmasi penghapusan
     const handleDelete = () => {
         if (deleteId) {
             router.delete(`/admin/settings/admins/${deleteId}`, {
@@ -112,213 +84,24 @@ export default function AdminsIndex({ admins, filters }) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Manajemen Admin" />
             <Card className="flex h-full flex-1 flex-col">
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <CardTitle>Daftar Admin</CardTitle>
-                        <Link href="/admin/settings/admins/create">
-                            <Button>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Tambah Admin
-                            </Button>
-                        </Link>
-                    </div>
-                    <CardDescription>
-                        Kelola akun yang memiliki akses ke panel admin.
-                    </CardDescription>
-                </CardHeader>
+                <Header />
                 <CardContent className="flex flex-1 flex-col">
-                    <div className="mb-4 flex items-center justify-between">
-                        <div className="relative w-full max-w-xs">
-                            <Input
-                                type="search"
-                                placeholder="Cari nama atau email..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="pl-9"
-                            />
-                            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        </div>
-                        <Select
-                            onValueChange={handlePerPageChange}
-                            defaultValue={String(filters.per_page || '5')}
-                        >
-                            <SelectTrigger className="w-[120px]">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="5">5 Data</SelectItem>
-                                <SelectItem value="10">10 Data</SelectItem>
-                                <SelectItem value="20">20 Data</SelectItem>
-                                <SelectItem value="50">50 Data</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="flex-1 overflow-auto rounded-md border">
-                        <Table>
-                            <TableHeader className="font-bold uppercase">
-                                <TableRow>
-                                    <TableHead className="w-10">No.</TableHead>
-                                    <TableHead>Nama</TableHead>
-                                    <TableHead>Email</TableHead>
-                                    <TableHead className="w-20 text-right">
-                                        Aksi
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {admins.data.length > 0 ? (
-                                    admins.data.map((admin, index) => (
-                                        <TableRow key={admin.id}>
-                                            <TableCell>
-                                                {admins.from + index}
-                                            </TableCell>
-                                            <TableCell className="font-medium">
-                                                {admin.name}
-                                            </TableCell>
-                                            <TableCell>{admin.email}</TableCell>
-                                            <TableCell className="text-right">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger
-                                                        asChild
-                                                    >
-                                                        <Button
-                                                            size="icon"
-                                                            variant="ghost"
-                                                        >
-                                                            <Ellipsis className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem
-                                                            asChild
-                                                        >
-                                                            <Link
-                                                                href={`/admin/settings/admins/${admin.id}/edit`}
-                                                            >
-                                                                <FilePen className="mr-2 h-4 w-4" />
-                                                                Edit
-                                                            </Link>
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem
-                                                            className="text-red-600 focus:text-red-600"
-                                                            onClick={() =>
-                                                                setDeleteId(
-                                                                    admin.id,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 className="mr-2 h-4 w-4" />
-                                                            Hapus
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={4}
-                                            className="h-full p-8 text-center"
-                                        >
-                                            <div className="flex flex-col items-center justify-center gap-4">
-                                                <Users className="h-16 w-16 text-gray-300 dark:text-gray-700" />
-                                                <h3 className="text-xl font-bold">
-                                                    Belum Ada Admin
-                                                </h3>
-                                                <p className="text-muted-foreground">
-                                                    Tambahkan admin baru untuk
-                                                    membantu mengelola sistem.
-                                                </p>
-                                                <Link href="/admin/settings/admins/create">
-                                                    <Button className="mt-2">
-                                                        <PlusCircle className="mr-2 h-4 w-4" />
-                                                        Tambah Admin Pertama
-                                                    </Button>
-                                                </Link>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
+                    <TableToolbar
+                        search={search}
+                        onSearchChange={setSearch}
+                        perPage={String(filters.per_page || '5')}
+                        onPerPageChange={handlePerPageChange}
+                    />
+                    <AdminsTable admins={admins} onDeleteClick={setDeleteId} />
                 </CardContent>
-                {admins.data.length > 0 && (
-                    <CardFooter className="flex flex-col items-center justify-between gap-4 md:flex-row">
-                        <div className="text-sm text-muted-foreground">
-                            Menampilkan{' '}
-                            <span className="font-semibold">
-                                {admins.from || 0}
-                            </span>{' '}
-                            -{' '}
-                            <span className="font-semibold">
-                                {admins.to || 0}
-                            </span>{' '}
-                            dari{' '}
-                            <span className="font-semibold">
-                                {admins.total || 0}
-                            </span>{' '}
-                            hasil
-                        </div>
-                        <Pagination>
-                            <PaginationContent>
-                                {admins.links.map((link, index) =>
-                                    link.label.includes('Previous') ? (
-                                        <PaginationPrevious
-                                            key={index}
-                                            href={link.url}
-                                            preserveScroll
-                                            preserveState
-                                        />
-                                    ) : link.label.includes('Next') ? (
-                                        <PaginationNext
-                                            key={index}
-                                            href={link.url}
-                                            preserveScroll
-                                            preserveState
-                                        />
-                                    ) : (
-                                        <PaginationLink
-                                            key={index}
-                                            href={link.url}
-                                            isActive={link.active}
-                                            preserveScroll
-                                            preserveState
-                                        >
-                                            {link.label}
-                                        </PaginationLink>
-                                    ),
-                                )}
-                            </PaginationContent>
-                        </Pagination>
-                    </CardFooter>
-                )}
+                <Pagination data={admins} />
             </Card>
 
-            <AlertDialog
+            <DeleteDialog
                 open={!!deleteId}
                 onOpenChange={() => setDeleteId(null)}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Tindakan ini akan menghapus akun admin secara
-                            permanen.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleDelete}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                            Hapus
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                onConfirm={handleDelete}
+            />
         </AppLayout>
     );
 }

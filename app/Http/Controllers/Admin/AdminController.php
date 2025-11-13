@@ -3,88 +3,97 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreAdminRequest;
+use App\Http\Requests\Admin\UpdateAdminRequest;
 use App\Models\User;
+use App\Repositories\Admin\AdminRepository;
+use App\Services\Admin\AdminService;
+use Exception;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
+use Inertia\Response;
 
+/**
+ * Class AdminController
+ *
+ * Controller ini menangani semua tindakan terkait manajemen pengguna admin.
+ */
 class AdminController extends Controller
 {
     /**
-     * Menampilkan daftar pengguna admin.
+     * @var AdminRepository
      */
-    public function index(Request $request)
+    protected $adminRepository;
+
+    /**
+     * @var AdminService
+     */
+    protected $adminService;
+
+    /**
+     * AdminController constructor.
+     *
+     * @param  AdminRepository  $adminRepository
+     * @param  AdminService  $adminService
+     */
+    public function __construct(AdminRepository $adminRepository, AdminService $adminService)
     {
-        // 1. Validasi input filter dari request
+        $this->adminRepository = $adminRepository;
+        $this->adminService = $adminService;
+    }
+
+    /**
+     * Menampilkan daftar pengguna admin.
+     *
+     * @param  Request  $request
+     * @return Response
+     */
+    public function index(Request $request): Response
+    {
         $request->validate([
             'search' => 'nullable|string|max:100',
             'per_page' => 'nullable|integer|in:5,10,20,50',
         ]);
 
-        // 2. Ambil nilai filter
-        $search = $request->input('search');
-        $perPage = $request->input('per_page', 5);
+        $admins = $this->adminRepository->getPaginated($request);
 
-        // 3. Buat query dengan filter
-        $admins = User::query()
-            ->where('role', 'admin')
-            ->when($search, function ($query, $search) {
-                // Cari berdasarkan nama atau email
-                return $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%");
-                });
-            })
-            ->latest()
-            ->paginate($perPage)
-            ->withQueryString();
-
-        // 4. Kirim data ke view
         return Inertia::render('admin/settings/admins/index', [
             'admins' => $admins,
-            'filters' => [
-                'search' => $search,
-                'per_page' => $perPage,
-            ],
+            'filters' => $request->only(['search', 'per_page']),
         ]);
     }
 
     /**
      * Menampilkan form untuk membuat admin baru.
+     *
+     * @return Response
      */
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('admin/settings/admins/create');
     }
 
     /**
      * Menyimpan admin baru ke database.
+     *
+     * @param  StoreAdminRequest  $request
+     * @return RedirectResponse
      */
-    public function store(Request $request)
+    public function store(StoreAdminRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:' . User::class,
-            // START: PERBAIKAN VALIDASI PASSWORD
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
-            // END: PERBAIKAN VALIDASI
-        ]);
+        $this->adminService->createAdmin($request->validated());
 
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => $request->password, // Dihandle oleh 'hashed' cast di Model
-            'role' => 'admin',
-        ]);
-
-        return Redirect::route('admin.settings.admins.index')->with('success', 'Admin baru berhasil ditambahkan.');
+        return redirect()->route('admin.settings.admins.index')->with('success', 'Admin baru berhasil ditambahkan.');
     }
 
     /**
      * Menampilkan form untuk mengedit data admin.
+     *
+     * @param  User  $admin
+     * @return Response
      */
-    public function edit(User $admin)
+    public function edit(User $admin): Response
     {
         return Inertia::render('admin/settings/admins/edit', [
             'admin' => $admin,
@@ -93,40 +102,32 @@ class AdminController extends Controller
 
     /**
      * Memperbarui data admin di database.
+     *
+     * @param  UpdateAdminRequest  $request
+     * @param  User  $admin
+     * @return RedirectResponse
      */
-    public function update(Request $request, User $admin)
+    public function update(UpdateAdminRequest $request, User $admin): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:' . User::class . ',email,' . $admin->id,
-            // START: PERBAIKAN VALIDASI PASSWORD
-            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
-            // END: PERBAIKAN VALIDASI
-        ]);
+        $this->adminService->updateAdmin($admin, $request->validated());
 
-        $admin->name = $request->name;
-        $admin->email = $request->email;
-
-        if ($request->filled('password')) {
-            $admin->password = $request->password;
-        }
-
-        $admin->save();
-
-        return Redirect::route('admin.settings.admins.index')->with('success', 'Data admin berhasil diperbarui.');
+        return redirect()->route('admin.settings.admins.index')->with('success', 'Data admin berhasil diperbarui.');
     }
 
     /**
      * Menghapus admin dari database.
+     *
+     * @param  User  $admin
+     * @return RedirectResponse
      */
-    public function destroy(User $admin)
+    public function destroy(User $admin): RedirectResponse
     {
-        if ($admin->id === auth()->id()) {
-            return Redirect::back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+        try {
+            $this->adminService->deleteAdmin($admin);
+
+            return redirect()->back()->with('success', 'Akun admin berhasil dihapus.');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
-
-        $admin->delete();
-
-        return Redirect::back()->with('success', 'Akun admin berhasil dihapus.');
     }
 }
