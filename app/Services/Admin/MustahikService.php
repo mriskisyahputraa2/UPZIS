@@ -13,6 +13,7 @@ use App\Models\Transaksi;
 use App\Repositories\Admin\MustahikRepository;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -195,9 +196,9 @@ class MustahikService
      *
      * @param Request $request
      * @param string $type 'excel' or 'pdf'
-     * @return BinaryFileResponse
+     * @return BinaryFileResponse|Response
      */
-    public function export(Request $request, string $type): BinaryFileResponse
+    public function export(Request $request, string $type): BinaryFileResponse|Response
     {
         $fileName = $this->generateDynamicFileName($request, $type === 'excel' ? '.xlsx' : '.pdf');
         $export = new MustahiksExport($request);

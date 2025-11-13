@@ -2,247 +2,116 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Exports\TransaksisExport;
 use App\Http\Controllers\Controller;
-use App\Models\Periode;
+use App\Http\Requests\Admin\IndexTransaksiRequest;
+use App\Http\Requests\Admin\UpdateTransaksiStatusRequest;
 use App\Models\Transaksi;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
+use App\Repositories\Admin\TransaksiAdminRepository;
+use App\Services\Admin\TransaksiAdminService;
+use Illuminate\Http\Response;
 use Inertia\Inertia;
-use Carbon\Carbon;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
+/**
+ * @summary Controller untuk mengelola data Transaksi dari sisi Admin.
+ *
+ * @description
+ * Controller ini bertanggung jawab untuk menangani request HTTP terkait
+ * data transaksi, seperti menampilkan daftar, detail, pembaruan status,
+ * dan ekspor data. Logika utama didelegasikan ke TransaksiAdminService.
+ */
 class TransaksiAdminController extends Controller
 {
     /**
-     * Menampilkan daftar semua transaksi.
+     * @param TransaksiAdminService $service
+     * @param TransaksiAdminRepository $repository
      */
-    public function index(Request $request)
+    public function __construct(
+        protected TransaksiAdminService $service,
+        protected TransaksiAdminRepository $repository
+    ) {
+    }
+
+    /**
+     * @summary Menampilkan daftar semua transaksi dengan filter.
+     *
+     * @param IndexTransaksiRequest $request
+     * @return \Inertia\Response
+     */
+    public function index(IndexTransaksiRequest $request): \Inertia\Response
     {
-        // Tambahkan validasi untuk filter 'type'
-        $request->validate([
-            'search' => 'nullable|string|max:100',
-            'status' => 'nullable|string',
-            'type' => 'nullable|string|in:zakat,infaq,sedekah', // Validasi jenis donasi
-            'per_page' => 'nullable|integer|in:5,10,20,50',
-            'periode_id' => 'nullable|integer|exists:periodes,id',
-        ]);
-        $query = Transaksi::with('user')->latest();
+        $query = $this->repository->getFilteredTransactionsQuery($request);
 
-        // Terapkan filter pencarian
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('order_id', 'like', "%{$search}%")->orWhereHas('user', function ($userQuery) use ($search) {
-                    $userQuery->where('name', 'like', "%{$search}%");
-                });
-            });
-        }
-
-        // Terapkan filter status
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
-        }
-        //Terapkan filter jenis donasi
-        if ($request->filled('type')) {
-            $query->where('type', $request->input('type'));
-        }
-        // Terapkan filter periode
-        if ($request->filled('periode_id')) {
-            $periode = Periode::find($request->input('periode_id'));
-            if ($periode) {
-                // Pastikan tanggal awal dan akhir mencakup keseluruhan hari dengan Carbon
-                $startDate = Carbon::parse($periode->start_date)->startOfDay();
-                $endDate = Carbon::parse($periode->end_date)->endOfDay();
-                $query->whereBetween('created_at', [$startDate, $endDate]);
-            }
-        }
-
-        // Ambil data dengan paginasi dan transformasikan hasilnya
-        $transaksis = $query->paginate($request->input('per_page', 5))->withQueryString()->through(
-            fn($transaksi) => [
-                'id' => $transaksi->id,
-                'order_id' => $transaksi->order_id,
-                'final_amount' => $transaksi->final_amount,
-                'payment_method' => $transaksi->payment_method,
-                'status' => $transaksi->status,
-                'type' => $transaksi->type,
-                // Kirim tanggal dan waktu yang sudah diformat dari server
-                'formatted_date' => $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('d F Y'),
-                'formatted_time' => $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('H:i:s T'),
-
-                'user' => $transaksi->user
-                    ? [
-                        'name' => $transaksi->user->name,
-                    ]
-                    : null,
-            ],
-        );
-
-        // Ambil semua periode untuk dropdown filter
-        $periodes = Periode::select('id', 'name')->get();
+        $transaksis = $query->paginate($request->input('per_page', 5))
+            ->withQueryString()
+            ->through(
+                fn($transaksi) => [
+                    'id' => $transaksi->id,
+                    'order_id' => $transaksi->order_id,
+                    'final_amount' => $transaksi->final_amount,
+                    'payment_method' => $transaksi->payment_method,
+                    'status' => $transaksi->status,
+                    'type' => $transaksi->type,
+                    'formatted_date' => $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('d F Y'),
+                    'formatted_time' => $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('H:i:s T'),
+                    'user' => $transaksi->user ? ['name' => $transaksi->user->name] : null,
+                ],
+            );
 
         return Inertia::render('admin/transaksi-admin/index', [
             'transaksis' => $transaksis,
-            'filters' => $request->only(['search', 'status', 'type', 'per_page', 'periode_id']),
-            'periodes' => $periodes,
+            'filters' => $request->validated(),
+            'periodes' => $this->repository->getAllPeriodes(),
         ]);
     }
 
     /**
-     * Menangani permintaan ekspor Excel.
+     * @summary Menampilkan detail satu transaksi.
+     *
+     * @param Transaksi $transaksi
+     * @return \Inertia\Response
      */
-    public function exportExcel(Request $request)
+    public function show(Transaksi $transaksi): \Inertia\Response
     {
-        $request->validate([
-            'search' => 'nullable|string|max:100',
-            'status' => 'nullable|string',
-            'type' => 'nullable|string|in:zakat,infaq,sedekah',
-            'periode_id' => 'nullable|integer|exists:periodes,id',
+        return Inertia::render('admin/transaksi-admin/show', [
+            'transaksi' => $this->service->getTransactionDetails($transaksi),
         ]);
-
-        $fileName = $this->generateDynamicFileName($request, '.xlsx');
-
-        return Excel::download(new TransaksisExport($request), $fileName);
     }
 
     /**
-     * Menangani permintaan ekspor PDF.
+     * @summary Memperbarui status transaksi.
+     *
+     * @param UpdateTransaksiStatusRequest $request
+     * @param Transaksi $transaksi
+     * @return RedirectResponse
      */
-    public function exportPdf(Request $request)
+    public function update(UpdateTransaksiStatusRequest $request, Transaksi $transaksi): RedirectResponse
     {
-        $request->validate([
-            'search' => 'nullable|string|max:100',
-            'status' => 'nullable|string',
-            'type' => 'nullable|string|in:zakat,infaq,sedekah',
-            'periode_id' => 'nullable|integer|exists:periodes,id',
-        ]);
-
-        // Buat query yang sama persis dengan di TransaksisExport
-      $query = Transaksi::with('user');
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('order_id', 'like', "%{$search}%")->orWhereHas('user', function ($userQuery) use ($search) {
-                    $userQuery->where('name', 'like', "%{$search}%");
-                });
-            });
-        }
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
-        }
-        if ($request->filled('type')) {
-            $query->where('type', $request->input('type'));
-        }
-        if ($request->filled('periode_id')) {
-            $periode = Periode::find($request->input('periode_id'));
-            if ($periode) {
-                $startDate = Carbon::parse($periode->start_date)->startOfDay();
-                $endDate = Carbon::parse($periode->end_date)->endOfDay();
-                $query->whereBetween('created_at', [$startDate, $endDate]);
-            }
-        }
-        $transaksis = $query->latest()->get();
-
-        //Kumpulkan deskripsi filter yang aktif
-        $filtersDescription = [];
-        if ($request->filled('status')) {
-            $filtersDescription['Status'] = $request->input('status');
-        }
-        if ($request->filled('type')) {
-            $filtersDescription['Jenis Donasi'] = ucfirst($request->input('type'));
-        }
-        if ($request->filled('periode_id')) {
-            $periode = Periode::find($request->input('periode_id'));
-            if ($periode) {
-                $filtersDescription['Periode'] = $periode->name;
-            }
-        }
-        if ($request->filled('search')) {
-            $filtersDescription['Pencarian'] = '"' . $request->input('search') . '"';
-        }
-
-        //Hitung ringkasan total
-        $summary = [
-            'totalAmount' => $transaksis->sum('final_amount'),
-            'totalTransactions' => $transaksis->count(),
-        ];
-
-        $fileName = $this->generateDynamicFileName($request, '.pdf');
-
-
-        // Load view Blade, kirim semua data, dan unduh sebagai PDF
-        $pdf = Pdf::loadView('reports.transaksi', [
-            'transaksis' => $transaksis,
-            'filtersDescription' => $filtersDescription,
-            'summary' => $summary,
-        ]);
-        return $pdf->download($fileName);
-    }
-
-    /**
-     * Memperbarui status transaksi.
-     */
-    public function update(Request $request, Transaksi $transaksi)
-    {
-        $request->validate([
-            'status' => ['required', Rule::in(['Menunggu Pembayaran', 'Menunggu Verifikasi', 'Berhasil', 'Gagal', 'Kadaluarsa'])],
-        ]);
-
-        $transaksi->update([
-            'status' => $request->status,
-        ]);
+        $this->service->updateStatus($request, $transaksi);
 
         return back()->with('success', 'Status transaksi berhasil diperbarui.');
     }
 
     /**
-     * Menampilkan detail satu transaksi untuk verifikasi.
+     * @summary Menangani permintaan ekspor data ke format Excel.
+     *
+     * @param IndexTransaksiRequest $request
+     * @return BinaryFileResponse
      */
-    public function show(Transaksi $transaksi)
+    public function exportExcel(IndexTransaksiRequest $request): BinaryFileResponse
     {
-        // Muat relasi user
-        $transaksi->load('user');
-
-        // Tambahkan atribut tanggal dan waktu yang sudah diformat
-        $transaksi->formatted_date = $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('d F Y');
-        $transaksi->formatted_time = $transaksi->created_at->setTimezone('Asia/Jakarta')->translatedFormat('H:i:s T');
-
-        // Buat URL untuk bukti pembayaran jika ada
-        if ($transaksi->payment_proof) {
-            $transaksi->payment_proof_url = Storage::url($transaksi->payment_proof);
-        } else {
-            $transaksi->payment_proof_url = null;
-        }
-
-        return Inertia::render('admin/transaksi-admin/show', [
-            'transaksi' => $transaksi,
-        ]);
+        return $this->service->exportExcel($request);
     }
 
     /**
-     * Helper private untuk membuat nama file yang dinamis berdasarkan filter.
+     * @summary Menangani permintaan ekspor data ke format PDF.
+     *
+     * @param IndexTransaksiRequest $request
+     * @return Response
      */
-    private function generateDynamicFileName(Request $request, string $extension): string
+    public function exportPdf(IndexTransaksiRequest $request): Response
     {
-        $fileNameParts = ['laporan-transaksi'];
-        if ($request->filled('status')) {
-            $fileNameParts[] = $request->input('status');
-        }
-        if ($request->filled('type')) {
-            $fileNameParts[] = 'jenis-' . $request->input('type');
-        }
-        if ($request->filled('periode_id')) {
-            $periode = Periode::find($request->input('periode_id'));
-            if ($periode) {
-                $fileNameParts[] = 'periode-' . $periode->name;
-            }
-        }
-        $fileNameParts[] = now()->format('d-m-Y');
-
-        return Str::slug(implode('-', $fileNameParts)) . $extension;
+        return $this->service->exportPdf($request);
     }
 }

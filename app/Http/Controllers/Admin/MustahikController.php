@@ -9,9 +9,10 @@ use App\Models\Mustahik;
 use App\Repositories\Admin\MustahikRepository;
 use App\Services\Admin\MustahikService;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
-use Inertia\Response;
+use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -39,9 +40,9 @@ class MustahikController extends Controller
      * @summary Menampilkan halaman daftar mustahik.
      *
      * @param Request $request
-     * @return Response
+     * @return InertiaResponse
      */
-    public function index(Request $request): Response
+    public function index(Request $request): InertiaResponse
     {
         $request->validate([
             'search' => 'nullable|string|max:100',
@@ -71,9 +72,9 @@ class MustahikController extends Controller
     /**
      * @summary Menampilkan form untuk menambah mustahik baru.
      *
-     * @return Response|RedirectResponse
+     * @return InertiaResponse|RedirectResponse
      */
-    public function create(): Response|RedirectResponse
+    public function create(): InertiaResponse|RedirectResponse
     {
         if (!$this->mustahikRepository->getActivePeriode()) {
             return redirect()->route('admin.mustahiks.index')->with('error', 'Tidak ada periode aktif. Silakan aktifkan satu periode untuk menambah data mustahik.');
@@ -103,9 +104,9 @@ class MustahikController extends Controller
      * @summary Menampilkan halaman detail mustahik.
      *
      * @param Mustahik $mustahik
-     * @return Response
+     * @return InertiaResponse
      */
-    public function show(Mustahik $mustahik): Response
+    public function show(Mustahik $mustahik): InertiaResponse
     {
         $data = $this->mustahikService->getMustahikDetails($mustahik);
 
@@ -119,9 +120,9 @@ class MustahikController extends Controller
      * @summary Menampilkan form untuk mengedit data mustahik.
      *
      * @param Mustahik $mustahik
-     * @return Response
+     * @return InertiaResponse
      */
-    public function edit(Mustahik $mustahik): Response
+    public function edit(Mustahik $mustahik): InertiaResponse
     {
         return Inertia::render('admin/mustahiks/edit', [
             'mustahik' => $this->mustahikRepository->loadEditRelations($mustahik),
@@ -176,9 +177,9 @@ class MustahikController extends Controller
      * @summary Menangani permintaan ekspor data ke format PDF.
      *
      * @param Request $request
-     * @return BinaryFileResponse
+     * @return Response
      */
-    public function exportPdf(Request $request): BinaryFileResponse
+    public function exportPdf(Request $request): Response
     {
         return $this->mustahikService->export($request, 'pdf');
     }
